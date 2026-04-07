@@ -6,7 +6,7 @@ const updateSchema = z.object({
   account_id: z.string().uuid().optional(),
   category_id: z.string().uuid().optional(),
   amount: z.number().positive().optional(),
-  currency: z.enum(["UYU", "USD"]).optional(),
+  currency: z.enum(["UYU", "USD", "BRL", "ARS"]).optional(),
   description: z.string().optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
 })

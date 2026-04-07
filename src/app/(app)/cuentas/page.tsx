@@ -32,10 +32,16 @@ export default function CuentasPage() {
   }
 
   // Agrupar cuentas por moneda
-  const uyuAccounts = accounts.filter((a) => a.currency === "UYU")
-  const usdAccounts = accounts.filter((a) => a.currency === "USD")
-  const totalUYU = uyuAccounts.reduce((sum, a) => sum + Number(a.balance), 0)
-  const totalUSD = usdAccounts.reduce((sum, a) => sum + Number(a.balance), 0)
+  const currencies = ["UYU", "USD", "BRL", "ARS"] as const
+  const totalsByCurrency = currencies.reduce((acc, cur) => {
+    const filtered = accounts.filter((a) => a.currency === cur)
+    acc[cur] = filtered.reduce((sum, a) => sum + Number(a.balance), 0)
+    return acc
+  }, {} as Record<string, number>)
+  // Solo mostrar monedas que tengan al menos una cuenta
+  const activeCurrencies = currencies.filter((cur) =>
+    accounts.some((a) => a.currency === cur) || totalsByCurrency[cur] !== 0
+  )
 
   if (loading) {
     return (
@@ -50,15 +56,13 @@ export default function CuentasPage() {
       <h1 className="text-2xl font-bold">Cuentas</h1>
 
       {/* Totales por moneda */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Total UYU</p>
-          <p className="text-2xl font-bold mt-1">{formatMoney(totalUYU, "UYU")}</p>
-        </div>
-        <div className="rounded-xl border border-border bg-card p-4">
-          <p className="text-xs text-muted-foreground">Total USD</p>
-          <p className="text-2xl font-bold mt-1">{formatMoney(totalUSD, "USD")}</p>
-        </div>
+      <div className={`grid gap-3 ${activeCurrencies.length <= 2 ? "grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}>
+        {activeCurrencies.map((cur) => (
+          <div key={cur} className="rounded-xl border border-border bg-card p-4">
+            <p className="text-xs text-muted-foreground">Total {cur}</p>
+            <p className="text-2xl font-bold mt-1">{formatMoney(totalsByCurrency[cur], cur)}</p>
+          </div>
+        ))}
       </div>
 
       {/* Cards de cuentas */}

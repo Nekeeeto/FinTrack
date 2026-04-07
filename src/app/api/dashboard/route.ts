@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase/server"
 import { startOfMonth, endOfMonth, subMonths, format, eachDayOfInterval, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
+import { toUYU } from "@/lib/currency"
+import type { ExchangeRate } from "@/types/database"
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
   const monthlyFlowMonths = 6
   const monthlyFlowFrom = format(startOfMonth(subMonths(new Date(), monthlyFlowMonths - 1)), "yyyy-MM-dd")
 
-  const [accountsRes, transactionsRes, monthlyFlowRes, budgetsRes] = await Promise.all([
+  const [accountsRes, transactionsRes, monthlyFlowRes, budgetsRes, ratesRes] = await Promise.all([
     supabaseAdmin.from("accounts").select("*").order("created_at"),
     supabaseAdmin
       .from("transactions")
@@ -44,46 +46,65 @@ export async function GET(req: NextRequest) {
       .order("date", { ascending: false }),
     supabaseAdmin
       .from("transactions")
-      .select("amount, date, category:categories(type)")
+      .select("amount, currency, date, category:categories(type)")
       .gte("date", monthlyFlowFrom)
       .order("date"),
     supabaseAdmin
       .from("budget_limits")
       .select("*, category:categories(id, name, color, parent_id)")
       .order("created_at"),
+    supabaseAdmin
+      .from("exchange_rates")
+      .select("*")
+      .order("fetched_at", { ascending: false })
+      .limit(10),
   ])
 
   const accounts = accountsRes.data || []
   const transactions = transactionsRes.data || []
 
-  // Cash flow
+  // Obtener la cotización más reciente de cada par
+  const allRates = ratesRes.data || []
+  const latestRates: ExchangeRate[] = []
+  const seen = new Set<string>()
+  for (const r of allRates) {
+    const key = `${r.base_currency}-${r.target_currency}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      latestRates.push(r as ExchangeRate)
+    }
+  }
+
+  // Cash flow (convertido a UYU para totales consolidados)
   let income = 0
   let expenses = 0
   const expenseByCategory: Record<string, { name: string; value: number; color: string }> = {}
 
   for (const tx of transactions) {
+    const amountUYU = toUYU(Number(tx.amount), tx.currency, latestRates)
     if (tx.category?.type === "income") {
-      income += Number(tx.amount)
+      income += amountUYU
     } else {
-      expenses += Number(tx.amount)
+      expenses += amountUYU
       const catName = tx.category?.name || "Otro"
       if (!expenseByCategory[catName]) {
         expenseByCategory[catName] = { name: catName, value: 0, color: tx.category?.color || "#6b7280" }
       }
-      expenseByCategory[catName].value += Number(tx.amount)
+      expenseByCategory[catName].value += amountUYU
     }
   }
 
   // Balance trend (cumulative by day)
   const endDate = dateTo > new Date() ? new Date() : dateTo
   const days = eachDayOfInterval({ start: dateFrom, end: endDate })
-  const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0)
+  const totalBalance = accounts.reduce((sum, a) => sum + toUYU(Number(a.balance), a.currency, latestRates), 0)
 
   const txByDate: Record<string, number> = {}
   for (const tx of transactions) {
     const d = tx.date
     if (!txByDate[d]) txByDate[d] = 0
-    txByDate[d] += tx.category?.type === "income" ? Number(tx.amount) : -Number(tx.amount)
+    const amtUYU = toUYU(Number(tx.amount), tx.currency, latestRates)
+    txByDate[d] += tx.category?.type === "income" ? amtUYU : -amtUYU
   }
 
   const balanceTrend = days.map((day) => {
@@ -116,10 +137,11 @@ export async function GET(req: NextRequest) {
     const key = tx.date.substring(0, 7) // yyyy-MM
     if (monthlyFlowMap[key]) {
       const cat = Array.isArray(tx.category) ? tx.category[0] : tx.category
+      const amtUYU = toUYU(Number(tx.amount), tx.currency, latestRates)
       if (cat?.type === "income") {
-        monthlyFlowMap[key].income += Number(tx.amount)
+        monthlyFlowMap[key].income += amtUYU
       } else {
-        monthlyFlowMap[key].expenses += Number(tx.amount)
+        monthlyFlowMap[key].expenses += amtUYU
       }
     }
   }
@@ -145,7 +167,7 @@ export async function GET(req: NextRequest) {
     const allIds = [b.category_id, ...childIds]
     const spent = transactions
       .filter((tx) => allIds.includes(tx.category_id) && tx.category?.type === "expense")
-      .reduce((s, tx) => s + Number(tx.amount), 0)
+      .reduce((s, tx) => s + toUYU(Number(tx.amount), tx.currency, latestRates), 0)
     return {
       id: b.id,
       category_id: b.category_id,

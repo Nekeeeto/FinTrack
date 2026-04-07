@@ -1,7 +1,17 @@
 export type AccountType = 'checking' | 'savings' | 'cash' | 'investment' | 'business'
 export type TransactionSource = 'manual' | 'telegram' | 'import'
 export type CategoryType = 'income' | 'expense'
-export type Currency = 'UYU' | 'USD'
+export type Currency = 'UYU' | 'USD' | 'BRL' | 'ARS'
+
+export interface ExchangeRate {
+  id: string
+  base_currency: Currency
+  target_currency: Currency
+  buy_rate: number
+  sell_rate: number
+  source: 'bcu' | 'manual' | 'exchangerate-api'
+  fetched_at: string
+}
 
 export interface Account {
   id: string

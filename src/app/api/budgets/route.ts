@@ -6,7 +6,7 @@ import { startOfMonth, endOfMonth, format } from "date-fns"
 const createSchema = z.object({
   category_id: z.string().uuid(),
   amount: z.number().positive(),
-  currency: z.enum(["UYU", "USD"]).default("UYU"),
+  currency: z.enum(["UYU", "USD", "BRL", "ARS"]).default("UYU"),
 })
 
 // GET /api/budgets?month=2026-04

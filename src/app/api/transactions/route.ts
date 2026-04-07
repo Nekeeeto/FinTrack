@@ -6,7 +6,7 @@ const createSchema = z.object({
   account_id: z.string().uuid(),
   category_id: z.string().uuid(),
   amount: z.number().positive(),
-  currency: z.enum(["UYU", "USD"]).default("UYU"),
+  currency: z.enum(["UYU", "USD", "BRL", "ARS"]).default("UYU"),
   description: z.string().default(""),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   source: z.enum(["manual", "telegram", "import"]).default("manual"),

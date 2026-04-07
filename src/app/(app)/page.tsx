@@ -8,6 +8,7 @@ import { BalanceTrend } from "@/components/dashboard/balance-trend"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { MonthlyFlow } from "@/components/dashboard/monthly-flow"
 import { BudgetProgress } from "@/components/dashboard/budget-progress"
+import { ExchangeRatesWidget } from "@/components/dashboard/exchange-rates-widget"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -152,7 +153,9 @@ export default function DashboardPage() {
             <BudgetProgress data={data.budgetProgress} />
           )}
 
-          {/* Charts row */}
+          {/* Cotizaciones + Charts row */}
+          <ExchangeRatesWidget />
+
           <div className="grid md:grid-cols-2 gap-4">
             <BalanceTrend data={data.balanceTrend} />
             <ExpenseChart data={data.expensesByCategory} />

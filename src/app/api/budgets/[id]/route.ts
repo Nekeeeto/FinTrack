@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/server"
 
 const updateSchema = z.object({
   amount: z.number().positive().optional(),
-  currency: z.enum(["UYU", "USD"]).optional(),
+  currency: z.enum(["UYU", "USD", "BRL", "ARS"]).optional(),
 })
 
 // PATCH /api/budgets/[id]

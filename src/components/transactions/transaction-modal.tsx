@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { X, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import type { Transaction, Account, Category } from "@/types/database"
+import type { Transaction, Account, Category, Currency } from "@/types/database"
 
 interface Props {
   transaction: Transaction | null // null = crear, obj = editar
@@ -124,9 +124,11 @@ export function TransactionModal({ transaction, accounts, categories, onClose, o
             </div>
             <div className="w-24">
               <label className="text-xs text-muted-foreground mb-1 block">Moneda</label>
-              <select value={currency} onChange={(e) => setCurrency(e.target.value as "UYU" | "USD")} className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background">
-                <option value="UYU">UYU</option>
-                <option value="USD">USD</option>
+              <select value={currency} onChange={(e) => setCurrency(e.target.value as Currency)} className="w-full px-3 py-2 text-sm rounded-lg border border-border bg-background">
+                <option value="UYU">🇺🇾 UYU</option>
+                <option value="USD">🇺🇸 USD</option>
+                <option value="BRL">🇧🇷 BRL</option>
+                <option value="ARS">🇦🇷 ARS</option>
               </select>
             </div>
           </div>

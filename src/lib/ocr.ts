@@ -4,7 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/server"
 
 export interface OCRResult {
   monto: number | null
-  moneda: "UYU" | "USD"
+  moneda: "UYU" | "USD" | "BRL" | "ARS"
   comercio: string | null
   fecha: string | null // YYYY-MM-DD
   items: string[]
@@ -79,7 +79,7 @@ Extraé la siguiente información y respondé ÚNICAMENTE con un JSON válido (s
 
 {
   "monto": <número total en la moneda detectada, o null si no se lee>,
-  "moneda": "UYU" o "USD",
+  "moneda": "UYU", "USD", "BRL" o "ARS",
   "comercio": "<nombre del comercio o null>",
   "fecha": "<YYYY-MM-DD o null si no se lee>",
   "items": ["<lista de ítems principales si se leen>"],
@@ -124,7 +124,7 @@ Reglas:
 
     return {
       monto: parsed.monto ?? null,
-      moneda: parsed.moneda === "USD" ? "USD" : "UYU",
+      moneda: ["USD", "BRL", "ARS"].includes(parsed.moneda) ? parsed.moneda : "UYU",
       comercio: parsed.comercio ?? null,
       fecha: parsed.fecha ?? null,
       items: Array.isArray(parsed.items) ? parsed.items : [],
