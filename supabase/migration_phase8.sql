@@ -1,10 +1,8 @@
 -- =============================================
 -- FASE 8: Multi-tenant, user_profiles, RLS estricto
 -- =============================================
--- IMPORTANTE: Antes de correr esta migración:
--- 1. El admin debe haberse logueado al menos una vez (para tener registro en auth.users)
--- 2. Reemplazar '<ADMIN_UUID>' con el UUID real del admin (de auth.users)
--- 3. Reemplazar '<ADMIN_EMAIL>' con el email real del admin
+-- PASO 1: Ejecutar este SQL en Supabase SQL Editor
+-- PASO 2: Hacer POST a /api/bootstrap (crea admin + asigna datos)
 
 -- =============================================
 -- 1. Tabla user_profiles
@@ -57,35 +55,14 @@ ALTER TABLE model_usage ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES auth.us
 CREATE INDEX IF NOT EXISTS idx_model_usage_user ON model_usage(user_id);
 
 -- =============================================
--- 3. Asignar datos existentes al admin
--- REEMPLAZAR '<ADMIN_UUID>' CON EL UUID REAL
--- =============================================
-UPDATE accounts SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-UPDATE categories SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-UPDATE transactions SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-UPDATE budget_limits SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-UPDATE pending_receipts SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-UPDATE settings SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-UPDATE push_subscriptions SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-UPDATE model_usage SET user_id = '<ADMIN_UUID>' WHERE user_id IS NULL;
-
--- =============================================
--- 4. Hacer user_id NOT NULL en tablas principales
--- =============================================
-ALTER TABLE accounts ALTER COLUMN user_id SET NOT NULL;
-ALTER TABLE categories ALTER COLUMN user_id SET NOT NULL;
-ALTER TABLE transactions ALTER COLUMN user_id SET NOT NULL;
-ALTER TABLE budget_limits ALTER COLUMN user_id SET NOT NULL;
-
--- =============================================
--- 5. Agregar 'webapp' al CHECK constraint de transactions.source
+-- 3. Agregar 'webapp' al CHECK constraint de transactions.source
 -- =============================================
 ALTER TABLE transactions DROP CONSTRAINT IF EXISTS transactions_source_check;
 ALTER TABLE transactions ADD CONSTRAINT transactions_source_check
   CHECK (source IN ('manual', 'telegram', 'import', 'webapp'));
 
 -- =============================================
--- 6. Dropear políticas RLS permisivas (las de fase 7 con IS NULL)
+-- 4. Dropear políticas RLS permisivas (las de fase 7 con IS NULL)
 -- =============================================
 
 -- Accounts
@@ -133,7 +110,7 @@ DROP POLICY IF EXISTS push_subs_delete ON push_subscriptions;
 DROP POLICY IF EXISTS model_usage_all ON model_usage;
 
 -- =============================================
--- 7. Crear políticas RLS estrictas (sin IS NULL)
+-- 5. Crear políticas RLS estrictas (sin IS NULL)
 -- =============================================
 
 -- Accounts: cada usuario solo ve/edita sus cuentas
@@ -193,13 +170,11 @@ CREATE POLICY model_usage_select_admin ON model_usage FOR SELECT USING (
 );
 CREATE POLICY model_usage_insert ON model_usage FOR INSERT WITH CHECK (true);
 
--- Exchange rates: públicas (no cambia)
--- Ya existen las políticas de exchange_rates como públicas
-
 -- =============================================
--- 8. Crear perfil del admin
--- REEMPLAZAR '<ADMIN_UUID>' Y '<ADMIN_EMAIL>'
+-- NO hacer NOT NULL todavía en user_id
+-- El bootstrap endpoint asigna los datos y luego se puede hacer:
+-- ALTER TABLE accounts ALTER COLUMN user_id SET NOT NULL;
+-- ALTER TABLE categories ALTER COLUMN user_id SET NOT NULL;
+-- ALTER TABLE transactions ALTER COLUMN user_id SET NOT NULL;
+-- ALTER TABLE budget_limits ALTER COLUMN user_id SET NOT NULL;
 -- =============================================
-INSERT INTO user_profiles (user_id, name, email, role, plan, onboarding_completed)
-VALUES ('<ADMIN_UUID>', 'Admin', '<ADMIN_EMAIL>', 'admin', 'premium', true)
-ON CONFLICT (user_id) DO NOTHING;

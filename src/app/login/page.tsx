@@ -6,17 +6,16 @@ import { supabase } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
-import { Mail, Loader2 } from "lucide-react"
+import { Loader2, Lock, Mail } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState("")
-  const [sent, setSent] = useState(false)
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [checking, setChecking] = useState(true)
   const [error, setError] = useState("")
 
-  // Handle hash fragment tokens from magic link redirect
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
@@ -32,41 +31,37 @@ export default function LoginPage() {
     setLoading(true)
     setError("")
 
-    // Verificar si el email está registrado (sistema de invitación)
-    try {
-      const checkRes = await fetch("/api/auth/check-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      })
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-      const checkData = await checkRes.json()
-
-      if (!checkData.exists) {
-        setLoading(false)
-        setError("Solo usuarios invitados. Contacta al administrador.")
-        return
-      }
-    } catch {
+    if (error) {
       setLoading(false)
-      setError("Error al verificar el email. Intentá de nuevo.")
+      if (error.message === "Invalid login credentials") {
+        setError("Email o contraseña incorrectos.")
+      } else {
+        setError(error.message)
+      }
       return
     }
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/login`,
-      },
-    })
+    // Verificar si completó onboarding
+    if (data.session) {
+      try {
+        const res = await fetch("/api/me")
+        const profile = await res.json()
+        if (profile && !profile.onboarding_completed) {
+          router.replace("/onboarding")
+          return
+        }
+      } catch {
+        // Si falla, seguir al inicio
+      }
+      router.replace("/inicio")
+    }
 
     setLoading(false)
-
-    if (error) {
-      setError(error.message)
-    } else {
-      setSent(true)
-    }
   }
 
   if (checking) {
@@ -79,45 +74,52 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full max-w-sm mx-auto">
         <CardHeader className="text-center space-y-2 pb-4">
           <h1 className="text-2xl font-bold">
             <span className="text-emerald-500">$</span> Biyuya
           </h1>
           <p className="text-sm text-muted-foreground">
-            Ingresá con tu email para acceder
+            Ingresá tus credenciales para acceder
           </p>
         </CardHeader>
         <CardContent>
-          {sent ? (
-            <div className="text-center space-y-3 py-4">
-              <Mail className="h-10 w-10 text-emerald-500 mx-auto" />
-              <p className="text-sm font-medium">Revisá tu casilla de correo</p>
-              <p className="text-xs text-muted-foreground">
-                Te mandamos un link mágico a <strong>{email}</strong>
-              </p>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="password"
+                  placeholder="Contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="pl-10"
+                  required
+                />
+              </div>
             </div>
-          ) : (
-            <form onSubmit={handleLogin} className="space-y-4">
-              <Input
-                type="email"
-                placeholder="tu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              {error && (
-                <p className="text-xs text-red-500">{error}</p>
+            {error && (
+              <p className="text-xs text-red-500 text-center">{error}</p>
+            )}
+            <Button type="submit" className="w-full" disabled={loading}>
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Iniciar sesión"
               )}
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  "Enviar magic link"
-                )}
-              </Button>
-            </form>
-          )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>
