@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 
 export async function GET() {
-  const { data, error } = await supabaseAdmin
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
+  const { data, error } = await auth.supabase
     .from("accounts")
     .select("*")
+    .eq("user_id", auth.userId)
     .order("created_at")
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })

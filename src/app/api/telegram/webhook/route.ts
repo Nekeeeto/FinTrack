@@ -56,10 +56,21 @@ async function updatePending(chatId: number, msgId: number, updates: Partial<Pen
   return updated
 }
 
+// --- Helper: obtener user_id del admin ---
+
+async function getAdminUserId(): Promise<string | null> {
+  const { data } = await supabaseAdmin
+    .from("user_profiles")
+    .select("user_id")
+    .eq("role", "admin")
+    .limit(1)
+    .single()
+  return data?.user_id ?? null
+}
+
 // --- Webhook handler ---
 
 export async function POST(req: NextRequest) {
-  // Verificar secret
   const webhookSecret = await getSetting("TELEGRAM_WEBHOOK_SECRET")
   const secret = req.headers.get("x-telegram-bot-api-secret-token")
   if (webhookSecret && secret !== webhookSecret) {
@@ -93,8 +104,9 @@ async function handlePhoto(msg: TelegramUpdate["message"] & {}) {
   await sendMessage(chatId, "📸 Procesando tu ticket...")
 
   try {
+    const adminUserId = await getAdminUserId()
     const { buffer, mimeType } = await downloadPhoto(bestPhoto.file_id)
-    const ocr = await processReceiptImage(buffer, mimeType)
+    const ocr = await processReceiptImage(buffer, mimeType, adminUserId ?? undefined)
 
     if (!ocr.monto && ocr.confianza === "baja" && ocr.texto_raw.includes("no parece")) {
       await sendMessage(
@@ -104,8 +116,8 @@ async function handlePhoto(msg: TelegramUpdate["message"] & {}) {
       return
     }
 
-    const category = await inferCategory(ocr.comercio, ocr.items)
-    const account = await getDefaultAccount()
+    const category = await inferCategory(ocr.comercio, ocr.items, adminUserId ?? undefined)
+    const account = await getDefaultAccount(adminUserId ?? undefined)
 
     if (!account) {
       await sendMessage(chatId, "⚠️ No encontré la cuenta GENERAL. Revisá la configuración.")
@@ -211,7 +223,8 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
 
   // --- Cambiar categoría: mostrar lista ---
   if (data === "change_cat") {
-    const categories = await getAllCategories()
+    const adminId = await getAdminUserId()
+    const categories = await getAllCategories(adminId ?? undefined)
     const keyboard: InlineKeyboardButton[][] = []
     for (let i = 0; i < categories.length; i += 2) {
       const row: InlineKeyboardButton[] = [
@@ -257,7 +270,8 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
 
   // --- Cambiar cuenta: mostrar lista ---
   if (data === "change_acc") {
-    const accounts = await getAllAccounts()
+    const adminId = await getAdminUserId()
+    const accounts = await getAllAccounts(adminId ?? undefined)
     const keyboard: InlineKeyboardButton[][] = accounts.map((a) => [
       { text: `${a.name} (${a.currency})`, callback_data: `set_acc:${a.id}` },
     ])
@@ -376,6 +390,7 @@ async function saveTransaction(chatId: number, msgId: number, pending: PendingDa
     return
   }
 
+  const adminUserId = await getAdminUserId()
   const today = new Date().toISOString().split("T")[0]
 
   const { data: tx, error } = await supabaseAdmin
@@ -389,6 +404,7 @@ async function saveTransaction(chatId: number, msgId: number, pending: PendingDa
       date: ocr.fecha ?? today,
       source: "telegram" as const,
       raw_ocr_data: ocr as unknown as Record<string, unknown>,
+      user_id: adminUserId,
     })
     .select("*, account:accounts(*), category:categories(*)")
     .single()
@@ -441,6 +457,7 @@ async function saveTransaction(chatId: number, msgId: number, pending: PendingDa
   await sendPushNotification(
     "Gasto registrado",
     `${montoStr} — ${ocr.comercio ?? "Ticket"} (${tx.category?.name ?? "?"})`,
-    "/transacciones"
+    "/transacciones",
+    adminUserId ?? undefined
   ).catch(() => {})
 }

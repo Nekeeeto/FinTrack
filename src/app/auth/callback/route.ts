@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import { supabaseAdmin } from "@/lib/supabase/server"
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
             return request.cookies.getAll()
           },
           setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) =>
+            cookiesToSet.forEach(({ name, value }) =>
               request.cookies.set(name, value)
             )
           },
@@ -23,19 +24,41 @@ export async function GET(request: NextRequest) {
       }
     )
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data: sessionData, error } =
+      await supabase.auth.exchangeCodeForSession(code)
 
-    if (!error) {
+    if (!error && sessionData.session) {
+      const userId = sessionData.session.user.id
+
+      // Verificar si el usuario tiene perfil (bypass RLS con supabaseAdmin)
+      const { data: profile } = await supabaseAdmin
+        .from("user_profiles")
+        .select("onboarding_completed")
+        .eq("user_id", userId)
+        .single()
+
+      // Determinar la URL de redirección base
       const forwardedHost = request.headers.get("x-forwarded-host")
       const isLocalEnv = process.env.NODE_ENV === "development"
+      const baseUrl =
+        !isLocalEnv && forwardedHost
+          ? `https://${forwardedHost}`
+          : origin
 
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}/`)
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}/`)
-      } else {
-        return NextResponse.redirect(`${origin}/`)
+      // Sin perfil -> no está invitado, redirigir a login con error
+      if (!profile) {
+        return NextResponse.redirect(
+          `${baseUrl}/login?error=no-profile`
+        )
       }
+
+      // Perfil existe pero no completó onboarding
+      if (!profile.onboarding_completed) {
+        return NextResponse.redirect(`${baseUrl}/onboarding`)
+      }
+
+      // Todo OK -> ir al inicio
+      return NextResponse.redirect(`${baseUrl}/inicio`)
     }
   }
 

@@ -1,6 +1,11 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
+// Rutas públicas que no requieren autenticación
+const PUBLIC_ROUTES = ["/", "/login", "/auth"]
+// Rutas API que manejan su propia auth (webhook Telegram, etc.)
+const PASSTHROUGH_API_ROUTES = ["/api/telegram/webhook"]
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
 
@@ -29,27 +34,42 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Allow API routes (telegram webhook, etc.) to pass through
-  if (request.nextUrl.pathname.startsWith("/api/")) {
+  const pathname = request.nextUrl.pathname
+
+  // API routes: dejar pasar (cada route maneja su propia auth)
+  if (pathname.startsWith("/api/")) {
     return supabaseResponse
   }
 
-  // Allow auth callback
-  if (request.nextUrl.pathname.startsWith("/auth")) {
+  // Rutas de auth callback: siempre permitir
+  if (pathname.startsWith("/auth")) {
     return supabaseResponse
   }
 
-  // Redirect to login if not authenticated
-  if (!user && request.nextUrl.pathname !== "/login") {
+  // Landing page (/): si el usuario está autenticado, redirigir a /inicio
+  if (pathname === "/") {
+    if (user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/inicio"
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
+  // Login: si ya está autenticado, redirigir a /inicio
+  if (pathname === "/login") {
+    if (user) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/inicio"
+      return NextResponse.redirect(url)
+    }
+    return supabaseResponse
+  }
+
+  // Todas las demás rutas requieren autenticación
+  if (!user) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"
-    return NextResponse.redirect(url)
-  }
-
-  // Redirect to dashboard if authenticated and on login page
-  if (user && request.nextUrl.pathname === "/login") {
-    const url = request.nextUrl.clone()
-    url.pathname = "/"
     return NextResponse.redirect(url)
   }
 

@@ -1,15 +1,19 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 import type { Category } from "@/types/database"
 
 // GET /api/categories?flat=true para lista plana, sin param para árbol
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const flat = req.nextUrl.searchParams.get("flat") === "true"
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await auth.supabase
     .from("categories")
     .select("*")
+    .eq("user_id", auth.userId)
     .order("sort_order")
     .order("name")
 
@@ -17,7 +21,6 @@ export async function GET(req: NextRequest) {
 
   if (flat) return NextResponse.json(data)
 
-  // Construir árbol
   const categories = data as Category[]
   const parents = categories.filter((c) => !c.parent_id)
   const tree = parents.map((parent) => ({
@@ -41,6 +44,9 @@ const categorySchema = z.object({
 
 // POST /api/categories
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const body = await req.json()
   const parsed = categorySchema.safeParse(body)
 
@@ -48,9 +54,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await auth.supabase
     .from("categories")
-    .insert(parsed.data)
+    .insert({ ...parsed.data, user_id: auth.userId })
     .select()
     .single()
 

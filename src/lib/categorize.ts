@@ -65,7 +65,8 @@ const RULES: { keywords: string[]; subcategory: string; parent: string }[] = [
  */
 export async function inferCategory(
   comercio: string | null,
-  items: string[]
+  items: string[],
+  userId?: string
 ): Promise<Category | null> {
   const searchText = [comercio, ...items]
     .filter(Boolean)
@@ -74,7 +75,6 @@ export async function inferCategory(
 
   if (!searchText) return null
 
-  // Buscar match en las reglas
   let matchedRule: (typeof RULES)[number] | null = null
   for (const rule of RULES) {
     if (rule.keywords.some((kw) => searchText.includes(kw))) {
@@ -85,55 +85,61 @@ export async function inferCategory(
 
   if (!matchedRule) return null
 
-  // Intentar encontrar la subcategoría primero
+  // Filtrar por user_id si se proporciona
   if (matchedRule.subcategory) {
-    const { data: sub } = await supabaseAdmin
+    let query = supabaseAdmin
       .from("categories")
       .select("*")
       .eq("name", matchedRule.subcategory)
       .not("parent_id", "is", null)
-      .single()
+    if (userId) query = query.eq("user_id", userId)
+    const { data: sub } = await query.single()
 
     if (sub) return sub
   }
 
-  // Fallback a categoría padre
-  const { data: parent } = await supabaseAdmin
+  let query = supabaseAdmin
     .from("categories")
     .select("*")
     .eq("name", matchedRule.parent)
     .is("parent_id", null)
-    .single()
+  if (userId) query = query.eq("user_id", userId)
+  const { data: parent } = await query.single()
 
   return parent ?? null
 }
 
 /** Obtiene la cuenta por defecto (GENERAL) */
-export async function getDefaultAccount() {
-  const { data } = await supabaseAdmin
+export async function getDefaultAccount(userId?: string) {
+  let query = supabaseAdmin
     .from("accounts")
     .select("*")
     .eq("name", "GENERAL")
-    .single()
+  if (userId) query = query.eq("user_id", userId)
+  const { data } = await query.single()
   return data
 }
 
-/** Obtiene todas las categorías (solo subcategorías para selección en bot) */
-export async function getAllCategories(): Promise<Category[]> {
-  const { data } = await supabaseAdmin
+/** Obtiene todas las categorías padre de tipo expense */
+export async function getAllCategories(userId?: string): Promise<Category[]> {
+  let query = supabaseAdmin
     .from("categories")
     .select("*")
     .eq("type", "expense")
     .is("parent_id", null)
     .order("sort_order")
+  if (userId) query = query.eq("user_id", userId)
+  const { data } = await query
   return data ?? []
 }
 
 /** Obtiene todas las cuentas */
-export async function getAllAccounts() {
-  const { data } = await supabaseAdmin
+export async function getAllAccounts(userId?: string) {
+  let query = supabaseAdmin
     .from("accounts")
     .select("*")
     .order("name")
+  if (userId) query = query.eq("user_id", userId)
+  const { data } = await query
   return data ?? []
 }

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 
 const createSchema = z.object({
   account_id: z.string().uuid(),
@@ -9,18 +9,22 @@ const createSchema = z.object({
   currency: z.enum(["UYU", "USD", "BRL", "ARS"]).default("UYU"),
   description: z.string().default(""),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  source: z.enum(["manual", "telegram", "import"]).default("manual"),
+  source: z.enum(["manual", "telegram", "import", "webapp"]).default("manual"),
   receipt_url: z.string().url().nullable().optional(),
   raw_ocr_data: z.record(z.string(), z.unknown()).nullable().optional(),
 })
 
 // GET /api/transactions?account_id=&category_id=&from=&to=&limit=&offset=
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const params = req.nextUrl.searchParams
 
-  let query = supabaseAdmin
+  let query = auth.supabase
     .from("transactions")
     .select("*, account:accounts(*), category:categories(*)", { count: "exact" })
+    .eq("user_id", auth.userId)
     .order("date", { ascending: false })
 
   const accountId = params.get("account_id")
@@ -46,6 +50,9 @@ export async function GET(req: NextRequest) {
 
 // POST /api/transactions
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const body = await req.json()
   const parsed = createSchema.safeParse(body)
 
@@ -53,16 +60,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  const { data: tx, error } = await supabaseAdmin
+  const { data: tx, error } = await auth.supabase
     .from("transactions")
-    .insert(parsed.data)
+    .insert({ ...parsed.data, user_id: auth.userId })
     .select("*, account:accounts(*), category:categories(*)")
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Update account balance
-  const { data: category } = await supabaseAdmin
+  // Actualizar balance de la cuenta
+  const { data: category } = await auth.supabase
     .from("categories")
     .select("type")
     .eq("id", parsed.data.category_id)
@@ -70,25 +77,18 @@ export async function POST(req: NextRequest) {
 
   const balanceChange = category?.type === "income" ? parsed.data.amount : -parsed.data.amount
 
-  await supabaseAdmin.rpc("update_account_balance", {
-    p_account_id: parsed.data.account_id,
-    p_amount: balanceChange,
-  }).then(async (res) => {
-    // Fallback if RPC doesn't exist yet
-    if (res.error) {
-      const { data: account } = await supabaseAdmin
-        .from("accounts")
-        .select("balance")
-        .eq("id", parsed.data.account_id)
-        .single()
-      if (account) {
-        await supabaseAdmin
-          .from("accounts")
-          .update({ balance: Number(account.balance) + balanceChange })
-          .eq("id", parsed.data.account_id)
-      }
-    }
-  })
+  const { data: account } = await auth.supabase
+    .from("accounts")
+    .select("balance")
+    .eq("id", parsed.data.account_id)
+    .single()
+
+  if (account) {
+    await auth.supabase
+      .from("accounts")
+      .update({ balance: Number(account.balance) + balanceChange })
+      .eq("id", parsed.data.account_id)
+  }
 
   return NextResponse.json(tx, { status: 201 })
 }

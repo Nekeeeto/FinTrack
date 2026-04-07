@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase/server"
 import { getSetting } from "@/lib/settings"
 import Anthropic from "@anthropic-ai/sdk"
@@ -16,6 +17,9 @@ const DEFAULT_MODEL = "claude-sonnet-4-20250514"
 
 // GET /api/analysis?month=2026-04
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const params = req.nextUrl.searchParams
   const monthParam = params.get("month")
 
@@ -23,26 +27,26 @@ export async function GET(req: NextRequest) {
   const from = format(startOfMonth(now), "yyyy-MM-dd")
   const to = format(endOfMonth(now), "yyyy-MM-dd")
 
-  // Mes anterior para comparación
   const prevMonth = subMonths(now, 1)
   const prevFrom = format(startOfMonth(prevMonth), "yyyy-MM-dd")
   const prevTo = format(endOfMonth(prevMonth), "yyyy-MM-dd")
 
-  // Traer transacciones del mes actual y anterior
   const [currentRes, prevRes, categoriesRes, budgetsRes] = await Promise.all([
-    supabaseAdmin
+    auth.supabase
       .from("transactions")
       .select("*, category:categories(name, type, parent_id, color)")
+      .eq("user_id", auth.userId)
       .gte("date", from)
       .lte("date", to)
       .order("date", { ascending: false }),
-    supabaseAdmin
+    auth.supabase
       .from("transactions")
       .select("*, category:categories(name, type)")
+      .eq("user_id", auth.userId)
       .gte("date", prevFrom)
       .lte("date", prevTo),
-    supabaseAdmin.from("categories").select("id, name, type, parent_id"),
-    supabaseAdmin.from("budget_limits").select("*, category:categories(name)"),
+    auth.supabase.from("categories").select("id, name, type, parent_id").eq("user_id", auth.userId),
+    auth.supabase.from("budget_limits").select("*, category:categories(name)").eq("user_id", auth.userId),
   ])
 
   const currentTx = currentRes.data || []
@@ -50,7 +54,6 @@ export async function GET(req: NextRequest) {
   const categories = categoriesRes.data || []
   const budgets = budgetsRes.data || []
 
-  // Calcular resúmenes
   const currentIncome = currentTx
     .filter((tx) => tx.category?.type === "income")
     .reduce((s, tx) => s + Number(tx.amount), 0)
@@ -64,7 +67,6 @@ export async function GET(req: NextRequest) {
     .filter((tx) => tx.category?.type === "expense")
     .reduce((s, tx) => s + Number(tx.amount), 0)
 
-  // Gastos por categoría
   const expByCategory: Record<string, number> = {}
   for (const tx of currentTx) {
     if (tx.category?.type === "expense") {
@@ -81,9 +83,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Presupuestos con gastos
   const budgetSummary = budgets.map((b) => {
-    // Sumar gastos de la categoría y sus hijos
     const childIds = categories
       .filter((c) => c.parent_id === b.category_id)
       .map((c) => c.id)
@@ -99,7 +99,6 @@ export async function GET(req: NextRequest) {
     }
   })
 
-  // Armar contexto para Claude
   const context = `
 DATOS FINANCIEROS — ${format(now, "MMMM yyyy")}
 
@@ -131,7 +130,6 @@ ${currentTx
 TOTAL TRANSACCIONES: ${currentTx.length}
 `
 
-  // Llamar a Claude
   const apiKey = await getSetting("ANTHROPIC_API_KEY")
   const model = (await getSetting("ANTHROPIC_MODEL")) || DEFAULT_MODEL
   const anthropic = new Anthropic({ apiKey })
@@ -159,7 +157,6 @@ Respondé ÚNICAMENTE con un JSON válido (sin markdown, sin backticks):
     ],
   })
 
-  // Trackear uso
   const inputTokens = response.usage.input_tokens
   const outputTokens = response.usage.output_tokens
   const pricing = MODEL_PRICING[model] ?? MODEL_PRICING[DEFAULT_MODEL]
@@ -176,6 +173,7 @@ Respondé ÚNICAMENTE con un JSON válido (sin markdown, sin backticks):
         input_tokens: inputTokens,
         output_tokens: outputTokens,
         cost_usd: costUsd,
+        user_id: auth.userId,
       })
   } catch (err) {
     console.error("Error tracking model usage:", err)

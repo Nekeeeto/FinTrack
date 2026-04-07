@@ -23,7 +23,7 @@ async function getVapidKeys() {
   }
 }
 
-export async function sendPushNotification(title: string, body: string, url?: string) {
+export async function sendPushNotification(title: string, body: string, url?: string, userId?: string) {
   const keys = await getVapidKeys()
   if (!keys) return { sent: 0 }
 
@@ -33,10 +33,10 @@ export async function sendPushNotification(title: string, body: string, url?: st
     keys.privateKey
   )
 
-  // Obtener todas las suscripciones guardadas
-  const { data: subs } = await supabaseAdmin
-    .from("push_subscriptions")
-    .select("*")
+  // Obtener suscripciones del usuario (o todas si no se especifica)
+  let query = supabaseAdmin.from("push_subscriptions").select("*")
+  if (userId) query = query.eq("user_id", userId)
+  const { data: subs } = await query
 
   if (!subs || subs.length === 0) return { sent: 0 }
 

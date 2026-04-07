@@ -1,7 +1,9 @@
 export type AccountType = 'checking' | 'savings' | 'cash' | 'investment' | 'business'
-export type TransactionSource = 'manual' | 'telegram' | 'import'
+export type TransactionSource = 'manual' | 'telegram' | 'import' | 'webapp'
 export type CategoryType = 'income' | 'expense'
 export type Currency = 'UYU' | 'USD' | 'BRL' | 'ARS'
+export type UserRole = 'admin' | 'user'
+export type UserPlan = 'free' | 'premium'
 
 export interface ExchangeRate {
   id: string
@@ -15,6 +17,7 @@ export interface ExchangeRate {
 
 export interface Account {
   id: string
+  user_id: string
   name: string
   type: AccountType
   currency: Currency
@@ -26,6 +29,7 @@ export interface Account {
 
 export interface Category {
   id: string
+  user_id: string
   parent_id: string | null
   name: string
   color: string
@@ -38,6 +42,7 @@ export interface Category {
 
 export interface Transaction {
   id: string
+  user_id: string
   account_id: string
   category_id: string
   amount: number
@@ -55,6 +60,7 @@ export interface Transaction {
 
 export interface BudgetLimit {
   id: string
+  user_id: string
   category_id: string
   amount: number
   currency: Currency
@@ -66,4 +72,16 @@ export interface BudgetLimit {
   // Calculated
   spent?: number
   percentage?: number
+}
+
+export interface UserProfile {
+  user_id: string
+  name: string
+  email: string
+  role: UserRole
+  plan: UserPlan
+  photo_count_month: number
+  photo_reset_date: string
+  onboarding_completed: boolean
+  created_at: string
 }

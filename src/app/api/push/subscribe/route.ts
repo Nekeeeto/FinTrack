@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 
 const subscriptionSchema = z.object({
   endpoint: z.string().url(),
@@ -10,8 +10,11 @@ const subscriptionSchema = z.object({
   }),
 })
 
-// POST /api/push/subscribe — guardar suscripción push
+// POST /api/push/subscribe
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const body = await req.json()
     const parsed = subscriptionSchema.safeParse(body)
@@ -22,11 +25,10 @@ export async function POST(req: NextRequest) {
 
     const { endpoint, keys } = parsed.data
 
-    // Upsert: si ya existe el endpoint, actualizar keys
-    const { error } = await supabaseAdmin
+    const { error } = await auth.supabase
       .from("push_subscriptions")
       .upsert(
-        { endpoint, p256dh: keys.p256dh, auth: keys.auth },
+        { endpoint, p256dh: keys.p256dh, auth: keys.auth, user_id: auth.userId },
         { onConflict: "endpoint" }
       )
 
@@ -38,16 +40,20 @@ export async function POST(req: NextRequest) {
   }
 }
 
-// DELETE /api/push/subscribe — eliminar suscripción
+// DELETE /api/push/subscribe
 export async function DELETE(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { endpoint } = await req.json()
     if (!endpoint) return NextResponse.json({ error: "Falta endpoint" }, { status: 400 })
 
-    await supabaseAdmin
+    await auth.supabase
       .from("push_subscriptions")
       .delete()
       .eq("endpoint", endpoint)
+      .eq("user_id", auth.userId)
 
     return NextResponse.json({ ok: true })
   } catch {

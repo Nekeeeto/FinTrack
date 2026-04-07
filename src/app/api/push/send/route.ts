@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 import { sendPushNotification } from "@/lib/push"
-import { supabaseAdmin } from "@/lib/supabase/server"
 
-// POST /api/push/send — enviar notificación (test o resumen semanal)
+// POST /api/push/send
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const { type } = await req.json()
 
@@ -11,19 +14,20 @@ export async function POST(req: NextRequest) {
       const result = await sendPushNotification(
         "Biyuya - Test",
         "Las notificaciones push están funcionando correctamente.",
-        "/"
+        "/inicio",
+        auth.userId
       )
       return NextResponse.json({ ok: true, ...result })
     }
 
     if (type === "weekly_summary") {
-      // Calcular resumen de la última semana
       const now = new Date()
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
 
-      const { data: transactions } = await supabaseAdmin
+      const { data: transactions } = await auth.supabase
         .from("transactions")
         .select("amount, category:categories(type)")
+        .eq("user_id", auth.userId)
         .gte("date", weekAgo.toISOString().slice(0, 10))
         .lte("date", now.toISOString().slice(0, 10))
 
@@ -52,7 +56,8 @@ export async function POST(req: NextRequest) {
       const result = await sendPushNotification(
         "Biyuya - Resumen semanal",
         body,
-        "/analisis"
+        "/analisis",
+        auth.userId
       )
       return NextResponse.json({ ok: true, ...result })
     }

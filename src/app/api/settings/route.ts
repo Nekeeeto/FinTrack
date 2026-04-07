@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAdmin, isAuthError } from "@/lib/auth"
 import { getSettings, setSetting, type SettingKey } from "@/lib/settings"
 
 const ALLOWED_KEYS: SettingKey[] = [
@@ -9,12 +10,14 @@ const ALLOWED_KEYS: SettingKey[] = [
   "ANTHROPIC_MODEL",
 ]
 
-// GET /api/settings — devuelve las settings (valores enmascarados)
+// GET /api/settings — admin only
 export async function GET() {
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
+
   try {
     const settings = await getSettings(ALLOWED_KEYS)
 
-    // Enmascarar valores sensibles para mostrar en UI
     const masked: Record<string, { configured: boolean; preview: string }> = {}
     for (const key of ALLOWED_KEYS) {
       const val = settings[key] || ""
@@ -31,8 +34,11 @@ export async function GET() {
   }
 }
 
-// POST /api/settings — guarda una setting
+// POST /api/settings — admin only
 export async function POST(req: NextRequest) {
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
+
   try {
     const { key, value } = await req.json()
 

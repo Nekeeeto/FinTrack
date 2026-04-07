@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const { id } = await params
   const body = await req.json()
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await auth.supabase
     .from("categories")
     .update(body)
     .eq("id", id)
+    .eq("user_id", auth.userId)
     .select()
     .single()
 
@@ -18,13 +22,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const { id } = await params
 
-  // Verificar que no tenga transacciones asociadas
-  const { count } = await supabaseAdmin
+  const { count } = await auth.supabase
     .from("transactions")
     .select("id", { count: "exact", head: true })
     .eq("category_id", id)
+    .eq("user_id", auth.userId)
 
   if (count && count > 0) {
     return NextResponse.json(
@@ -33,7 +40,11 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     )
   }
 
-  const { error } = await supabaseAdmin.from("categories").delete().eq("id", id)
+  const { error } = await auth.supabase
+    .from("categories")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", auth.userId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 

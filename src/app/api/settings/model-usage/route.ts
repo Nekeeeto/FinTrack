@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAdmin, isAuthError } from "@/lib/auth"
 
-// GET /api/settings/model-usage — estadísticas de uso por modelo
+// GET /api/settings/model-usage — admin only, ve todo el uso
 export async function GET() {
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
+
   try {
     const { data, error } = await supabaseAdmin
       .from("model_usage")
@@ -10,7 +14,6 @@ export async function GET() {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    // Agregar por modelo
     const byModel: Record<
       string,
       { photos: number; input_tokens: number; output_tokens: number; cost_usd: number }

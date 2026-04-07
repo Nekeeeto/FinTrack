@@ -20,7 +20,7 @@ export default function LoginPage() {
   useEffect(() => {
     supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        router.replace("/")
+        router.replace("/inicio")
       } else {
         setChecking(false)
       }
@@ -31,6 +31,27 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError("")
+
+    // Verificar si el email está registrado (sistema de invitación)
+    try {
+      const checkRes = await fetch("/api/auth/check-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      })
+
+      const checkData = await checkRes.json()
+
+      if (!checkData.exists) {
+        setLoading(false)
+        setError("Solo usuarios invitados. Contacta al administrador.")
+        return
+      }
+    } catch {
+      setLoading(false)
+      setError("Error al verificar el email. Intentá de nuevo.")
+      return
+    }
 
     const { error } = await supabase.auth.signInWithOtp({
       email,

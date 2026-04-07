@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 
 const rowSchema = z.object({
   account_id: z.string().uuid(),
@@ -15,8 +15,11 @@ const importSchema = z.object({
   rows: z.array(rowSchema).min(1).max(500),
 })
 
-// POST /api/import — importación masiva de transacciones
+// POST /api/import
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
     const body = await req.json()
     const parsed = importSchema.safeParse(body)
@@ -27,10 +30,11 @@ export async function POST(req: NextRequest) {
 
     const transactions = parsed.data.rows.map((row) => ({
       ...row,
+      user_id: auth.userId,
       source: "import" as const,
     }))
 
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await auth.supabase
       .from("transactions")
       .insert(transactions)
       .select("id")
@@ -44,9 +48,8 @@ export async function POST(req: NextRequest) {
     for (const accountId of accountIds) {
       const accountTxs = transactions.filter((t) => t.account_id === accountId)
 
-      // Obtener tipos de categoría para calcular balance
       const categoryIds = [...new Set(accountTxs.map((t) => t.category_id))]
-      const { data: categories } = await supabaseAdmin
+      const { data: categories } = await auth.supabase
         .from("categories")
         .select("id, type")
         .in("id", categoryIds)
@@ -59,14 +62,14 @@ export async function POST(req: NextRequest) {
         balanceChange += type === "income" ? tx.amount : -tx.amount
       }
 
-      const { data: account } = await supabaseAdmin
+      const { data: account } = await auth.supabase
         .from("accounts")
         .select("balance")
         .eq("id", accountId)
         .single()
 
       if (account) {
-        await supabaseAdmin
+        await auth.supabase
           .from("accounts")
           .update({ balance: Number(account.balance) + balanceChange })
           .eq("id", accountId)

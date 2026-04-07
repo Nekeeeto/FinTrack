@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server"
 import webpush from "web-push"
 import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 
 // GET /api/push/vapid — obtener public key (o generar par si no existe)
 export async function GET() {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   try {
+    // VAPID keys son globales — usar supabaseAdmin
     const { data: existing } = await supabaseAdmin
       .from("settings")
       .select("value")
@@ -15,7 +20,6 @@ export async function GET() {
       return NextResponse.json({ publicKey: existing.value })
     }
 
-    // Generar nuevas VAPID keys
     const vapidKeys = webpush.generateVAPIDKeys()
 
     await supabaseAdmin.from("settings").upsert([

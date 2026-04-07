@@ -1,8 +1,12 @@
 import { NextResponse } from "next/server"
+import { requireAdmin, isAuthError } from "@/lib/auth"
 import { getSetting } from "@/lib/settings"
 import Anthropic from "@anthropic-ai/sdk"
 
 export async function POST() {
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
+
   try {
     const apiKey = await getSetting("ANTHROPIC_API_KEY")
 

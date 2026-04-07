@@ -1,38 +1,40 @@
 import { NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 import { startOfMonth, endOfMonth, subMonths, format } from "date-fns"
 
 // GET /api/analysis/anomalies
-// Detecta gastos inusuales comparando con el promedio de los últimos 3 meses
 export async function GET() {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const now = new Date()
   const from = format(startOfMonth(now), "yyyy-MM-dd")
   const to = format(endOfMonth(now), "yyyy-MM-dd")
 
-  // Últimos 3 meses para calcular promedios
   const histFrom = format(startOfMonth(subMonths(now, 3)), "yyyy-MM-dd")
   const histTo = format(endOfMonth(subMonths(now, 1)), "yyyy-MM-dd")
 
   const [currentRes, histRes, categoriesRes] = await Promise.all([
-    supabaseAdmin
+    auth.supabase
       .from("transactions")
       .select("*, category:categories(id, name, type, parent_id, color)")
+      .eq("user_id", auth.userId)
       .gte("date", from)
       .lte("date", to)
       .order("amount", { ascending: false }),
-    supabaseAdmin
+    auth.supabase
       .from("transactions")
       .select("category_id, amount, category:categories(name, type, parent_id)")
+      .eq("user_id", auth.userId)
       .gte("date", histFrom)
       .lte("date", histTo),
-    supabaseAdmin.from("categories").select("id, name, parent_id, type"),
+    auth.supabase.from("categories").select("id, name, parent_id, type").eq("user_id", auth.userId),
   ])
 
   const currentTx = (currentRes.data || []) as Array<Record<string, unknown>>
   const histTx = (histRes.data || []) as Array<Record<string, unknown>>
   const categories = categoriesRes.data || []
 
-  // Helper para acceder al join de categoría (Supabase puede devolver objeto o array)
   function getCat(tx: Record<string, unknown>): { name: string; type: string; parent_id: string | null; color?: string; id?: string } | null {
     const cat = tx.category
     if (!cat) return null
@@ -40,7 +42,6 @@ export async function GET() {
     return cat as { name: string; type: string; parent_id: string | null; color?: string; id?: string }
   }
 
-  // Promedio mensual por categoría padre (últimos 3 meses)
   const histByParent: Record<string, number[]> = {}
   for (const tx of histTx) {
     const cat = getCat(tx)
@@ -52,14 +53,12 @@ export async function GET() {
     histByParent[key].push(Number(tx.amount))
   }
 
-  // Calcular promedio y desviación por categoría
   const avgByCategory: Record<string, { avg: number; total: number }> = {}
   for (const [cat, amounts] of Object.entries(histByParent)) {
     const total = amounts.reduce((s, a) => s + a, 0)
     avgByCategory[cat] = { avg: total / 3, total }
   }
 
-  // Gastos del mes actual por categoría padre
   const currentByParent: Record<string, { total: number; color: string }> = {}
   for (const tx of currentTx) {
     const cat = getCat(tx)
@@ -73,7 +72,6 @@ export async function GET() {
     currentByParent[key].total += Number(tx.amount)
   }
 
-  // Detectar anomalías: gasto actual > 1.5x promedio
   const anomalies = []
   for (const [cat, current] of Object.entries(currentByParent)) {
     const hist = avgByCategory[cat]
@@ -93,7 +91,6 @@ export async function GET() {
     }
   }
 
-  // Transacciones individuales inusualmente grandes (> 2x el promedio de la categoría)
   const largeTransactions = []
   for (const tx of currentTx) {
     const cat = getCat(tx)
@@ -104,7 +101,6 @@ export async function GET() {
     const hist = avgByCategory[key]
     if (!hist) continue
 
-    // Promedio por transacción
     const histAmounts = histByParent[key] || []
     const avgPerTx = histAmounts.length > 0
       ? histAmounts.reduce((s, a) => s + a, 0) / histAmounts.length

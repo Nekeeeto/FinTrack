@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server"
+import { requireAdmin, isAuthError } from "@/lib/auth"
 import { getSetting } from "@/lib/settings"
 
 export async function POST() {
+  const auth = await requireAdmin()
+  if (isAuthError(auth)) return auth
+
   try {
     const token = await getSetting("TELEGRAM_BOT_TOKEN")
     const chatId = await getSetting("TELEGRAM_CHAT_ID")
@@ -20,13 +24,12 @@ export async function POST() {
       )
     }
 
-    // Enviar mensaje de prueba
     const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         chat_id: chatId,
-        text: "✅ Bot test — Conexión exitosa con Biyuya!",
+        text: "Bot test - Conexión exitosa con Biyuya!",
       }),
     })
 

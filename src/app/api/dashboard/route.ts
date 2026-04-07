@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase/server"
 import { startOfMonth, endOfMonth, subMonths, format, eachDayOfInterval, parseISO } from "date-fns"
 import { es } from "date-fns/locale"
@@ -6,6 +7,9 @@ import { toUYU } from "@/lib/currency"
 import type { ExchangeRate } from "@/types/database"
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const searchParams = req.nextUrl.searchParams
   const period = searchParams.get("period") || "this_month"
 
@@ -32,26 +36,29 @@ export async function GET(req: NextRequest) {
   const from = format(dateFrom, "yyyy-MM-dd")
   const to = format(dateTo, "yyyy-MM-dd")
 
-  // Flujo mensual: últimos 6 meses
   const monthlyFlowMonths = 6
   const monthlyFlowFrom = format(startOfMonth(subMonths(new Date(), monthlyFlowMonths - 1)), "yyyy-MM-dd")
 
+  // Exchange rates son globales — usar supabaseAdmin
   const [accountsRes, transactionsRes, monthlyFlowRes, budgetsRes, ratesRes] = await Promise.all([
-    supabaseAdmin.from("accounts").select("*").order("created_at"),
-    supabaseAdmin
+    auth.supabase.from("accounts").select("*").eq("user_id", auth.userId).order("created_at"),
+    auth.supabase
       .from("transactions")
       .select("*, account:accounts(*), category:categories(*)")
+      .eq("user_id", auth.userId)
       .gte("date", from)
       .lte("date", to)
       .order("date", { ascending: false }),
-    supabaseAdmin
+    auth.supabase
       .from("transactions")
       .select("amount, currency, date, category:categories(type)")
+      .eq("user_id", auth.userId)
       .gte("date", monthlyFlowFrom)
       .order("date"),
-    supabaseAdmin
+    auth.supabase
       .from("budget_limits")
       .select("*, category:categories(id, name, color, parent_id)")
+      .eq("user_id", auth.userId)
       .order("created_at"),
     supabaseAdmin
       .from("exchange_rates")
@@ -63,7 +70,6 @@ export async function GET(req: NextRequest) {
   const accounts = accountsRes.data || []
   const transactions = transactionsRes.data || []
 
-  // Obtener la cotización más reciente de cada par
   const allRates = ratesRes.data || []
   const latestRates: ExchangeRate[] = []
   const seen = new Set<string>()
@@ -75,7 +81,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Cash flow (convertido a UYU para totales consolidados)
   let income = 0
   let expenses = 0
   const expenseByCategory: Record<string, { name: string; value: number; color: string }> = {}
@@ -94,7 +99,6 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Balance trend (cumulative by day)
   const endDate = dateTo > new Date() ? new Date() : dateTo
   const days = eachDayOfInterval({ start: dateFrom, end: endDate })
   const totalBalance = accounts.reduce((sum, a) => sum + toUYU(Number(a.balance), a.currency, latestRates), 0)
@@ -112,7 +116,6 @@ export async function GET(req: NextRequest) {
     return { date: format(day, "dd/MM"), dayNet: txByDate[d] || 0 }
   })
 
-  // Calculate running balance forward from start
   let startBalance = totalBalance
   for (const entry of balanceTrend) {
     startBalance -= entry.dayNet
@@ -123,7 +126,6 @@ export async function GET(req: NextRequest) {
     return { date: entry.date, balance: cumBalance }
   })
 
-  // Flujo mensual agrupado por mes
   const monthlyFlowTx = monthlyFlowRes.data || []
   const monthlyFlowMap: Record<string, { income: number; expenses: number }> = {}
 
@@ -134,7 +136,7 @@ export async function GET(req: NextRequest) {
   }
 
   for (const tx of monthlyFlowTx) {
-    const key = tx.date.substring(0, 7) // yyyy-MM
+    const key = tx.date.substring(0, 7)
     if (monthlyFlowMap[key]) {
       const cat = Array.isArray(tx.category) ? tx.category[0] : tx.category
       const amtUYU = toUYU(Number(tx.amount), tx.currency, latestRates)
@@ -157,9 +159,8 @@ export async function GET(req: NextRequest) {
     }
   })
 
-  // Presupuestos con gasto del período actual
   const budgets = budgetsRes.data || []
-  const allCategories = await supabaseAdmin.from("categories").select("id, parent_id")
+  const allCategories = await auth.supabase.from("categories").select("id, parent_id").eq("user_id", auth.userId)
   const cats = allCategories.data || []
 
   const budgetProgress = budgets.map((b) => {

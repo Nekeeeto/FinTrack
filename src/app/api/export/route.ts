@@ -1,14 +1,18 @@
 import { NextRequest, NextResponse } from "next/server"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 import { format } from "date-fns"
 
 // GET /api/export?from=&to=&account_id=&category_id=&format=csv
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const params = req.nextUrl.searchParams
 
-  let query = supabaseAdmin
+  let query = auth.supabase
     .from("transactions")
     .select("*, account:accounts(name, currency), category:categories(name, type)")
+    .eq("user_id", auth.userId)
     .order("date", { ascending: false })
 
   const accountId = params.get("account_id")
@@ -27,7 +31,6 @@ export async function GET(req: NextRequest) {
 
   const transactions = data || []
 
-  // Generar CSV
   const headers = ["Fecha", "Cuenta", "Categoría", "Tipo", "Monto", "Moneda", "Descripción", "Fuente"]
   const rows = transactions.map((tx) => [
     tx.date,
@@ -45,7 +48,7 @@ export async function GET(req: NextRequest) {
     ...rows.map((row) => row.join(",")),
   ].join("\n")
 
-  const filename = `fintrack-${format(new Date(), "yyyy-MM-dd")}.csv`
+  const filename = `biyuya-${format(new Date(), "yyyy-MM-dd")}.csv`
 
   return new NextResponse(csv, {
     headers: {

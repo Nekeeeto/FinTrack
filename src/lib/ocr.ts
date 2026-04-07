@@ -26,7 +26,7 @@ async function getModel(): Promise<string> {
   return model || DEFAULT_MODEL
 }
 
-async function trackUsage(model: string, response: Anthropic.Message) {
+async function trackUsage(model: string, response: Anthropic.Message, userId?: string) {
   const inputTokens = response.usage.input_tokens
   const outputTokens = response.usage.output_tokens
   const pricing = MODEL_PRICING[model] ?? MODEL_PRICING[DEFAULT_MODEL]
@@ -40,6 +40,7 @@ async function trackUsage(model: string, response: Anthropic.Message) {
     input_tokens: inputTokens,
     output_tokens: outputTokens,
     cost_usd: costUsd,
+    user_id: userId ?? null,
   })
 }
 
@@ -49,7 +50,8 @@ async function trackUsage(model: string, response: Anthropic.Message) {
  */
 export async function processReceiptImage(
   imageBuffer: Buffer,
-  mimeType: string
+  mimeType: string,
+  userId?: string
 ): Promise<OCRResult> {
   const apiKey = await getSetting("ANTHROPIC_API_KEY")
   const model = await getModel()
@@ -100,7 +102,7 @@ Reglas:
   })
 
   // Trackear uso del modelo
-  await trackUsage(model, response).catch((err) =>
+  await trackUsage(model, response, userId).catch((err) =>
     console.error("Error tracking model usage:", err)
   )
 

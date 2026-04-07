@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
-import { supabaseAdmin } from "@/lib/supabase/server"
+import { requireAuth, isAuthError } from "@/lib/auth"
 
 const updateSchema = z.object({
   account_id: z.string().uuid().optional(),
@@ -16,12 +16,16 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const { id } = await params
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await auth.supabase
     .from("transactions")
     .select("*, account:accounts(*), category:categories(*)")
     .eq("id", id)
+    .eq("user_id", auth.userId)
     .single()
 
   if (error) return NextResponse.json({ error: "No encontrada" }, { status: 404 })
@@ -34,6 +38,9 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const { id } = await params
   const body = await req.json()
   const parsed = updateSchema.safeParse(body)
@@ -42,30 +49,30 @@ export async function PATCH(
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
   }
 
-  // Get old transaction to adjust balance
-  const { data: oldTx } = await supabaseAdmin
+  const { data: oldTx } = await auth.supabase
     .from("transactions")
     .select("*, category:categories(type)")
     .eq("id", id)
+    .eq("user_id", auth.userId)
     .single()
 
   if (!oldTx) return NextResponse.json({ error: "No encontrada" }, { status: 404 })
 
-  const { data, error } = await supabaseAdmin
+  const { data, error } = await auth.supabase
     .from("transactions")
     .update(parsed.data)
     .eq("id", id)
+    .eq("user_id", auth.userId)
     .select("*, account:accounts(*), category:categories(*)")
     .single()
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Recalculate balance if amount or category changed
   if (parsed.data.amount || parsed.data.category_id) {
     const oldSign = oldTx.category?.type === "income" ? 1 : -1
     const oldEffect = oldSign * Number(oldTx.amount)
 
-    const { data: newCat } = await supabaseAdmin
+    const { data: newCat } = await auth.supabase
       .from("categories")
       .select("type")
       .eq("id", data.category_id)
@@ -75,14 +82,14 @@ export async function PATCH(
 
     const diff = newEffect - oldEffect
 
-    const { data: account } = await supabaseAdmin
+    const { data: account } = await auth.supabase
       .from("accounts")
       .select("balance")
       .eq("id", data.account_id)
       .single()
 
     if (account) {
-      await supabaseAdmin
+      await auth.supabase
         .from("accounts")
         .update({ balance: Number(account.balance) + diff })
         .eq("id", data.account_id)
@@ -97,31 +104,37 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
   const { id } = await params
 
-  // Get transaction to reverse balance
-  const { data: tx } = await supabaseAdmin
+  const { data: tx } = await auth.supabase
     .from("transactions")
     .select("*, category:categories(type)")
     .eq("id", id)
+    .eq("user_id", auth.userId)
     .single()
 
   if (!tx) return NextResponse.json({ error: "No encontrada" }, { status: 404 })
 
-  const { error } = await supabaseAdmin.from("transactions").delete().eq("id", id)
+  const { error } = await auth.supabase
+    .from("transactions")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", auth.userId)
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-  // Reverse balance effect
   const balanceReverse = tx.category?.type === "income" ? -Number(tx.amount) : Number(tx.amount)
-  const { data: account } = await supabaseAdmin
+  const { data: account } = await auth.supabase
     .from("accounts")
     .select("balance")
     .eq("id", tx.account_id)
     .single()
 
   if (account) {
-    await supabaseAdmin
+    await auth.supabase
       .from("accounts")
       .update({ balance: Number(account.balance) + balanceReverse })
       .eq("id", tx.account_id)
