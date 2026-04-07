@@ -5,6 +5,7 @@ export type SettingKey =
   | "TELEGRAM_WEBHOOK_SECRET"
   | "ANTHROPIC_API_KEY"
   | "TELEGRAM_CHAT_ID"
+  | "ANTHROPIC_MODEL"
 
 /**
  * Obtiene un setting de la DB. Si no existe, usa el env var como fallback.

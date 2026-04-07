@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Settings, Send, Brain, Eye, EyeOff, Loader2, CheckCircle2, XCircle } from "lucide-react"
+import { Settings, Send, Brain, Eye, EyeOff, Loader2, CheckCircle2, XCircle, Cpu } from "lucide-react"
 
 interface SettingState {
   configured: boolean
@@ -15,6 +15,13 @@ interface TestResult {
   message?: string
   error?: string
   model?: string
+}
+
+interface ModelUsageData {
+  photos: number
+  input_tokens: number
+  output_tokens: number
+  cost_usd: number
 }
 
 const SETTING_LABELS: Record<string, { label: string; placeholder: string; description: string }> = {
@@ -40,6 +47,12 @@ const SETTING_LABELS: Record<string, { label: string; placeholder: string; descr
   },
 }
 
+const MODELS = [
+  { id: "claude-opus-4-20250514", label: "Opus 4", tier: "Máxima calidad", priceIn: "$15", priceOut: "$75" },
+  { id: "claude-sonnet-4-20250514", label: "Sonnet 4", tier: "Balance calidad/costo", priceIn: "$3", priceOut: "$15" },
+  { id: "claude-haiku-4-5-20251001", label: "Haiku 4.5", tier: "Más económico", priceIn: "$0.80", priceOut: "$4" },
+]
+
 export default function ConfiguracionPage() {
   const [settings, setSettings] = useState<SettingsMap>({})
   const [loading, setLoading] = useState(true)
@@ -51,9 +64,13 @@ export default function ConfiguracionPage() {
   const [testingAnthropic, setTestingAnthropic] = useState(false)
   const [telegramResult, setTelegramResult] = useState<TestResult | null>(null)
   const [anthropicResult, setAnthropicResult] = useState<TestResult | null>(null)
+  const [selectedModel, setSelectedModel] = useState("claude-sonnet-4-20250514")
+  const [savingModel, setSavingModel] = useState(false)
+  const [modelUsage, setModelUsage] = useState<Record<string, ModelUsageData>>({})
 
   useEffect(() => {
     fetchSettings()
+    fetchModelUsage()
   }, [])
 
   async function fetchSettings() {
@@ -61,10 +78,28 @@ export default function ConfiguracionPage() {
       const res = await fetch("/api/settings")
       const data = await res.json()
       setSettings(data)
+      // Si hay modelo configurado, seleccionarlo
+      if (data.ANTHROPIC_MODEL?.preview) {
+        // El preview viene enmascarado, necesitamos el valor real del modelo
+        // Buscamos un match parcial en los modelos disponibles
+        const modelPreview = data.ANTHROPIC_MODEL.preview
+        const match = MODELS.find((m) => modelPreview.includes(m.id.slice(-4)))
+        if (match) setSelectedModel(match.id)
+      }
     } catch {
       // silenciar
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function fetchModelUsage() {
+    try {
+      const res = await fetch("/api/settings/model-usage")
+      const data = await res.json()
+      if (!data.error) setModelUsage(data)
+    } catch {
+      // silenciar
     }
   }
 
@@ -92,6 +127,22 @@ export default function ConfiguracionPage() {
       setSaveResult((s) => ({ ...s, [key]: "error" }))
     } finally {
       setSaving((s) => ({ ...s, [key]: false }))
+    }
+  }
+
+  async function saveModel(modelId: string) {
+    setSavingModel(true)
+    setSelectedModel(modelId)
+    try {
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key: "ANTHROPIC_MODEL", value: modelId }),
+      })
+    } catch {
+      // silenciar
+    } finally {
+      setSavingModel(false)
     }
   }
 
@@ -123,6 +174,8 @@ export default function ConfiguracionPage() {
     }
   }
 
+  const totalCost = Object.values(modelUsage).reduce((sum, m) => sum + m.cost_usd, 0)
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -139,7 +192,7 @@ export default function ConfiguracionPage() {
           Configuración
         </h1>
         <p className="text-muted-foreground mt-1">
-          Configurá las API keys para el bot de Telegram y el OCR con Claude.
+          API keys, modelo de IA y tracking de costos.
         </p>
       </div>
 
@@ -173,7 +226,6 @@ export default function ConfiguracionPage() {
           )
         )}
 
-        {/* Botón test */}
         <div className="pt-2 border-t border-border">
           <button
             onClick={testTelegram}
@@ -212,7 +264,6 @@ export default function ConfiguracionPage() {
           onSave={() => saveSetting("ANTHROPIC_API_KEY")}
         />
 
-        {/* Botón test */}
         <div className="pt-2 border-t border-border">
           <button
             onClick={testAnthropic}
@@ -226,35 +277,87 @@ export default function ConfiguracionPage() {
         </div>
       </section>
 
+      {/* --- Selector de modelo --- */}
+      <section className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-purple-500/10">
+            <Cpu className="h-5 w-5 text-purple-500" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-lg">Modelo de IA</h2>
+            <p className="text-sm text-muted-foreground">Elegí qué modelo usa el OCR de tickets</p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {MODELS.map((model) => {
+            const isSelected = selectedModel === model.id
+            const usage = modelUsage[model.id]
+            return (
+              <button
+                key={model.id}
+                onClick={() => saveModel(model.id)}
+                disabled={savingModel}
+                className={`w-full text-left p-4 rounded-lg border transition-colors ${
+                  isSelected
+                    ? "border-purple-500 bg-purple-500/5"
+                    : "border-border hover:border-purple-500/50"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{model.label}</span>
+                      {isSelected && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-500 font-medium">
+                          ACTIVO
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">{model.tier}</p>
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground">
+                    <p>In: {model.priceIn}/1M tok</p>
+                    <p>Out: {model.priceOut}/1M tok</p>
+                  </div>
+                </div>
+                {usage && (
+                  <div className="mt-2 pt-2 border-t border-border flex gap-4 text-xs text-muted-foreground">
+                    <span>{usage.photos} foto{usage.photos !== 1 ? "s" : ""}</span>
+                    <span>{(usage.input_tokens + usage.output_tokens).toLocaleString()} tokens</span>
+                    <span className="font-medium text-foreground">
+                      US$ {usage.cost_usd.toFixed(4)}
+                    </span>
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        {totalCost > 0 && (
+          <div className="pt-3 border-t border-border flex items-center justify-between">
+            <span className="text-sm font-medium">Costo total acumulado</span>
+            <span className="text-sm font-bold">US$ {totalCost.toFixed(4)}</span>
+          </div>
+        )}
+      </section>
+
       {/* --- Instrucciones --- */}
       <section className="rounded-xl border border-border bg-card p-6 space-y-3">
         <h2 className="font-semibold text-lg">Pasos para configurar</h2>
         <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-          <li>
-            Abrí Telegram, buscá <strong>@BotFather</strong> y creá un bot con <code>/newbot</code>. Copiá el token.
-          </li>
-          <li>
-            Pegá el token arriba en <strong>Telegram Bot Token</strong> y guardá.
-          </li>
-          <li>
-            Mandá <code>/start</code> a tu bot nuevo. Usá <strong>@userinfobot</strong> en Telegram para obtener tu Chat ID.
-          </li>
-          <li>
-            Pegá tu Chat ID arriba y guardá.
-          </li>
-          <li>
-            Hacé click en <strong>&quot;Bot test&quot;</strong> para verificar que funciona.
-          </li>
-          <li>
-            Andá a{" "}
+          <li>Abrí Telegram, buscá <strong>@BotFather</strong> y creá un bot con <code>/newbot</code>. Copiá el token.</li>
+          <li>Pegá el token arriba en <strong>Telegram Bot Token</strong> y guardá.</li>
+          <li>Mandá <code>/start</code> a tu bot. Usá <strong>@userinfobot</strong> en Telegram para obtener tu Chat ID.</li>
+          <li>Pegá tu Chat ID arriba y guardá.</li>
+          <li>Hacé click en <strong>&quot;Bot test&quot;</strong> para verificar.</li>
+          <li>Andá a{" "}
             <a href="https://console.anthropic.com/" target="_blank" rel="noopener" className="text-amber-500 underline">
               console.anthropic.com
-            </a>{" "}
-            y copiá tu API key.
-          </li>
-          <li>
-            Pegala arriba y hacé click en <strong>&quot;Test&quot;</strong> para verificar.
-          </li>
+            </a>{" "}y copiá tu API key.</li>
+          <li>Pegala arriba y hacé click en <strong>&quot;Test&quot;</strong> para verificar.</li>
+          <li>Elegí el modelo de IA y probá con distintos tickets para comparar calidad y costo.</li>
         </ol>
       </section>
     </div>
@@ -294,9 +397,7 @@ function SettingField({
         <label className="text-sm font-medium">{config.label}</label>
         <span
           className={`text-xs px-2 py-0.5 rounded-full ${
-            configured
-              ? "bg-emerald-500/10 text-emerald-500"
-              : "bg-red-500/10 text-red-500"
+            configured ? "bg-emerald-500/10 text-emerald-500" : "bg-red-500/10 text-red-500"
           }`}
         >
           {configured ? "Configurado" : "No configurado"}

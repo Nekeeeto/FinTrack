@@ -6,6 +6,7 @@ const ALLOWED_KEYS: SettingKey[] = [
   "TELEGRAM_WEBHOOK_SECRET",
   "ANTHROPIC_API_KEY",
   "TELEGRAM_CHAT_ID",
+  "ANTHROPIC_MODEL",
 ]
 
 // GET /api/settings — devuelve las settings (valores enmascarados)

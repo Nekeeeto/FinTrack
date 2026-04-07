@@ -16,10 +16,14 @@ export interface Account {
 
 export interface Category {
   id: string
+  parent_id: string | null
   name: string
   color: string
   icon: string
   type: CategoryType
+  sort_order: number
+  // Joined
+  subcategories?: Category[]
 }
 
 export interface Transaction {

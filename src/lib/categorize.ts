@@ -2,71 +2,66 @@ import { supabaseAdmin } from "@/lib/supabase/server"
 import type { Category } from "@/types/database"
 
 /**
- * Reglas de categorización basadas en nombres de comercios uruguayos.
- * Mapea keywords del comercio → nombre de categoría en la DB.
+ * Reglas de categorización para el mercado uruguayo.
+ * Mapea keywords del comercio → nombre de subcategoría (o categoría padre).
  */
-const RULES: { keywords: string[]; category: string }[] = [
-  {
-    keywords: [
-      "tata", "disco", "devoto", "tienda inglesa", "macro", "el dorado",
-      "kinko", "multi ahorro", "fresh market", "la cabaña", "geant",
-      "mcdonalds", "mcdonald", "burger king", "rappi", "pedidosya",
-      "mostrador", "panadería", "panaderia", "carnicería", "carniceria",
-      "almacén", "almacen", "supermercado", "autoservice", "feria",
-      "restaurante", "bar ", "café", "cafe ", "pizza", "sushi",
-      "heladería", "heladeria", "starbucks", "subway",
-    ],
-    category: "Comida y bebidas",
-  },
-  {
-    keywords: [
-      "ute", "ose", "antel", "alquiler", "expensas", "inmobiliaria",
-      "portería", "porteria", "limpieza", "gas", "garrafa",
-    ],
-    category: "Vivienda",
-  },
-  {
-    keywords: [
-      "ancap", "petrobras", "axion", "stm", "uber", "cabify",
-      "estacionamiento", "parking", "peaje", "nafta", "combustible",
-      "taller", "gomería", "gomeria",
-    ],
-    category: "Transporte",
-  },
-  {
-    keywords: [
-      "zara", "h&m", "renner", "amazon", "mercadolibre", "mercado libre",
-      "tienda", "shopping", "ropa", "calzado",
-    ],
-    category: "Compras",
-  },
-  {
-    keywords: [
-      "farmacia", "farmashop", "san roque", "mutualista", "médica", "medica",
-      "hospital", "clínica", "clinica", "doctor", "dentista", "óptica", "optica",
-    ],
-    category: "Salud",
-  },
-  {
-    keywords: [
-      "cine", "netflix", "spotify", "steam", "playstation", "nintendo",
-      "gimnasio", "gym", "club", "teatro", "concierto", "evento",
-    ],
-    category: "Vida y entretenimiento",
-  },
-  {
-    keywords: ["pirotecnia", "pyro", "cotillón", "cotillon", "casa miguel"],
-    category: "Negocios",
-  },
-  {
-    keywords: ["growth partner", "growth"],
-    category: "GROWTH PARTNER",
-  },
+const RULES: { keywords: string[]; subcategory: string; parent: string }[] = [
+  // Comida y bebidas
+  { keywords: ["tata", "disco", "devoto", "tienda inglesa", "macro", "el dorado", "kinko", "multi ahorro", "fresh market", "geant", "supermercado", "autoservice"], subcategory: "Supermercado", parent: "Comida y bebidas" },
+  { keywords: ["mcdonalds", "mcdonald", "burger king", "subway", "restaurante", "sushi", "pizza", "parrilla", "asado"], subcategory: "Restaurante", parent: "Comida y bebidas" },
+  { keywords: ["rappi", "pedidosya", "delivery"], subcategory: "Delivery", parent: "Comida y bebidas" },
+  { keywords: ["starbucks", "café", "cafe ", "bar ", "cervecería", "cerveceria", "pub"], subcategory: "Café y bar", parent: "Comida y bebidas" },
+  { keywords: ["panadería", "panaderia", "almacén", "almacen"], subcategory: "Panadería y almacén", parent: "Comida y bebidas" },
+  { keywords: ["feria", "verdulería", "verduleria", "carnicería", "carniceria"], subcategory: "Feria y verdulería", parent: "Comida y bebidas" },
+
+  // Compras
+  { keywords: ["zara", "h&m", "renner", "ropa", "calzado", "zapatería", "zapateria"], subcategory: "Ropa y calzado", parent: "Compras" },
+  { keywords: ["amazon", "mercadolibre", "mercado libre", "aliexpress", "tiendamia"], subcategory: "Compras online", parent: "Compras" },
+  { keywords: ["shopping", "tienda", "regalo"], subcategory: "Regalos", parent: "Compras" },
+
+  // Vivienda
+  { keywords: ["alquiler", "inmobiliaria"], subcategory: "Alquiler", parent: "Vivienda" },
+  { keywords: ["ute", "electricidad"], subcategory: "UTE", parent: "Vivienda" },
+  { keywords: ["ose", "agua"], subcategory: "OSE", parent: "Vivienda" },
+  { keywords: ["gas", "garrafa"], subcategory: "Gas", parent: "Vivienda" },
+  { keywords: ["expensas", "portería", "porteria"], subcategory: "Expensas", parent: "Vivienda" },
+  { keywords: ["limpieza"], subcategory: "Limpieza", parent: "Vivienda" },
+
+  // Transporte
+  { keywords: ["stm", "bondi", "omnibus", "cutcsa", "copsa"], subcategory: "STM / Bondi", parent: "Transporte" },
+  { keywords: ["uber", "cabify"], subcategory: "Uber / Cabify", parent: "Transporte" },
+  { keywords: ["taxi"], subcategory: "Taxi", parent: "Transporte" },
+
+  // Vehículo
+  { keywords: ["ancap", "petrobras", "axion", "nafta", "combustible"], subcategory: "Combustible", parent: "Vehículo" },
+  { keywords: ["estacionamiento", "parking"], subcategory: "Estacionamiento", parent: "Vehículo" },
+  { keywords: ["peaje"], subcategory: "Peaje", parent: "Vehículo" },
+  { keywords: ["taller", "gomería", "gomeria", "service"], subcategory: "Taller y service", parent: "Vehículo" },
+
+  // Vida y entretenimiento
+  { keywords: ["farmacia", "farmashop", "san roque"], subcategory: "Salud y farmacia", parent: "Vida y entretenimiento" },
+  { keywords: ["mutualista", "médica", "medica", "hospital", "clínica", "clinica", "doctor", "dentista", "óptica", "optica"], subcategory: "Salud y farmacia", parent: "Vida y entretenimiento" },
+  { keywords: ["gimnasio", "gym", "club deportivo"], subcategory: "Gimnasio y deporte", parent: "Vida y entretenimiento" },
+  { keywords: ["netflix", "spotify", "steam", "playstation", "nintendo", "disney", "hbo", "suscripción", "suscripcion"], subcategory: "Suscripciones", parent: "Vida y entretenimiento" },
+  { keywords: ["cine", "teatro", "concierto", "evento"], subcategory: "Cine y teatro", parent: "Vida y entretenimiento" },
+  { keywords: ["peluquería", "peluqueria", "barbería", "barberia"], subcategory: "Cuidado personal", parent: "Vida y entretenimiento" },
+
+  // Comunicación, PC
+  { keywords: ["antel", "internet", "fibra"], subcategory: "Antel / Internet", parent: "Comunicación, PC" },
+  { keywords: ["claro", "movistar", "celular"], subcategory: "Celular", parent: "Comunicación, PC" },
+
+  // Gastos financieros
+  { keywords: ["tarjeta", "visa", "mastercard", "oca", "creditel"], subcategory: "Tarjeta de crédito", parent: "Gastos financieros" },
+  { keywords: ["comisión", "comision", "banco", "brou", "itaú", "itau", "santander", "scotiabank", "hsbc"], subcategory: "Comisiones bancarias", parent: "Gastos financieros" },
+
+  // Negocios custom
+  { keywords: ["pirotecnia", "pyro"], parent: "GROWTH PARTNER", subcategory: "" },
+  { keywords: ["cotillón", "cotillon", "casa miguel"], parent: "GROWTH PARTNER", subcategory: "" },
+  { keywords: ["growth partner", "growth"], parent: "GROWTH PARTNER", subcategory: "" },
 ]
 
 /**
- * Infiere la categoría de un gasto basándose en el nombre del comercio
- * y los ítems del ticket. Devuelve la categoría de la DB o null.
+ * Infiere la categoría (subcategoría preferente) basándose en comercio e ítems.
  */
 export async function inferCategory(
   comercio: string | null,
@@ -80,24 +75,37 @@ export async function inferCategory(
   if (!searchText) return null
 
   // Buscar match en las reglas
-  let matchedCategoryName: string | null = null
+  let matchedRule: (typeof RULES)[number] | null = null
   for (const rule of RULES) {
     if (rule.keywords.some((kw) => searchText.includes(kw))) {
-      matchedCategoryName = rule.category
+      matchedRule = rule
       break
     }
   }
 
-  if (!matchedCategoryName) return null
+  if (!matchedRule) return null
 
-  // Obtener la categoría de la DB
-  const { data } = await supabaseAdmin
+  // Intentar encontrar la subcategoría primero
+  if (matchedRule.subcategory) {
+    const { data: sub } = await supabaseAdmin
+      .from("categories")
+      .select("*")
+      .eq("name", matchedRule.subcategory)
+      .not("parent_id", "is", null)
+      .single()
+
+    if (sub) return sub
+  }
+
+  // Fallback a categoría padre
+  const { data: parent } = await supabaseAdmin
     .from("categories")
     .select("*")
-    .eq("name", matchedCategoryName)
+    .eq("name", matchedRule.parent)
+    .is("parent_id", null)
     .single()
 
-  return data ?? null
+  return parent ?? null
 }
 
 /** Obtiene la cuenta por defecto (GENERAL) */
@@ -110,17 +118,18 @@ export async function getDefaultAccount() {
   return data
 }
 
-/** Obtiene todas las categorías para mostrar en botones */
+/** Obtiene todas las categorías (solo subcategorías para selección en bot) */
 export async function getAllCategories(): Promise<Category[]> {
   const { data } = await supabaseAdmin
     .from("categories")
     .select("*")
     .eq("type", "expense")
-    .order("name")
+    .is("parent_id", null)
+    .order("sort_order")
   return data ?? []
 }
 
-/** Obtiene todas las cuentas para mostrar en botones */
+/** Obtiene todas las cuentas */
 export async function getAllAccounts() {
   const { data } = await supabaseAdmin
     .from("accounts")
