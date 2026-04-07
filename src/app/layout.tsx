@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
+import { ThemeProvider } from "@/components/theme-provider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinTrack - Gestor Financiero Personal",
+  title: "Biyuya - Gestor Financiero Personal",
   description: "Controlá tus finanzas personales y de negocio",
 };
 
@@ -27,10 +28,13 @@ export default function RootLayout({
     <html
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
-      <body className="min-h-full flex bg-gray-50 dark:bg-gray-950">
-        <Sidebar />
-        <main className="flex-1 md:ml-64 p-4 md:p-8">{children}</main>
+      <body className="min-h-full flex">
+        <ThemeProvider>
+          <Sidebar />
+          <main className="flex-1 md:ml-64 p-4 md:p-8 bg-background">{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );
