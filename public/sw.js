@@ -1,9 +1,9 @@
-const CACHE_NAME = 'biyuya-v1'
+const CACHE_NAME = 'biyuya-v2'
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
-  '/icons/icon-192.svg',
-  '/icons/icon-512.svg',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
 ]
 
 // Install: cachear assets estáticos
