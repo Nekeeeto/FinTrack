@@ -6,6 +6,8 @@ import { CashFlow } from "@/components/dashboard/cash-flow"
 import { ExpenseChart } from "@/components/dashboard/expense-chart"
 import { BalanceTrend } from "@/components/dashboard/balance-trend"
 import { RecentTransactions } from "@/components/dashboard/recent-transactions"
+import { MonthlyFlow } from "@/components/dashboard/monthly-flow"
+import { BudgetProgress } from "@/components/dashboard/budget-progress"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -21,6 +23,8 @@ interface DashboardData {
   cashFlow: { income: number; expenses: number }
   expensesByCategory: { name: string; value: number; color: string }[]
   balanceTrend: { date: string; balance: number }[]
+  monthlyFlow: { month: string; label: string; income: number; expenses: number; net: number }[]
+  budgetProgress: { id: string; category_id: string; category_name: string; category_color: string; limit: number; spent: number; percentage: number }[]
 }
 
 type PeriodOption = "this_month" | "last_month" | "custom"
@@ -143,11 +147,21 @@ export default function DashboardPage() {
             />
           </div>
 
+          {/* Budget progress */}
+          {data.budgetProgress && data.budgetProgress.length > 0 && (
+            <BudgetProgress data={data.budgetProgress} />
+          )}
+
           {/* Charts row */}
           <div className="grid md:grid-cols-2 gap-4">
             <BalanceTrend data={data.balanceTrend} />
             <ExpenseChart data={data.expensesByCategory} />
           </div>
+
+          {/* Monthly flow chart */}
+          {data.monthlyFlow && (
+            <MonthlyFlow data={data.monthlyFlow} />
+          )}
 
           {/* Recent transactions */}
           <RecentTransactions transactions={data.transactions} />

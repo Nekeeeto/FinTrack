@@ -42,3 +42,18 @@ export interface Transaction {
   account?: Account
   category?: Category
 }
+
+export interface BudgetLimit {
+  id: string
+  category_id: string
+  amount: number
+  currency: Currency
+  period: 'monthly'
+  created_at: string
+  updated_at: string
+  // Joined
+  category?: Category
+  // Calculated
+  spent?: number
+  percentage?: number
+}
