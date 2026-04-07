@@ -52,6 +52,13 @@ INSERT INTO accounts (name, type, currency, balance, color, icon) VALUES
   ('CASA MIGUEL', 'business', 'UYU', 0, '#dc2626', 'home'),
   ('DÓLARES', 'savings', 'USD', 0, '#16a34a', 'banknote');
 
+-- Tabla de configuración (key-value para API keys y settings)
+CREATE TABLE settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL DEFAULT '',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Seed: Categorías
 INSERT INTO categories (name, color, icon, type) VALUES
   ('Comida y bebidas', '#f97316', 'utensils', 'expense'),

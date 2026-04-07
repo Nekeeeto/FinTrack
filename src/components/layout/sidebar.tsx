@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, ArrowLeftRight, Landmark, Menu, X } from "lucide-react"
+import { LayoutDashboard, ArrowLeftRight, Landmark, Settings, Menu, X } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -11,6 +11,7 @@ const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/transacciones", label: "Transacciones", icon: ArrowLeftRight },
   { href: "/cuentas", label: "Cuentas", icon: Landmark },
+  { href: "/configuracion", label: "Configuración", icon: Settings },
 ]
 
 export function Sidebar() {
