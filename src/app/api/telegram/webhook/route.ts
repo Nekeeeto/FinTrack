@@ -16,32 +16,49 @@ import {
   getAllCategories,
   getAllAccounts,
 } from "@/lib/categorize"
-import type { Account, Category } from "@/types/database"
 
-// Almacén temporal de datos pendientes de confirmación (en memoria del proceso)
-// En producción se podría usar Redis, pero para Vercel serverless esto funciona
-// porque el callback llega rápido tras enviar el mensaje.
-const pendingReceipts = new Map<
-  string, // key: `${chatId}:${messageId}`
-  {
-    ocr: OCRResult
-    categoryId: string
-    accountId: string
-    receiptUrl?: string
-  }
->()
+// --- Persistencia en Supabase (tabla pending_receipts) ---
 
-// Limpiar entradas viejas (> 1 hora) para evitar memory leaks
-function cleanupOldEntries() {
-  // No hay timestamp en el map, simplemente limitamos el tamaño
-  if (pendingReceipts.size > 500) {
-    const firstKey = pendingReceipts.keys().next().value
-    if (firstKey) pendingReceipts.delete(firstKey)
-  }
+interface PendingData {
+  ocr: OCRResult
+  categoryId: string
+  accountId: string
 }
 
+async function savePending(chatId: number, msgId: number, data: PendingData) {
+  const key = `${chatId}:${msgId}`
+  await supabaseAdmin
+    .from("pending_receipts")
+    .upsert({ key, chat_id: chatId, message_id: msgId, data, created_at: new Date().toISOString() }, { onConflict: "key" })
+}
+
+async function getPending(chatId: number, msgId: number): Promise<PendingData | null> {
+  const key = `${chatId}:${msgId}`
+  const { data } = await supabaseAdmin
+    .from("pending_receipts")
+    .select("data")
+    .eq("key", key)
+    .single()
+  return data?.data ?? null
+}
+
+async function deletePending(chatId: number, msgId: number) {
+  const key = `${chatId}:${msgId}`
+  await supabaseAdmin.from("pending_receipts").delete().eq("key", key)
+}
+
+async function updatePending(chatId: number, msgId: number, updates: Partial<PendingData>) {
+  const existing = await getPending(chatId, msgId)
+  if (!existing) return null
+  const updated = { ...existing, ...updates }
+  await savePending(chatId, msgId, updated)
+  return updated
+}
+
+// --- Webhook handler ---
+
 export async function POST(req: NextRequest) {
-  // Verificar secret (opcional, para seguridad)
+  // Verificar secret
   const webhookSecret = await getSetting("TELEGRAM_WEBHOOK_SECRET")
   const secret = req.headers.get("x-telegram-bot-api-secret-token")
   if (webhookSecret && secret !== webhookSecret) {
@@ -60,7 +77,6 @@ export async function POST(req: NextRequest) {
     }
   } catch (err) {
     console.error("Error en webhook de Telegram:", err)
-    // No devolver error a Telegram para evitar reintentos
   }
 
   return NextResponse.json({ ok: true })
@@ -71,17 +87,14 @@ export async function POST(req: NextRequest) {
 async function handlePhoto(msg: TelegramUpdate["message"] & {}) {
   const chatId = msg.chat.id
   const photos = msg.photo!
-  // Telegram envía varias resoluciones, tomamos la más grande
   const bestPhoto = photos[photos.length - 1]
 
   await sendMessage(chatId, "📸 Procesando tu ticket...")
 
   try {
-    // Descargar foto y procesar con OCR
     const { buffer, mimeType } = await downloadPhoto(bestPhoto.file_id)
     const ocr = await processReceiptImage(buffer, mimeType)
 
-    // Imagen no es un ticket
     if (!ocr.monto && ocr.confianza === "baja" && ocr.texto_raw.includes("no parece")) {
       await sendMessage(
         chatId,
@@ -90,7 +103,6 @@ async function handlePhoto(msg: TelegramUpdate["message"] & {}) {
       return
     }
 
-    // Inferir categoría y cuenta
     const category = await inferCategory(ocr.comercio, ocr.items)
     const account = await getDefaultAccount()
 
@@ -102,27 +114,21 @@ async function handlePhoto(msg: TelegramUpdate["message"] & {}) {
     const categoryId = category?.id ?? ""
     const categoryName = category?.name ?? "Sin categoría"
 
-    // Construir resumen
     const summary = buildSummary(ocr, categoryName, account.name)
-
-    // Botones inline
-    const keyboard = buildConfirmKeyboard(categoryId, account.id)
+    const keyboard = buildConfirmKeyboard()
 
     const result = await sendMessage(chatId, summary, {
       parse_mode: "HTML",
       reply_markup: { inline_keyboard: keyboard },
     })
 
-    // Guardar datos pendientes para cuando confirme
     if (result.ok) {
       const botMsgId = result.result.message_id
-      const key = `${chatId}:${botMsgId}`
-      pendingReceipts.set(key, {
+      await savePending(chatId, botMsgId, {
         ocr,
         categoryId,
         accountId: account.id,
       })
-      cleanupOldEntries()
     }
   } catch (err) {
     console.error("Error procesando foto:", err)
@@ -175,8 +181,7 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
   if (!chatId || !msgId) return
 
   const data = cb.data ?? ""
-  const key = `${chatId}:${msgId}`
-  const pending = pendingReceipts.get(key)
+  const pending = await getPending(chatId, msgId)
 
   // --- CONFIRMAR guardado ---
   if (data === "confirm") {
@@ -184,7 +189,6 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
       await answerCallbackQuery(cb.id, "⚠️ Datos expirados, mandá la foto de nuevo.")
       return
     }
-
     if (!pending.categoryId) {
       await answerCallbackQuery(cb.id, "⚠️ Elegí una categoría primero.")
       return
@@ -192,13 +196,13 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
 
     await answerCallbackQuery(cb.id, "Guardando...")
     await saveTransaction(chatId, msgId, pending)
-    pendingReceipts.delete(key)
+    await deletePending(chatId, msgId)
     return
   }
 
   // --- CANCELAR ---
   if (data === "cancel") {
-    pendingReceipts.delete(key)
+    await deletePending(chatId, msgId)
     await answerCallbackQuery(cb.id, "Cancelado")
     await editMessageText(chatId, msgId, "❌ Operación cancelada.")
     return
@@ -208,7 +212,6 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
   if (data === "change_cat") {
     const categories = await getAllCategories()
     const keyboard: InlineKeyboardButton[][] = []
-    // 2 botones por fila
     for (let i = 0; i < categories.length; i += 2) {
       const row: InlineKeyboardButton[] = [
         { text: categories[i].name, callback_data: `set_cat:${categories[i].id}` },
@@ -237,9 +240,8 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
       return
     }
     const newCatId = data.replace("set_cat:", "")
-    pending.categoryId = newCatId
+    await updatePending(chatId, msgId, { categoryId: newCatId })
 
-    // Obtener nombre de la categoría
     const { data: cat } = await supabaseAdmin
       .from("categories")
       .select("name")
@@ -247,8 +249,8 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
       .single()
 
     await answerCallbackQuery(cb.id, `Categoría: ${cat?.name ?? "?"}`)
-    // Volver al resumen
-    await showUpdatedSummary(chatId, msgId, pending)
+    const updated = await getPending(chatId, msgId)
+    if (updated) await showUpdatedSummary(chatId, msgId, updated)
     return
   }
 
@@ -274,7 +276,7 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
       return
     }
     const newAccId = data.replace("set_acc:", "")
-    pending.accountId = newAccId
+    await updatePending(chatId, msgId, { accountId: newAccId })
 
     const { data: acc } = await supabaseAdmin
       .from("accounts")
@@ -283,7 +285,8 @@ async function handleCallback(cb: NonNullable<TelegramUpdate["callback_query"]>)
       .single()
 
     await answerCallbackQuery(cb.id, `Cuenta: ${acc?.name ?? "?"}`)
-    await showUpdatedSummary(chatId, msgId, pending)
+    const updated = await getPending(chatId, msgId)
+    if (updated) await showUpdatedSummary(chatId, msgId, updated)
     return
   }
 
@@ -327,10 +330,7 @@ function buildSummary(ocr: OCRResult, categoryName: string, accountName: string)
   return lines.join("\n")
 }
 
-function buildConfirmKeyboard(
-  categoryId: string,
-  accountId: string
-): InlineKeyboardButton[][] {
+function buildConfirmKeyboard(): InlineKeyboardButton[][] {
   return [
     [
       { text: "✏️ Categoría", callback_data: "change_cat" },
@@ -343,12 +343,7 @@ function buildConfirmKeyboard(
   ]
 }
 
-async function showUpdatedSummary(
-  chatId: number,
-  msgId: number,
-  pending: NonNullable<ReturnType<typeof pendingReceipts.get>>
-) {
-  // Obtener nombres actuales
+async function showUpdatedSummary(chatId: number, msgId: number, pending: PendingData) {
   const [catRes, accRes] = await Promise.all([
     pending.categoryId
       ? supabaseAdmin.from("categories").select("name").eq("id", pending.categoryId).single()
@@ -360,7 +355,7 @@ async function showUpdatedSummary(
   const accName = accRes.data?.name ?? "?"
 
   const summary = buildSummary(pending.ocr, catName, accName)
-  const keyboard = buildConfirmKeyboard(pending.categoryId, pending.accountId)
+  const keyboard = buildConfirmKeyboard()
 
   await editMessageText(chatId, msgId, summary, {
     parse_mode: "HTML",
@@ -368,11 +363,7 @@ async function showUpdatedSummary(
   })
 }
 
-async function saveTransaction(
-  chatId: number,
-  msgId: number,
-  pending: NonNullable<ReturnType<typeof pendingReceipts.get>>
-) {
+async function saveTransaction(chatId: number, msgId: number, pending: PendingData) {
   const { ocr, categoryId, accountId } = pending
 
   if (!ocr.monto) {
@@ -386,7 +377,6 @@ async function saveTransaction(
 
   const today = new Date().toISOString().split("T")[0]
 
-  // Insertar transacción
   const { data: tx, error } = await supabaseAdmin
     .from("transactions")
     .insert({
@@ -436,7 +426,6 @@ async function saveTransaction(
     }
   })
 
-  // Mensaje de éxito
   const montoStr = `${ocr.moneda === "USD" ? "US$" : "$"} ${ocr.monto.toLocaleString("es-UY")}`
   await editMessageText(
     chatId,

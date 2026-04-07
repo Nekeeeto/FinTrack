@@ -59,6 +59,15 @@ CREATE TABLE settings (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Tabla de receipts pendientes de confirmación en Telegram
+CREATE TABLE pending_receipts (
+  key TEXT PRIMARY KEY,
+  chat_id BIGINT NOT NULL,
+  message_id BIGINT NOT NULL,
+  data JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Seed: Categorías
 INSERT INTO categories (name, color, icon, type) VALUES
   ('Comida y bebidas', '#f97316', 'utensils', 'expense'),
