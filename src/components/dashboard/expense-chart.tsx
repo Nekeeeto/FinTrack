@@ -34,18 +34,19 @@ export function ExpenseChart({ data }: { data: ExpenseData[] }) {
         <CardTitle className="text-sm font-medium text-muted-foreground">
           Estructura de gastos
         </CardTitle>
+        <p className="text-xl font-bold">{formatMoney(total)}</p>
       </CardHeader>
       <CardContent>
-        <div className="flex items-center gap-4">
-          <div className="w-40 h-40">
+        <div className="flex items-start gap-4">
+          <div className="w-44 h-44 flex-shrink-0">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={40}
-                  outerRadius={70}
+                  innerRadius={45}
+                  outerRadius={75}
                   paddingAngle={2}
                   dataKey="value"
                 >
@@ -65,21 +66,25 @@ export function ExpenseChart({ data }: { data: ExpenseData[] }) {
               </PieChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex-1 space-y-2">
-            {data.map((item) => (
-              <div key={item.name} className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ backgroundColor: item.color }}
-                  />
-                  <span className="text-muted-foreground">{item.name}</span>
+          <div className="flex-1 space-y-2.5 pt-1">
+            {data.map((item) => {
+              const pct = total > 0 ? Math.round((item.value / total) * 100) : 0
+              return (
+                <div key={item.name} className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div
+                      className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: item.color }}
+                    />
+                    <span className="text-xs text-muted-foreground truncate">{item.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className="text-xs font-medium">{formatMoney(item.value)}</span>
+                    <span className="text-xs text-muted-foreground w-8 text-right">{pct}%</span>
+                  </div>
                 </div>
-                <span className="font-medium">
-                  {total > 0 ? Math.round((item.value / total) * 100) : 0}%
-                </span>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </div>
       </CardContent>

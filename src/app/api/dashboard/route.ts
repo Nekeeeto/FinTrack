@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { supabaseAdmin } from "@/lib/supabase/server"
-import { startOfMonth, endOfMonth, subMonths, format, eachDayOfInterval } from "date-fns"
+import { startOfMonth, endOfMonth, subMonths, format, eachDayOfInterval, parseISO } from "date-fns"
 
 export async function GET(req: NextRequest) {
   const searchParams = req.nextUrl.searchParams
@@ -9,7 +9,15 @@ export async function GET(req: NextRequest) {
   let dateFrom: Date
   let dateTo: Date
 
-  if (period === "last_month") {
+  if (period === "custom") {
+    const fromParam = searchParams.get("from")
+    const toParam = searchParams.get("to")
+    if (!fromParam || !toParam) {
+      return NextResponse.json({ error: "from and to required for custom period" }, { status: 400 })
+    }
+    dateFrom = parseISO(fromParam)
+    dateTo = parseISO(toParam)
+  } else if (period === "last_month") {
     const lastMonth = subMonths(new Date(), 1)
     dateFrom = startOfMonth(lastMonth)
     dateTo = endOfMonth(lastMonth)
@@ -53,10 +61,10 @@ export async function GET(req: NextRequest) {
   }
 
   // Balance trend (cumulative by day)
-  const days = eachDayOfInterval({ start: dateFrom, end: dateTo > new Date() ? new Date() : dateTo })
+  const endDate = dateTo > new Date() ? new Date() : dateTo
+  const days = eachDayOfInterval({ start: dateFrom, end: endDate })
   const totalBalance = accounts.reduce((sum, a) => sum + Number(a.balance), 0)
-  let runningBalance = totalBalance
-  // Walk backwards from current balance
+
   const txByDate: Record<string, number> = {}
   for (const tx of transactions) {
     const d = tx.date
@@ -66,10 +74,7 @@ export async function GET(req: NextRequest) {
 
   const balanceTrend = days.map((day) => {
     const d = format(day, "yyyy-MM-dd")
-    return {
-      date: format(day, "dd/MM"),
-      dayNet: txByDate[d] || 0,
-    }
+    return { date: format(day, "dd/MM"), dayNet: txByDate[d] || 0 }
   })
 
   // Calculate running balance forward from start
