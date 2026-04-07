@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Settings, Send, Brain, Eye, EyeOff, Loader2, CheckCircle2, XCircle, Cpu } from "lucide-react"
+import { Settings, Send, Brain, Eye, EyeOff, Loader2, CheckCircle2, XCircle, Cpu, Bell } from "lucide-react"
+import { PushSettings } from "@/components/push-settings"
 
 interface SettingState {
   configured: boolean
@@ -341,6 +342,20 @@ export default function ConfiguracionPage() {
             <span className="text-sm font-bold">US$ {totalCost.toFixed(4)}</span>
           </div>
         )}
+      </section>
+
+      {/* --- Notificaciones Push --- */}
+      <section className="rounded-xl border border-border bg-card p-6 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-emerald-500/10">
+            <Bell className="h-5 w-5 text-emerald-500" />
+          </div>
+          <div>
+            <h2 className="font-semibold text-lg">Notificaciones Push</h2>
+            <p className="text-sm text-muted-foreground">Avisos cuando el bot procesa un ticket y resumen semanal</p>
+          </div>
+        </div>
+        <PushSettings />
       </section>
 
       {/* --- Instrucciones --- */}

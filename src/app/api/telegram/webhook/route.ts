@@ -16,6 +16,7 @@ import {
   getAllCategories,
   getAllAccounts,
 } from "@/lib/categorize"
+import { sendPushNotification } from "@/lib/push"
 
 // --- Persistencia en Supabase (tabla pending_receipts) ---
 
@@ -435,4 +436,11 @@ async function saveTransaction(chatId: number, msgId: number, pending: PendingDa
       `📁 ${tx.category?.name ?? "?"} · 🏦 ${tx.account?.name ?? "?"}`,
     { parse_mode: "HTML" }
   )
+
+  // Notificación push al browser
+  await sendPushNotification(
+    "Gasto registrado",
+    `${montoStr} — ${ocr.comercio ?? "Ticket"} (${tx.category?.name ?? "?"})`,
+    "/transacciones"
+  ).catch(() => {})
 }

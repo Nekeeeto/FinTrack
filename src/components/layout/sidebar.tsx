@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, ArrowLeftRight, Landmark, Tags, Settings, Menu, X, Target, Brain } from "lucide-react"
+import { LayoutDashboard, ArrowLeftRight, Landmark, Tags, Settings, Menu, X, Target, Brain, FileSpreadsheet } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
@@ -14,6 +14,7 @@ const navItems = [
   { href: "/categorias", label: "Categorías", icon: Tags },
   { href: "/presupuestos", label: "Presupuestos", icon: Target },
   { href: "/analisis", label: "Análisis IA", icon: Brain },
+  { href: "/importar", label: "Importar CSV", icon: FileSpreadsheet },
   { href: "/configuracion", label: "Configuración", icon: Settings },
 ]
 
