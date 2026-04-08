@@ -46,38 +46,35 @@ const CURRENCY_FLAGS: Record<string, string> = {
 const TRANSPORTE_OPTIONS = ["Auto", "Bondi", "Bici", "A pie", "Uber/Cabify", "Moto"]
 const PLATAFORMA_OPTIONS = ["MercadoLibre", "Instagram", "TiendaNube", "Shopify", "Feria presencial", "Otro"]
 
-// --- Componente chip Sí/No ---
-function BoolChips({
+// --- Componente selector de opciones (reemplaza Sí/No rígido) ---
+function OptionChips({
+  options,
   value,
   onChange,
 }: {
-  value: boolean | null
-  onChange: (v: boolean | null) => void
+  options: { label: string; value: string }[]
+  value: string | null
+  onChange: (v: string | null) => void
 }) {
   return (
-    <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={() => onChange(value === true ? null : true)}
-        className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
-          value === true
-            ? "bg-emerald-500 border-emerald-500 text-white"
-            : "border-border text-muted-foreground hover:border-emerald-500/50"
-        }`}
-      >
-        Sí
-      </button>
-      <button
-        type="button"
-        onClick={() => onChange(value === false ? null : false)}
-        className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
-          value === false
-            ? "bg-red-500/80 border-red-500/80 text-white"
-            : "border-border text-muted-foreground hover:border-red-500/50"
-        }`}
-      >
-        No
-      </button>
+    <div className="flex flex-wrap gap-1.5">
+      {options.map((opt) => {
+        const isActive = value === opt.value
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => onChange(isActive ? null : opt.value)}
+            className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+              isActive
+                ? "bg-emerald-500 border-emerald-500 text-white"
+                : "border-border text-muted-foreground hover:border-emerald-500/50"
+            }`}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
     </div>
   )
 }
@@ -136,13 +133,13 @@ export default function OnboardingPage() {
   const [categoryMode, setCategoryMode] = useState<CategoryMode>(null)
 
   // --- Step 2: Vida cotidiana (solo AI) ---
-  const [alquila, setAlquila] = useState<boolean | null>(null)
-  const [delivery, setDelivery] = useState<boolean | null>(null)
-  const [cocina, setCocina] = useState<boolean | null>(null)
+  const [vivienda, setVivienda] = useState<string | null>(null) // "alquilo", "propia", "con_familia"
+  const [delivery, setDelivery] = useState<string | null>(null) // "mucho", "a_veces", "los_findes", "nunca"
+  const [cocina, setCocina] = useState<string | null>(null) // "siempre", "bastante", "poco", "nunca"
   const [trabajo, setTrabajo] = useState("")
   const [transporte, setTransporte] = useState<string[]>([])
-  const [hijos, setHijos] = useState<boolean | null>(null)
-  const [mascotas, setMascotas] = useState<boolean | null>(null)
+  const [hijos, setHijos] = useState<string | null>(null) // "no", "1", "2", "3+"
+  const [mascotas, setMascotas] = useState<string | null>(null) // "no", "perro", "gato", "varios"
   const [detallesExtra, setDetallesExtra] = useState("")
 
   // --- Step 3: Crecimiento (solo AI, opcional) ---
@@ -249,7 +246,7 @@ export default function OnboardingPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           vida_cotidiana: {
-            alquila,
+            vivienda,
             delivery,
             cocina,
             trabajo,
@@ -515,29 +512,81 @@ export default function OnboardingPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">¿Alquilás?</Label>
-                <BoolChips value={alquila} onChange={setAlquila} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">¿Pedís delivery seguido?</Label>
-                <BoolChips value={delivery} onChange={setDelivery} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">¿Cocinás en casa?</Label>
-                <BoolChips value={cocina} onChange={setCocina} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">¿Tenés hijos?</Label>
-                <BoolChips value={hijos} onChange={setHijos} />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label className="text-sm">¿Tenés mascotas?</Label>
-                <BoolChips value={mascotas} onChange={setMascotas} />
-              </div>
+            {/* Vivienda */}
+            <div className="space-y-2">
+              <Label className="text-sm">Vivienda</Label>
+              <OptionChips
+                options={[
+                  { label: "Alquilo", value: "alquilo" },
+                  { label: "Propia", value: "propia" },
+                  { label: "Con familia", value: "con_familia" },
+                ]}
+                value={vivienda}
+                onChange={setVivienda}
+              />
             </div>
 
+            {/* Cocina */}
+            <div className="space-y-2">
+              <Label className="text-sm">¿Cocinás en casa?</Label>
+              <OptionChips
+                options={[
+                  { label: "Siempre", value: "siempre" },
+                  { label: "Bastante", value: "bastante" },
+                  { label: "Poco", value: "poco" },
+                  { label: "Nunca", value: "nunca" },
+                ]}
+                value={cocina}
+                onChange={setCocina}
+              />
+            </div>
+
+            {/* Delivery */}
+            <div className="space-y-2">
+              <Label className="text-sm">¿Pedís delivery?</Label>
+              <OptionChips
+                options={[
+                  { label: "Mucho", value: "mucho" },
+                  { label: "A veces", value: "a_veces" },
+                  { label: "Los fines", value: "los_findes" },
+                  { label: "Nunca", value: "nunca" },
+                ]}
+                value={delivery}
+                onChange={setDelivery}
+              />
+            </div>
+
+            {/* Hijos */}
+            <div className="space-y-2">
+              <Label className="text-sm">¿Tenés hijos?</Label>
+              <OptionChips
+                options={[
+                  { label: "No", value: "no" },
+                  { label: "1", value: "1" },
+                  { label: "2", value: "2" },
+                  { label: "3+", value: "3+" },
+                ]}
+                value={hijos}
+                onChange={setHijos}
+              />
+            </div>
+
+            {/* Mascotas */}
+            <div className="space-y-2">
+              <Label className="text-sm">¿Mascotas?</Label>
+              <OptionChips
+                options={[
+                  { label: "No", value: "no" },
+                  { label: "Perro", value: "perro" },
+                  { label: "Gato", value: "gato" },
+                  { label: "Varios", value: "varios" },
+                ]}
+                value={mascotas}
+                onChange={setMascotas}
+              />
+            </div>
+
+            {/* Trabajo */}
             <div className="space-y-2">
               <Label htmlFor="trabajo">¿De qué trabajás?</Label>
               <Input
@@ -548,30 +597,55 @@ export default function OnboardingPage() {
               />
             </div>
 
+            {/* Transporte */}
             <div className="space-y-2">
               <Label>¿Cómo te movés?</Label>
               <MultiChips options={TRANSPORTE_OPTIONS} selected={transporte} onChange={setTransporte} />
             </div>
 
+            {/* Detalles extra */}
             <div className="space-y-2">
               <Label htmlFor="detalles">¿Algo más que nos quieras contar?</Label>
               <textarea
                 id="detalles"
                 value={detallesExtra}
                 onChange={(e) => setDetallesExtra(e.target.value)}
-                placeholder="Ej: Pago ANDA todos los meses, tengo un perro, voy al gimnasio 3 veces por semana..."
+                placeholder="Ej: Pago ANDA todos los meses, voy al gimnasio, tengo suscripciones a Spotify y Netflix..."
                 className="flex w-full rounded-lg border border-input bg-transparent px-3 py-2 text-sm min-h-[80px] resize-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
               />
             </div>
 
             {/* Gate de negocio */}
             <div className="rounded-xl border border-border bg-card/50 p-4 space-y-3">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="text-sm font-medium">¿Tenés un emprendimiento o negocio?</p>
-                  <p className="text-xs text-muted-foreground">Si sí, te armamos categorías específicas.</p>
+                  <p className="text-xs text-muted-foreground">Te armamos categorías específicas.</p>
                 </div>
-                <BoolChips value={tieneNegocio} onChange={setTieneNegocio} />
+                <div className="flex gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setTieneNegocio(tieneNegocio === true ? null : true)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                      tieneNegocio === true
+                        ? "bg-emerald-500 border-emerald-500 text-white"
+                        : "border-border text-muted-foreground hover:border-emerald-500/50"
+                    }`}
+                  >
+                    Sí
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTieneNegocio(tieneNegocio === false ? null : false)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium border transition-all ${
+                      tieneNegocio === false
+                        ? "bg-muted border-border text-foreground"
+                        : "border-border text-muted-foreground hover:border-muted-foreground/50"
+                    }`}
+                  >
+                    No
+                  </button>
+                </div>
               </div>
             </div>
           </CardContent>

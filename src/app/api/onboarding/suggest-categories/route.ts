@@ -7,13 +7,13 @@ import { trackUsage, DEFAULT_MODEL } from "@/lib/ai-usage"
 import type { CategoryTemplate } from "@/lib/category-templates"
 
 const vidaCotidianaSchema = z.object({
-  alquila: z.boolean().nullable(),
-  delivery: z.boolean().nullable(),
-  cocina: z.boolean().nullable(),
+  vivienda: z.string().nullable(),
+  delivery: z.string().nullable(),
+  cocina: z.string().nullable(),
   trabajo: z.string(),
   transporte: z.array(z.string()),
-  hijos: z.boolean().nullable(),
-  mascotas: z.boolean().nullable(),
+  hijos: z.string().nullable(),
+  mascotas: z.string().nullable(),
   detalles_extra: z.string(),
 })
 
@@ -29,9 +29,8 @@ const requestSchema = z.object({
   attempt: z.number().int().min(1).max(2),
 })
 
-function boolToText(val: boolean | null): string {
-  if (val === null) return "no especificó"
-  return val ? "sí" : "no"
+function valOrNe(val: string | null): string {
+  return val || "no especificó"
 }
 
 function buildPrompt(vida: z.infer<typeof vidaCotidianaSchema>, crec: z.infer<typeof crecimientoSchema>): string {
@@ -40,13 +39,13 @@ function buildPrompt(vida: z.infer<typeof vidaCotidianaSchema>, crec: z.infer<ty
 ## Perfil del usuario
 
 ### Vida cotidiana
-- Vivienda: ${vida.alquila === null ? "no especificó" : vida.alquila ? "alquila" : "propietario o no alquila"}
-- Cocina en casa: ${boolToText(vida.cocina)}
-- Pide delivery seguido: ${boolToText(vida.delivery)}
+- Vivienda: ${valOrNe(vida.vivienda)}
+- Cocina en casa: ${valOrNe(vida.cocina)}
+- Pide delivery: ${valOrNe(vida.delivery)}
 - Trabajo/ocupación: ${vida.trabajo || "no especificó"}
 - Transporte: ${vida.transporte.length > 0 ? vida.transporte.join(", ") : "no especificó"}
-- Tiene hijos: ${boolToText(vida.hijos)}
-- Tiene mascotas: ${boolToText(vida.mascotas)}
+- Hijos: ${valOrNe(vida.hijos)}
+- Mascotas: ${valOrNe(vida.mascotas)}
 ${vida.detalles_extra ? `- Detalles adicionales: "${vida.detalles_extra}"` : ""}`
 
   if (crec) {
