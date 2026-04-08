@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import Anthropic from "@anthropic-ai/sdk"
 import { requireAuth, isAuthError } from "@/lib/auth"
+import { getSetting } from "@/lib/settings"
 import type { CategoryTemplate } from "@/lib/category-templates"
 
 export async function POST(request: Request) {
@@ -13,16 +14,16 @@ export async function POST(request: Request) {
 
     if (!description || typeof description !== "string" || description.trim().length === 0) {
       return NextResponse.json(
-        { error: "Se requiere una descripcion valida" },
+        { error: "Se requiere una descripción válida" },
         { status: 400 }
       )
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY
+    const apiKey = await getSetting("ANTHROPIC_API_KEY")
     if (!apiKey) {
-      console.error("ANTHROPIC_API_KEY no configurada")
+      console.error("ANTHROPIC_API_KEY no configurada en settings ni en env")
       return NextResponse.json(
-        { error: "Error de configuracion del servidor" },
+        { error: "API key de Anthropic no configurada. Pedile al admin que la configure en Configuración." },
         { status: 500 }
       )
     }
@@ -55,8 +56,11 @@ Responde UNICAMENTE con un array JSON valido (sin texto adicional, sin markdown,
   }
 ]`
 
+    const modelSetting = await getSetting("ANTHROPIC_MODEL")
+    const model = modelSetting || "claude-sonnet-4-20250514"
+
     const message = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model,
       max_tokens: 4096,
       messages: [{ role: "user", content: prompt }],
     })
@@ -65,7 +69,7 @@ Responde UNICAMENTE con un array JSON valido (sin texto adicional, sin markdown,
     if (!textBlock || textBlock.type !== "text") {
       console.error("Respuesta de Anthropic sin bloque de texto")
       return NextResponse.json(
-        { error: "Error al generar categorias" },
+        { error: "Error al generar categorías" },
         { status: 500 }
       )
     }
@@ -76,22 +80,36 @@ Responde UNICAMENTE con un array JSON valido (sin texto adicional, sin markdown,
     try {
       categories = JSON.parse(raw)
     } catch {
-      console.error("JSON invalido de Anthropic:", raw)
-      return NextResponse.json(
-        { error: "Error al parsear la respuesta de IA" },
-        { status: 500 }
-      )
+      // Intentar extraer JSON del texto si viene con markdown
+      const jsonMatch = raw.match(/\[[\s\S]*\]/)
+      if (jsonMatch) {
+        try {
+          categories = JSON.parse(jsonMatch[0])
+        } catch {
+          console.error("JSON inválido de Anthropic:", raw)
+          return NextResponse.json(
+            { error: "Error al parsear la respuesta de IA" },
+            { status: 500 }
+          )
+        }
+      } else {
+        console.error("JSON inválido de Anthropic:", raw)
+        return NextResponse.json(
+          { error: "Error al parsear la respuesta de IA" },
+          { status: 500 }
+        )
+      }
     }
 
     if (!Array.isArray(categories) || categories.length === 0) {
-      console.error("Respuesta no es un array valido:", categories)
+      console.error("Respuesta no es un array válido:", categories)
       return NextResponse.json(
-        { error: "Respuesta de IA con formato invalido" },
+        { error: "Respuesta de IA con formato inválido" },
         { status: 500 }
       )
     }
 
-    // Validar estructura basica de cada categoria
+    // Validar estructura básica de cada categoría
     const validTypes = ["income", "expense"]
     for (const cat of categories) {
       if (
@@ -101,9 +119,9 @@ Responde UNICAMENTE con un array JSON valido (sin texto adicional, sin markdown,
         !validTypes.includes(cat.type) ||
         !Array.isArray(cat.subcategories)
       ) {
-        console.error("Categoria con formato invalido:", cat)
+        console.error("Categoría con formato inválido:", cat)
         return NextResponse.json(
-          { error: "Respuesta de IA con formato invalido" },
+          { error: "Respuesta de IA con formato inválido" },
           { status: 500 }
         )
       }
