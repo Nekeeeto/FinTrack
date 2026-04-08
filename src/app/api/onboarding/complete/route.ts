@@ -49,15 +49,25 @@ export async function POST(req: NextRequest) {
     const { name, categories, accounts } = parsed.data
     const userId = auth.userId
 
-    // 1. Actualizar nombre en user_profiles
+    // Obtener email del usuario autenticado
+    const { data: { user } } = await auth.supabase.auth.getUser()
+    const userEmail = user?.email ?? ""
+
+    // 1. Crear o actualizar perfil en user_profiles (upsert)
     const { error: profileError } = await supabaseAdmin
       .from("user_profiles")
-      .update({ name })
-      .eq("user_id", userId)
+      .upsert({
+        user_id: userId,
+        name,
+        email: userEmail,
+        role: "user",
+        plan: "free",
+        onboarding_completed: false,
+      }, { onConflict: "user_id" })
 
     if (profileError) {
       return NextResponse.json(
-        { error: `Error actualizando perfil: ${profileError.message}` },
+        { error: `Error creando/actualizando perfil: ${profileError.message}` },
         { status: 500 }
       )
     }
