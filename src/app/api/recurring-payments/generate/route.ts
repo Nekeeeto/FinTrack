@@ -84,10 +84,11 @@ export async function POST() {
           .eq("id", rp.category_id)
           .single()
 
-        const delta = category?.type === "income" ? rp.amount : -rp.amount
+        const amt = Number(rp.amount)
+        const delta = category?.type === "income" ? amt : -amt
         await auth.supabase
           .from("accounts")
-          .update({ balance: account.balance + delta })
+          .update({ balance: Number(account.balance) + delta })
           .eq("id", rp.account_id)
       }
 
