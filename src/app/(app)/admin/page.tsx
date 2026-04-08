@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Users, ArrowLeftRight, DollarSign, Loader2 } from "lucide-react"
+import { buttonVariants } from "@/components/ui/button"
+import { Users, ArrowLeftRight, DollarSign, Loader2, UserPlus } from "lucide-react"
 import type { UserProfile } from "@/types/database"
 
 interface UserWithStats extends UserProfile {
@@ -63,7 +64,13 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Panel de Administración</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Panel de Administración</h1>
+        <Link href="/admin/usuarios/nuevo" className={buttonVariants()}>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Crear usuario
+        </Link>
+      </div>
 
       {/* Métricas */}
       <div className="grid gap-4 md:grid-cols-3">
@@ -100,8 +107,11 @@ export default function AdminDashboardPage() {
 
       {/* Tabla de usuarios */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Usuarios</CardTitle>
+          <Link href="/admin/usuarios" className="text-sm text-emerald-500 hover:underline">
+            Ver todos
+          </Link>
         </CardHeader>
         <CardContent>
           <Table>
