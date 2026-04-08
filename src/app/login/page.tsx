@@ -32,7 +32,7 @@ export default function LoginPage() {
     setLoading(true)
     setError("")
 
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -47,22 +47,8 @@ export default function LoginPage() {
       return
     }
 
-    // Verificar si completó onboarding
-    if (data.session) {
-      try {
-        const res = await fetch("/api/me")
-        const profile = await res.json()
-        if (profile && !profile.onboarding_completed) {
-          router.replace("/onboarding")
-          return
-        }
-      } catch {
-        // Si falla, seguir al inicio
-      }
-      router.replace("/inicio")
-    }
-
-    setLoading(false)
+    // Login exitoso — redirigir
+    window.location.href = "/inicio"
   }
 
   if (checking) {
