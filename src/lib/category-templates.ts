@@ -139,11 +139,4 @@ export const CATEGORY_TEMPLATES: CategoryTemplate[] = [
       { name: 'Otros ingresos', color: '#22c55e', icon: 'plus-circle' },
     ],
   },
-  {
-    name: 'GROWTH PARTNER',
-    color: '#0ea5e9',
-    icon: 'rocket',
-    type: 'expense',
-    subcategories: [],
-  },
 ]

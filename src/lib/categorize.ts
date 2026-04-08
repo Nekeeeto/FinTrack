@@ -54,10 +54,6 @@ const RULES: { keywords: string[]; subcategory: string; parent: string }[] = [
   { keywords: ["tarjeta", "visa", "mastercard", "oca", "creditel"], subcategory: "Tarjeta de crédito", parent: "Gastos financieros" },
   { keywords: ["comisión", "comision", "banco", "brou", "itaú", "itau", "santander", "scotiabank", "hsbc"], subcategory: "Comisiones bancarias", parent: "Gastos financieros" },
 
-  // Negocios custom
-  { keywords: ["pirotecnia", "pyro"], parent: "GROWTH PARTNER", subcategory: "" },
-  { keywords: ["cotillón", "cotillon", "casa miguel"], parent: "GROWTH PARTNER", subcategory: "" },
-  { keywords: ["growth partner", "growth"], parent: "GROWTH PARTNER", subcategory: "" },
 ]
 
 /**
