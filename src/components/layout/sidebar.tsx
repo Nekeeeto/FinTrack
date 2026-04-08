@@ -19,6 +19,8 @@ import {
   Plus,
   BarChart3,
   MoreHorizontal,
+  CalendarClock,
+  HelpCircle,
 } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -33,8 +35,10 @@ const baseNavItems = [
   { href: "/cuentas", label: "Cuentas", icon: Landmark },
   { href: "/categorias", label: "Categorías", icon: Tags },
   { href: "/presupuestos", label: "Presupuestos", icon: Target },
+  { href: "/recurrentes", label: "Recurrentes", icon: CalendarClock },
   { href: "/analisis", label: "Análisis IA", icon: Brain },
   { href: "/importar", label: "Importar CSV", icon: FileSpreadsheet },
+  { href: "/ayuda", label: "Ayuda", icon: HelpCircle },
 ]
 
 // Items para la bottom nav en mobile
