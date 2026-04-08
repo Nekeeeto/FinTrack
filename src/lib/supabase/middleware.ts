@@ -1,10 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
+import { createClient } from "@supabase/supabase-js"
 import { NextResponse, type NextRequest } from "next/server"
-
-// Rutas públicas que no requieren autenticación
-const PUBLIC_ROUTES = ["/", "/login", "/auth"]
-// Rutas API que manejan su propia auth (webhook Telegram, etc.)
-const PASSTHROUGH_API_ROUTES = ["/api/telegram/webhook"]
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request })
@@ -73,16 +69,19 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Chequear si el usuario completó el onboarding
-  // (solo para rutas que NO sean /onboarding)
+  // Chequear onboarding con service role (bypasea RLS)
   if (pathname !== "/onboarding") {
-    const { data: profile } = await supabase
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    )
+
+    const { data: profile } = await supabaseAdmin
       .from("user_profiles")
       .select("onboarding_completed")
       .eq("user_id", user.id)
       .single()
 
-    // Si no tiene perfil o no completó onboarding → redirigir
     if (!profile || !profile.onboarding_completed) {
       const url = request.nextUrl.clone()
       url.pathname = "/onboarding"
