@@ -67,6 +67,7 @@ export async function GET() {
 const createUserSchema = z.object({
   email: z.string().email("Email inválido"),
   name: z.string().min(1, "El nombre es obligatorio").max(100),
+  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 })
 
 // POST — Crear nuevo usuario (solo admin)
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    const { email, name } = parsed.data
+    const { email, name, password } = parsed.data
 
     // Verificar si ya existe un perfil con ese email
     const { data: existing } = await supabaseAdmin
@@ -101,10 +102,11 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Crear usuario en Supabase Auth
+    // Crear usuario en Supabase Auth con contraseña
     const { data: authData, error: authError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
+        password,
         email_confirm: true,
       })
 
@@ -135,8 +137,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         profile,
-        message:
-          "Usuario creado. Puede iniciar sesión con magic link usando su email.",
+        credentials: { email, password },
+        message: "Usuario creado. Ya puede iniciar sesión.",
       },
       { status: 201 }
     )

@@ -14,16 +14,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog"
-import {
   ArrowLeft,
   Loader2,
   Trash2,
@@ -50,7 +40,7 @@ export default function AdminUserDetailPage({
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState("")
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
 
   useEffect(() => {
     async function fetchData() {
@@ -69,7 +59,6 @@ export default function AdminUserDetailPage({
     fetchData()
   }, [id])
 
-  // Cargar transacciones recientes del usuario
   useEffect(() => {
     async function fetchTransactions() {
       try {
@@ -132,7 +121,7 @@ export default function AdminUserDetailPage({
       setError("Error de conexión")
     } finally {
       setActionLoading(false)
-      setDialogOpen(false)
+      setConfirmDelete(false)
     }
   }
 
@@ -244,37 +233,27 @@ export default function AdminUserDetailPage({
           Cambiar a {user.plan === "free" ? "premium" : "free"}
         </Button>
 
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger render={<Button variant="destructive" />}>
+        {!confirmDelete ? (
+          <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="h-4 w-4 mr-2" />
             Eliminar usuario
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Eliminar usuario</DialogTitle>
-              <DialogDescription>
-                Vas a eliminar a <strong>{user.name || user.email}</strong>.
-                Esta acción no se puede deshacer. Se eliminará el usuario de
-                autenticación y todos sus datos.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <DialogClose render={<Button variant="outline" />}>
-                Cancelar
-              </DialogClose>
-              <Button
-                variant="destructive"
-                onClick={handleDelete}
-                disabled={actionLoading}
-              >
-                {actionLoading && (
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                )}
-                Sí, eliminar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          </Button>
+        ) : (
+          <div className="flex items-center gap-2 border border-destructive rounded-lg px-3 py-1.5">
+            <span className="text-sm text-destructive font-medium">Seguro?</span>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={actionLoading}
+            >
+              {actionLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sí, eliminar"}
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(false)}>
+              Cancelar
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Costo modelo */}
@@ -320,7 +299,7 @@ export default function AdminUserDetailPage({
                     <TableCell>{tx.description}</TableCell>
                     <TableCell>{tx.category?.name || "-"}</TableCell>
                     <TableCell className="text-right">
-                      {tx.amount.toLocaleString("es-UY", {
+                      {Number(tx.amount).toLocaleString("es-UY", {
                         minimumFractionDigits: 2,
                       })}
                     </TableCell>
