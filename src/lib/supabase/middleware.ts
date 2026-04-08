@@ -73,5 +73,21 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Chequear si el usuario completó el onboarding
+  // (solo para rutas que NO sean /onboarding)
+  if (pathname !== "/onboarding") {
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("onboarding_completed")
+      .eq("user_id", user.id)
+      .single()
+
+    if (profile && !profile.onboarding_completed) {
+      const url = request.nextUrl.clone()
+      url.pathname = "/onboarding"
+      return NextResponse.redirect(url)
+    }
+  }
+
   return supabaseResponse
 }
