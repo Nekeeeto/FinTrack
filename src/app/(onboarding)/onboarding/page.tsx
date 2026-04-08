@@ -59,6 +59,7 @@ export default function OnboardingPage() {
   const [categoryMode, setCategoryMode] = useState<CategoryMode>(null)
   const [aiPrompt, setAiPrompt] = useState("")
   const [aiLoading, setAiLoading] = useState(false)
+  const [aiProgress, setAiProgress] = useState(0)
   const [categories, setCategories] = useState<CategoryTemplate[]>(CATEGORY_TEMPLATES)
   const [selectedCategories, setSelectedCategories] = useState<Set<number>>(
     () => new Set(CATEGORY_TEMPLATES.map((_, i) => i))
@@ -85,28 +86,52 @@ export default function OnboardingPage() {
   async function generateAiCategories() {
     if (!aiPrompt.trim()) return
     setAiLoading(true)
+    setAiProgress(0)
     setError("")
+
+    // Progreso simulado que avanza rápido al inicio y se frena
+    const interval = setInterval(() => {
+      setAiProgress((prev) => {
+        if (prev >= 90) return prev
+        // Avance más rápido al inicio, más lento al final
+        const increment = prev < 30 ? 4 : prev < 60 ? 2 : 0.5
+        return Math.min(prev + increment, 90)
+      })
+    }, 300)
+
     try {
       const res = await fetch("/api/onboarding/suggest-categories", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ description: aiPrompt.trim() }),
       })
+
+      clearInterval(interval)
+
       if (!res.ok) {
         const data = await res.json()
         setError(data.error || "Error generando categorías")
         setAiLoading(false)
+        setAiProgress(0)
         return
       }
+
+      setAiProgress(100)
       const aiCats: CategoryTemplate[] = await res.json()
+
+      // Pequeña pausa para que se vea el 100%
+      await new Promise((r) => setTimeout(r, 400))
+
       setCategories(aiCats)
       setSelectedCategories(new Set(aiCats.map((_, i) => i)))
       setDeselectedSubs(new Set())
       setExpandedCategories(new Set())
     } catch {
+      clearInterval(interval)
       setError("Error de conexión. Intentá de nuevo.")
     } finally {
       setAiLoading(false)
+      setAiProgress(0)
     }
   }
 
@@ -381,11 +406,41 @@ export default function OnboardingPage() {
                 </div>
               )}
 
-              {/* Loading AI */}
+              {/* Loading AI con barra de progreso */}
               {aiLoading && (
-                <div className="flex flex-col items-center justify-center py-12 gap-3">
-                  <Loader2 className="size-8 animate-spin text-emerald-500" />
-                  <p className="text-sm text-muted-foreground">Generando tus categorías personalizadas...</p>
+                <div className="flex flex-col items-center justify-center py-10 gap-5">
+                  <div className="relative">
+                    <div className="size-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                      <Sparkles className="size-7 text-emerald-500 animate-pulse" />
+                    </div>
+                  </div>
+                  <div className="text-center space-y-1">
+                    <p className="text-sm font-medium">Generando tus categorías personalizadas...</p>
+                    <p className="text-xs text-muted-foreground">
+                      {aiProgress < 30
+                        ? "Analizando tu perfil..."
+                        : aiProgress < 60
+                          ? "Armando categorías a medida..."
+                          : aiProgress < 90
+                            ? "Organizando subcategorías..."
+                            : "¡Casi listo!"}
+                    </p>
+                  </div>
+                  {/* Barra de progreso */}
+                  <div className="w-full max-w-xs">
+                    <div className="h-2 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-emerald-500 transition-all duration-300 ease-out"
+                        style={{ width: `${aiProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground text-center mt-2">
+                      {Math.round(aiProgress)}%
+                    </p>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground/60 text-center max-w-xs">
+                    Esto puede demorar hasta un minuto dependiendo de la complejidad de tu solicitud.
+                  </p>
                 </div>
               )}
 

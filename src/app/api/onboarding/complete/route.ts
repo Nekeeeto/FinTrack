@@ -53,30 +53,62 @@ export async function POST(req: NextRequest) {
     const { data: { user } } = await auth.supabase.auth.getUser()
     const userEmail = user?.email ?? ""
 
-    // 1. Crear o actualizar perfil en user_profiles (upsert)
-    const { error: profileError } = await supabaseAdmin
+    // 1. Asegurar que existe el perfil sin pisar role/plan/onboarding
+    const { data: existingProfile } = await supabaseAdmin
       .from("user_profiles")
-      .upsert({
-        user_id: userId,
-        name,
-        email: userEmail,
-        role: "user",
-        plan: "free",
-        onboarding_completed: false,
-      }, { onConflict: "user_id" })
+      .select("user_id")
+      .eq("user_id", userId)
+      .single()
 
-    if (profileError) {
-      return NextResponse.json(
-        { error: `Error creando/actualizando perfil: ${profileError.message}` },
-        { status: 500 }
-      )
+    if (!existingProfile) {
+      // No existe → crear
+      const { error: insertError } = await supabaseAdmin
+        .from("user_profiles")
+        .insert({
+          user_id: userId,
+          name,
+          email: userEmail,
+          role: "user",
+          plan: "free",
+          onboarding_completed: false,
+        })
+
+      if (insertError) {
+        return NextResponse.json(
+          { error: `Error creando perfil: ${insertError.message}` },
+          { status: 500 }
+        )
+      }
+    } else {
+      // Ya existe → solo actualizar nombre y email
+      const { error: updateError } = await supabaseAdmin
+        .from("user_profiles")
+        .update({ name, email: userEmail })
+        .eq("user_id", userId)
+
+      if (updateError) {
+        return NextResponse.json(
+          { error: `Error actualizando perfil: ${updateError.message}` },
+          { status: 500 }
+        )
+      }
     }
 
-    // 2. Insertar categorias padre e hijas
+    // 2. Limpiar categorías y cuentas previas (por si es un retry)
+    await supabaseAdmin
+      .from("categories")
+      .delete()
+      .eq("user_id", userId)
+
+    await supabaseAdmin
+      .from("accounts")
+      .delete()
+      .eq("user_id", userId)
+
+    // 3. Insertar categorias padre e hijas
     for (let sortOrder = 0; sortOrder < categories.length; sortOrder++) {
       const cat = categories[sortOrder]
 
-      // Insertar categoria padre
       const { data: parentData, error: parentError } = await supabaseAdmin
         .from("categories")
         .insert({
@@ -97,7 +129,6 @@ export async function POST(req: NextRequest) {
         )
       }
 
-      // Insertar subcategorias si hay
       if (cat.subcategories.length > 0) {
         const subcats = cat.subcategories.map((sub, subIndex) => ({
           user_id: userId,
@@ -122,7 +153,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // 3. Insertar cuentas
+    // 4. Insertar cuentas
     const accountRows = accounts.map((acc) => ({
       user_id: userId,
       name: acc.name,
@@ -144,7 +175,7 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // 4. Marcar onboarding como completado
+    // 5. Marcar onboarding como completado (paso final)
     const { error: completeError } = await supabaseAdmin
       .from("user_profiles")
       .update({ onboarding_completed: true })
