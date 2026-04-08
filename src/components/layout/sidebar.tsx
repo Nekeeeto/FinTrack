@@ -38,15 +38,27 @@ export function Sidebar() {
     router.push("/login")
   }
 
+  // Título de la página actual
+  const currentItem = navItems.find(
+    (item) => pathname === item.href || pathname.startsWith(item.href + "/")
+  )
+  const pageTitle = currentItem?.label ?? "Biyuya"
+
   return (
     <>
-      {/* Mobile toggle */}
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 bg-card rounded-lg shadow-md border border-border"
-      >
-        <Menu className="h-5 w-5" />
-      </button>
+      {/* Mobile top bar */}
+      <header className="fixed top-0 left-0 right-0 z-40 md:hidden h-14 bg-card border-b border-border flex items-center px-4 gap-3">
+        <button
+          onClick={() => setOpen(true)}
+          className="p-1.5 -ml-1.5 rounded-lg hover:bg-accent transition-colors"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+        <h1 className="text-base font-semibold flex-1 truncate">
+          <span className="text-emerald-500">$</span> {pageTitle}
+        </h1>
+        <ThemeToggle />
+      </header>
 
       {/* Overlay */}
       {open && (
@@ -68,14 +80,14 @@ export function Sidebar() {
             <span className="text-emerald-500">$</span> Biyuya
           </h1>
           <div className="flex items-center gap-1">
-            <ThemeToggle />
+            <span className="hidden md:inline-flex"><ThemeToggle /></span>
             <button onClick={() => setOpen(false)} className="md:hidden p-1">
               <X className="h-5 w-5" />
             </button>
           </div>
         </div>
 
-        <nav className="flex-1 px-3 space-y-1">
+        <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
             return (

@@ -42,13 +42,13 @@ export function MonthlyFlow({ data }: { data: MonthlyFlowData[] }) {
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11 }}
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--color-muted-foreground)"
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
                 tick={{ fontSize: 11 }}
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--color-muted-foreground)"
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
@@ -59,11 +59,13 @@ export function MonthlyFlow({ data }: { data: MonthlyFlowData[] }) {
                   name === "income" ? "Ingresos" : "Gastos",
                 ]}
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "8px",
                   fontSize: "12px",
+                  color: "var(--color-card-foreground)",
                 }}
+                labelStyle={{ color: "var(--color-muted-foreground)" }}
                 labelFormatter={(label) => label}
               />
               <Legend

@@ -39,13 +39,13 @@ export function BalanceTrend({ data }: { data: TrendData[] }) {
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 11 }}
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--color-muted-foreground)"
                 tickLine={false}
                 axisLine={false}
               />
               <YAxis
                 tick={{ fontSize: 11 }}
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--color-muted-foreground)"
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`}
@@ -53,11 +53,13 @@ export function BalanceTrend({ data }: { data: TrendData[] }) {
               <Tooltip
                 formatter={(value) => [formatMoney(Number(value)), "Saldo"]}
                 contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  backgroundColor: "var(--color-card)",
+                  border: "1px solid var(--color-border)",
                   borderRadius: "8px",
                   fontSize: "12px",
+                  color: "var(--color-card-foreground)",
                 }}
+                labelStyle={{ color: "var(--color-muted-foreground)" }}
               />
               <Line
                 type="monotone"
