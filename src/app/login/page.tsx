@@ -17,7 +17,8 @@ export default function LoginPage() {
   const [error, setError] = useState("")
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
+    // Chequear sesión existente directamente
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         router.replace("/inicio")
       } else {
@@ -66,15 +67,15 @@ export default function LoginPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="fixed inset-0 flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm mx-auto">
+    <div className="fixed inset-0 flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-sm">
         <CardHeader className="text-center space-y-2 pb-4">
           <h1 className="text-2xl font-bold">
             <span className="text-emerald-500">$</span> Biyuya
