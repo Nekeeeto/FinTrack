@@ -42,12 +42,14 @@ Seed inicial: 4 cuentas (GENERAL, PYRO.UY, CASA MIGUEL, DÓLARES) + 9 categoría
 - [ ] Bot de Telegram + OCR
 - [ ] Dashboard principal
 - [ ] Pantalla de transacciones
+- [ ] Asistente de voz (Groq Whisper) — botón flotante global
 
 ## Variables de entorno necesarias
 NEXT_PUBLIC_SUPABASE_URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY
 SUPABASE_SERVICE_ROLE_KEY
 ANTHROPIC_API_KEY
+GROQ_API_KEY
 TELEGRAM_BOT_TOKEN
 TELEGRAM_WEBHOOK_SECRET
 NEXT_PUBLIC_APP_URL
@@ -64,6 +66,7 @@ NEXT_PUBLIC_APP_URL
 - Al terminar cada tarea: listar archivos creados/modificados y por qué
 - Si hay un error de build o lint, corregirlo antes de reportar que terminaste
 - Hacer commit al terminar cada tarea con mensaje descriptivo en español
+- **SIEMPRE actualizar CHANGELOG.md** antes de cada push con los cambios realizados
 
 ## Comandos útiles
 ```bash
