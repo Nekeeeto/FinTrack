@@ -148,31 +148,70 @@ export function FeatureIllustrationAlerts({ className }: Props) {
 export function FeatureIllustrationCloud({ className }: Props) {
   return (
     <svg viewBox="0 0 200 120" fill="none" className={className} aria-hidden xmlns="http://www.w3.org/2000/svg">
-      <ellipse cx="100" cy="78" rx="52" ry="18" className="fill-muted/50 stroke-border dark:fill-white/[0.08] dark:stroke-white/12" strokeWidth="1.2" />
-      <circle cx="78" cy="72" r="16" className="fill-muted/50 dark:fill-white/[0.08]" />
-      <circle cx="100" cy="64" r="20" className="fill-muted/50 dark:fill-white/[0.08]" />
-      <circle cx="124" cy="70" r="14" className="fill-muted/50 dark:fill-white/[0.08]" />
-      <rect x="72" y="88" width="56" height="20" rx="4" className="fill-[#5DBCD2]/12 stroke-[#5DBCD2]/40" strokeWidth="1" />
-      <path d="M88 98h24M88 102h16" className="stroke-[#5DBCD2]/70" strokeWidth="1.2" strokeLinecap="round" />
-      <g>
-        <animateTransform
-          attributeName="transform"
-          type="translate"
-          values="0,0; 0,-4; 0,0"
-          dur="2.5s"
-          repeatCount="indefinite"
-        />
-        <path
-          d="M100 28v12M94 34l6-6 6 6"
-          stroke={ACCENT}
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </g>
-      <circle cx="100" cy="34" r="3" fill={ACCENT} opacity="0.85">
-        <animate attributeName="opacity" values="0.5;1;0.5" dur="2s" repeatCount="indefinite" />
+      <defs>
+        <linearGradient id="cloudGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#5DBCD2" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#5DBCD2" stopOpacity="0.05" />
+        </linearGradient>
+        <linearGradient id="serverGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="currentColor" stopOpacity="0.08" />
+          <stop offset="100%" stopColor="currentColor" stopOpacity="0.02" />
+        </linearGradient>
+      </defs>
+
+      {/* Background Grid/Rings */}
+      <circle cx="100" cy="60" r="45" className="stroke-muted-foreground/10 dark:stroke-white/5" strokeWidth="1" strokeDasharray="4 4" />
+      <circle cx="100" cy="60" r="30" className="stroke-muted-foreground/10 dark:stroke-white/5" strokeWidth="1" strokeDasharray="4 4" />
+
+      {/* Data Streams */}
+      <path d="M88 75 v-25" className="stroke-[#5DBCD2]/40" strokeWidth="1.5" strokeDasharray="2 4" strokeLinecap="round" />
+      <path d="M100 75 v-35" className="stroke-[#5DBCD2]/60" strokeWidth="1.5" strokeDasharray="2 4" strokeLinecap="round" />
+      <path d="M112 75 v-25" className="stroke-[#5DBCD2]/40" strokeWidth="1.5" strokeDasharray="2 4" strokeLinecap="round" />
+
+      {/* Animated Packets */}
+      <circle cx="88" cy="75" r="1.5" fill={ACCENT}>
+        <animate attributeName="cy" values="75;50" dur="1.5s" repeatCount="indefinite" />
+        <animate attributeName="opacity" values="0;1;0" dur="1.5s" repeatCount="indefinite" />
       </circle>
+      <circle cx="100" cy="75" r="2" fill={ACCENT}>
+        <animate attributeName="cy" values="75;40" dur="2s" repeatCount="indefinite" begin="0.5s" />
+        <animate attributeName="opacity" values="0;1;0" dur="2s" repeatCount="indefinite" begin="0.5s" />
+      </circle>
+      <circle cx="112" cy="75" r="1.5" fill={ACCENT}>
+        <animate attributeName="cy" values="75;50" dur="1.8s" repeatCount="indefinite" begin="1s" />
+        <animate attributeName="opacity" values="0;1;0" dur="1.8s" repeatCount="indefinite" begin="1s" />
+      </circle>
+
+      {/* Cloud (Floating) */}
+      <g>
+        <animateTransform attributeName="transform" type="translate" values="0,0; 0,-3; 0,0" dur="3.5s" repeatCount="indefinite" />
+        <g transform="translate(66, 12) scale(2.8)">
+          <path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z" fill="url(#cloudGrad)" stroke="#5DBCD2" strokeWidth="0.75" strokeLinejoin="round" />
+        </g>
+        {/* Cloud Core Glow */}
+        <circle cx="100" cy="38" r="6" fill={ACCENT} opacity="0.2">
+          <animate attributeName="r" values="6;10;6" dur="2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.2;0.05;0.2" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="100" cy="38" r="3" fill={ACCENT} opacity="0.8" />
+      </g>
+
+      {/* Server Rack (Bottom) */}
+      <g transform="translate(70, 75)" className="text-slate-600 dark:text-slate-400">
+        {/* Server 1 */}
+        <rect x="0" y="0" width="60" height="12" rx="3" fill="url(#serverGrad)" stroke="currentColor" strokeWidth="1.2" />
+        <circle cx="8" cy="6" r="1.5" fill="#5DBCD2">
+          <animate attributeName="opacity" values="0.2;1;0.2" dur="1.2s" repeatCount="indefinite" />
+        </circle>
+        <line x1="16" y1="6" x2="52" y2="6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+
+        {/* Server 2 */}
+        <rect x="0" y="16" width="60" height="12" rx="3" fill="url(#serverGrad)" stroke="currentColor" strokeWidth="1.2" />
+        <circle cx="8" cy="22" r="1.5" fill="#10b981">
+          <animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <line x1="16" y1="22" x2="52" y2="22" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" opacity="0.4" />
+      </g>
     </svg>
   )
 }
