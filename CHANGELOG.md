@@ -27,9 +27,6 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - Estilos de modo claro para hero (gradientes y olas), secciones de marketing, FAQ, testimonios, tienda y footer.
 - `src/lib/landing-layout.ts`: `LANDING_CONTAINER` y `LANDING_SECTION_Y` / `LANDING_FOOTER_Y` para alinear `max-w-5xl`, paddings (`px-5 sm:px-6 lg:px-8`) y alturas de sección en toda la landing.
 
-### Eliminado
-- Barra fija inferior de descargas (`MobileDownloadBar`) en la home pública.
-
 ### Cambiado
 - `body` del layout raíz usa `bg-background` para respetar claro/oscuro en toda la app.
 - Tokens semánticos (`foreground`, `muted-foreground`, `card`, `border`) y utilidades `dark:` donde hacía falta para mantener el look oscuro actual.

@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Monitor, Smartphone } from "lucide-react"
 import Link from "next/link"
 import { LANDING_CONTAINER, LANDING_SECTION_Y } from "@/lib/landing-layout"
@@ -57,11 +58,13 @@ export function StoreSection() {
               ].join(" ")}
             >
               <div className="relative h-full w-full overflow-hidden rounded-[1.8rem]">
-                <img
+                <Image
                   src="/marketing-hero.png"
                   alt="Platita: gestor financiero en el navegador"
+                  fill
+                  sizes="(max-width: 768px) 100vw, 384px"
                   className={[
-                    "h-full w-full object-cover object-top",
+                    "object-cover object-top",
                     "transform-gpu will-change-transform",
                     "transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
                     "scale-100 motion-safe:group-hover:scale-[1.12] motion-reduce:transition-none",

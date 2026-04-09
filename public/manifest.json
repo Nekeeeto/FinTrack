@@ -1,11 +1,11 @@
 {
-  "name": "PLATITA.UY - Gestor Financiero",
-  "short_name": "PLATITA",
-  "description": "Controlá tus finanzas personales y de negocio",
+  "name": "Platita — finanzas personales (Uruguay)",
+  "short_name": "Platita",
+  "description": "Gastos, presupuesto y multicuenta en pesos y dólares. Gestor financiero personal en el navegador.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#10b981",
+  "background_color": "#020617",
+  "theme_color": "#020617",
   "orientation": "portrait-primary",
   "icons": [
     {
