@@ -103,7 +103,7 @@ const TESTIMONIALS_ROW_2: Testimonial[] = [
 
 function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
   return (
-    <article className="w-[320px] sm:w-[380px] shrink-0 rounded-3xl border border-white/10 bg-white/[0.02] p-6 sm:p-8 backdrop-blur-md transition-colors hover:border-[#5DBCD2]/30 hover:bg-white/[0.04]">
+    <article className="w-[320px] sm:w-[380px] shrink-0 rounded-3xl border border-border bg-card/90 p-6 sm:p-8 backdrop-blur-md transition-colors hover:border-[#5DBCD2]/35 dark:border-white/10 dark:bg-white/[0.02] dark:hover:border-[#5DBCD2]/30 dark:hover:bg-white/[0.04]">
       <div className="flex gap-1 mb-4">
         {Array.from({ length: 5 }).map((_, i) => (
           <Star
@@ -111,13 +111,13 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
             className={`h-4 w-4 ${
               i < testimonial.rating
                 ? "fill-[#5DBCD2] text-[#5DBCD2]"
-                : "text-white/20"
+                : "text-foreground/15 dark:text-white/20"
             }`}
           />
         ))}
       </div>
       
-      <p className="min-h-[90px] text-sm sm:text-base text-white/80 leading-relaxed italic">
+      <p className="min-h-[90px] text-sm sm:text-base text-muted-foreground leading-relaxed italic dark:text-white/80">
         "{testimonial.quote}"
       </p>
 
@@ -125,11 +125,11 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
         <img
           src={testimonial.avatar}
           alt={testimonial.name}
-          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border border-white/20"
+          className="h-10 w-10 sm:h-12 sm:w-12 rounded-full object-cover border border-border dark:border-white/20"
           loading="lazy"
         />
         <div>
-          <div className="font-semibold text-white truncate text-sm sm:text-base">
+          <div className="font-semibold text-foreground truncate text-sm sm:text-base">
             {testimonial.name}
           </div>
           <div className="text-xs text-[#5DBCD2]">
@@ -143,12 +143,12 @@ function TestimonialCard({ testimonial }: { testimonial: Testimonial }) {
 
 export function TestimonialsCarousel() {
   return (
-    <section className="border-t border-white/[0.06] bg-[#020617] overflow-hidden py-14 sm:py-20 md:py-24">
+    <section className="border-t border-border bg-background overflow-hidden py-14 sm:py-20 md:py-24">
       <div className="max-w-5xl mx-auto px-5 sm:px-6 text-center mb-10 sm:mb-14">
-        <h3 className="reveal text-2xl sm:text-3xl md:text-5xl font-semibold tracking-tight text-white leading-tight">
+        <h3 className="reveal text-2xl sm:text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight">
           Lo que dicen quienes ya usan <span className="text-[#5DBCD2]">PLATITA</span>
         </h3>
-        <p className="reveal mt-3 sm:mt-4 text-sm sm:text-base text-white/55 max-w-2xl mx-auto leading-relaxed">
+        <p className="reveal mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           Personas reales (y billeteras reales). Estas son algunas experiencias sin filtro de los usuarios
           que se animaron a tomar el control.
         </p>
@@ -188,8 +188,8 @@ export function TestimonialsCarousel() {
         </div>
 
         {/* Subtle Side Gradients for blending if viewport is very large */}
-        <div className="pointer-events-none absolute inset-y-0 left-0 w-[5%] bg-linear-to-r from-[#020617] to-transparent z-10" />
-        <div className="pointer-events-none absolute inset-y-0 right-0 w-[5%] bg-linear-to-l from-[#020617] to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-[5%] bg-linear-to-r from-background to-transparent z-10" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-[5%] bg-linear-to-l from-background to-transparent z-10" />
       </div>
     </section>
   )

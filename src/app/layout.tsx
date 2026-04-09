@@ -39,7 +39,7 @@ export default function RootLayout({
         <meta name="theme-color" content="#020617" />
         <link rel="apple-touch-icon" href="/icons/icon-192.png" />
       </head>
-      <body className="min-h-full font-sans bg-[#020617] text-foreground">
+      <body className="min-h-full font-sans bg-background text-foreground">
         <ThemeProvider>
           <PWARegister />
           {children}

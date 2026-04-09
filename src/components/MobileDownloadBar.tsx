@@ -34,11 +34,11 @@ const LINKS: LinkItem[] = [
 export function MobileDownloadBar() {
   return (
     <div className="fixed inset-x-0 bottom-0 z-40 md:hidden">
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-[#020617]/70 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-background/85 to-transparent" />
 
       <div className="pointer-events-auto mx-auto max-w-5xl px-3 sm:px-4 pb-safe pb-3 sm:pb-4">
-        <div className="rounded-2xl border border-white/10 bg-black/50 backdrop-blur-xl shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
-          <div className="flex items-stretch divide-x divide-white/10">
+        <div className="rounded-2xl border border-border bg-card/95 backdrop-blur-xl shadow-lg shadow-slate-900/10 dark:border-white/10 dark:bg-black/50 dark:shadow-[0_25px_80px_rgba(0,0,0,0.65)]">
+          <div className="flex items-stretch divide-x divide-border dark:divide-white/10">
             {LINKS.map((it) => {
               const Icon = it.icon
               return (
@@ -48,14 +48,14 @@ export function MobileDownloadBar() {
                   className="flex-1 px-2 sm:px-3 py-2.5 sm:py-3 active:scale-[0.98] transition-transform"
                 >
                   <div className="flex items-center justify-center gap-1.5 sm:gap-2">
-                    <span className="grid place-items-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-white/5 border border-white/10">
-                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-white/85" />
+                    <span className="grid place-items-center h-7 w-7 sm:h-8 sm:w-8 rounded-xl bg-muted/60 border border-border dark:bg-white/5 dark:border-white/10">
+                      <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-foreground/85 dark:text-white/85" />
                     </span>
                     <div className="text-left min-w-0">
-                      <div className="text-[9px] sm:text-[10px] text-white/55 leading-none">
+                      <div className="text-[9px] sm:text-[10px] text-muted-foreground leading-none dark:text-white/55">
                         Descargar en
                       </div>
-                      <div className="text-[11px] sm:text-xs font-semibold text-white leading-tight flex items-center gap-0.5 sm:gap-1">
+                      <div className="text-[11px] sm:text-xs font-semibold text-foreground leading-tight flex items-center gap-0.5 sm:gap-1 dark:text-white">
                         <span className="truncate">{it.label}</span>
                         <Download className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#5DBCD2]/80 shrink-0" />
                       </div>

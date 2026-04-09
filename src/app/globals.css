@@ -339,6 +339,38 @@
     stroke: rgba(255, 255, 255, 0.22);
   }
 
+  /* Landing hero — modo claro (html.light vía next-themes) */
+  html.light .hero-animated-bg::before {
+    background:
+      radial-gradient(900px 360px at 50% 18%, rgba(93, 188, 210, 0.42), transparent 62%),
+      radial-gradient(720px 320px at 55% 60%, rgba(93, 188, 210, 0.22), transparent 68%),
+      radial-gradient(1150px 520px at 50% 118%, rgba(248, 250, 252, 0.92), transparent 58%),
+      linear-gradient(to bottom, #e0f2f7, #eef8fb 42%, #f9fafb 100%);
+    filter: saturate(1.02);
+  }
+
+  html.light .hero-animated-bg::after {
+    background:
+      radial-gradient(circle at 30% 25%, rgba(93, 188, 210, 0.35), transparent 46%),
+      radial-gradient(circle at 70% 35%, rgba(93, 188, 210, 0.2), transparent 50%),
+      radial-gradient(circle at 50% 62%, rgba(15, 23, 42, 0.04), transparent 52%);
+    opacity: 0.75;
+  }
+
+  html.light .hero-noise {
+    opacity: 0.035;
+    mix-blend-mode: multiply;
+  }
+
+  html.light .hero-waves path {
+    stroke: rgba(15, 23, 42, 0.14);
+  }
+
+  html.light .feature-card:hover {
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+    border-color: rgba(93, 188, 210, 0.35);
+  }
+
   /* ─── FAQ accordion smooth animation ─── */
   .faq-answer {
     display: grid;

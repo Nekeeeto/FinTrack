@@ -2,6 +2,16 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Landing: modo claro y interruptor de tema
+
+### Agregado
+- Interruptor de tema (sol/luna) en el header público de la landing, usando `next-themes` con persistencia en `localStorage` (`fintrack-theme`).
+- Estilos de modo claro para hero (gradientes y olas), secciones de marketing, FAQ, testimonios, tienda, footer y barra móvil de descargas.
+
+### Cambiado
+- `body` del layout raíz usa `bg-background` para respetar claro/oscuro en toda la app.
+- Tokens semánticos (`foreground`, `muted-foreground`, `card`, `border`) y utilidades `dark:` donde hacía falta para mantener el look oscuro actual.
+
 ## [2026-04-08] - Asistente de voz con Groq
 
 ### Mejorado

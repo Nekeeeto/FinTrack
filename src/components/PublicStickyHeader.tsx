@@ -3,6 +3,7 @@
 import Link from "next/link"
 import * as React from "react"
 import { ArrowRight } from "lucide-react"
+import { LandingThemeSwitch } from "@/components/LandingThemeSwitch"
 
 export function PublicStickyHeader() {
   const [visible, setVisible] = React.useState(true)
@@ -48,37 +49,40 @@ export function PublicStickyHeader() {
           className={[
             "mx-auto w-full rounded-full border backdrop-blur-md px-3 py-2 flex items-center justify-between transition-all duration-300",
             scrolled
-              ? "border-white/15 bg-black/55 shadow-[0_20px_80px_rgba(0,0,0,0.55)]"
-              : "border-white/10 bg-black/35 shadow-[0_20px_80px_rgba(0,0,0,0.45)]",
+              ? "border-slate-200/80 bg-white/75 shadow-[0_12px_50px_rgba(15,23,42,0.08)] dark:border-white/15 dark:bg-black/55 dark:shadow-[0_20px_80px_rgba(0,0,0,0.55)]"
+              : "border-slate-200/60 bg-white/60 shadow-[0_12px_40px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-black/35 dark:shadow-[0_20px_80px_rgba(0,0,0,0.45)]",
           ].join(" ")}
         >
           <div className="flex items-center gap-2 px-1 sm:px-2">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#5DBCD2]/20 text-[#5DBCD2] font-semibold text-sm">
               $
             </span>
-            <span className="text-sm font-semibold text-white/90">PLATITA</span>
+            <span className="text-sm font-semibold text-foreground/90">PLATITA</span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-5 text-xs text-white/70">
-            <a className="hover:text-white transition-colors" href="#features">
+          <nav className="hidden md:flex items-center gap-5 text-xs text-muted-foreground">
+            <a className="hover:text-foreground transition-colors" href="#features">
               Características
             </a>
-            <a className="hover:text-white transition-colors" href="#pricing">
+            <a className="hover:text-foreground transition-colors" href="#pricing">
               Precios
             </a>
-            <a className="hover:text-white transition-colors" href="#faq">
+            <a className="hover:text-foreground transition-colors" href="#faq">
               FAQ
             </a>
           </nav>
 
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#5DBCD2]/90 px-3.5 sm:px-4 py-2 text-xs font-semibold text-black hover:bg-[#5DBCD2] transition-colors active:scale-[0.97]"
-          >
-            <span className="hidden sm:inline">Iniciar sesión</span>
-            <span className="sm:hidden">Entrar</span>
-            <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-          </Link>
+          <div className="flex items-center gap-2 sm:gap-3">
+            <LandingThemeSwitch />
+            <Link
+              href="/login"
+              className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full bg-[#5DBCD2]/90 px-3.5 sm:px-4 py-2 text-xs font-semibold text-black hover:bg-[#5DBCD2] transition-colors active:scale-[0.97]"
+            >
+              <span className="hidden sm:inline">Iniciar sesión</span>
+              <span className="sm:hidden">Entrar</span>
+              <ArrowRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            </Link>
+          </div>
         </div>
       </div>
     </div>

@@ -28,7 +28,7 @@ export function WebVersionLink() {
     <Link 
       href="/login" 
       onClick={() => playSuccessChime()}
-      className="text-sm font-medium text-white/60 hover:text-white transition-colors flex items-center gap-1 group"
+      className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group"
     >
       O usá la versión web <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
     </Link>
