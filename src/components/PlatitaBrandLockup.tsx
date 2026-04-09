@@ -4,8 +4,9 @@ import { cn } from "@/lib/utils"
 
 const sizes = {
   sm: {
-    wrap: "gap-2",
-    icon: "h-7 w-7 shrink-0",
+    wrap: "gap-2.5",
+    /* ~36px: a text-sm el trazo del SVG no se cae a subpíxeles */
+    icon: "h-9 w-9 shrink-0 min-h-9 min-w-9",
     text: "text-sm font-semibold tracking-tight",
   },
   md: {
@@ -41,11 +42,11 @@ export function PlatitaBrandLockup({
     <>
       <span
         className={cn(
-          "platita-isotype-neon inline-flex items-center justify-center rounded-xl text-[#10b981]",
+          "platita-isotype-neon inline-flex items-center justify-center overflow-visible text-[#10b981]",
           s.icon
         )}
       >
-        <PlatitaIsotype className="h-[85%] w-[85%]" />
+        <PlatitaIsotype className="block h-full w-full max-h-full max-w-full" />
       </span>
       <span
         className={cn(s.text, "text-foreground/95", wordmarkClassName)}

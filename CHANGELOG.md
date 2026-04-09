@@ -8,6 +8,10 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - `PlatitaIsotype`: trazos en Q con puntas separadas y rombo centrado en el pinch (evita leerse como una sola onda).
 - Hero público: sin lockup duplicado; marca solo en header (y footer).
 
+### Cambiado (refinamiento visual)
+- Lockup `sm`: icono `h-9 w-9`, sin escalar el SVG al 85% (evita trazos ~1px y bordes rotos).
+- `PlatitaIsotype`: `viewBox` 44, `strokeWidth` 5.5, `overflow="visible"`; glow CSS más suave y sin `will-change: filter`.
+
 ## [2026-04-09] - Landing: lockup Platita (isotipo + texto) y glow animado
 
 ### Agregado

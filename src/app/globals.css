@@ -414,27 +414,28 @@
   }
 
   /* ─── Platita isotipo: glow “neon” suave (landing) ─── */
+  /* Glow más contenido: menos salto entre keyframes evita “borroso / roto” en iconos chicos */
   @keyframes platita-neon-dark {
     0%,
     100% {
-      filter: drop-shadow(0 0 6px rgb(16 185 129 / 0.55))
-        drop-shadow(0 0 16px rgb(16 185 129 / 0.28));
+      filter: drop-shadow(0 0 5px rgb(16 185 129 / 0.5))
+        drop-shadow(0 0 12px rgb(16 185 129 / 0.22));
     }
     50% {
-      filter: drop-shadow(0 0 10px rgb(16 185 129 / 0.95))
-        drop-shadow(0 0 26px rgb(16 185 129 / 0.45));
+      filter: drop-shadow(0 0 7px rgb(16 185 129 / 0.75))
+        drop-shadow(0 0 18px rgb(16 185 129 / 0.32));
     }
   }
 
   @keyframes platita-neon-light {
     0%,
     100% {
-      filter: drop-shadow(0 0 4px rgb(16 185 129 / 0.4))
-        drop-shadow(0 0 12px rgb(16 185 129 / 0.18));
+      filter: drop-shadow(0 0 3px rgb(16 185 129 / 0.35))
+        drop-shadow(0 0 10px rgb(16 185 129 / 0.14));
     }
     50% {
-      filter: drop-shadow(0 0 8px rgb(16 185 129 / 0.65))
-        drop-shadow(0 0 18px rgb(16 185 129 / 0.28));
+      filter: drop-shadow(0 0 5px rgb(16 185 129 / 0.55))
+        drop-shadow(0 0 14px rgb(16 185 129 / 0.22));
     }
   }
 
@@ -449,8 +450,8 @@
   }
 
   .platita-isotype-neon {
+    overflow: visible;
     animation: platita-neon-dark 3.4s ease-in-out infinite;
-    will-change: filter;
   }
 
   .platita-isotype-neon .platita-sparkle-fill {
