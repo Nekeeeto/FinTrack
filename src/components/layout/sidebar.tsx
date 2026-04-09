@@ -8,7 +8,6 @@ import {
   Landmark,
   Tags,
   Settings,
-  Menu,
   X,
   Target,
   Brain,
@@ -17,16 +16,22 @@ import {
   LogOut,
   Camera,
   Plus,
-  BarChart3,
-  MoreHorizontal,
   CalendarClock,
   HelpCircle,
+  User,
+  Bot,
+  Grid2x2,
+  Mic,
+  Bookmark,
+  CirclePlus,
 } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { useAuth } from "@/lib/auth-context"
 import { supabase } from "@/lib/supabase/client"
+import { PlatitaBrandLockup } from "@/components/PlatitaBrandLockup"
 
 const baseNavItems = [
   { href: "/inicio", label: "Dashboard", icon: LayoutDashboard },
@@ -43,18 +48,90 @@ const baseNavItems = [
 
 // Items para la bottom nav en mobile
 const bottomNavItems = [
-  { href: "/inicio", label: "Panel", icon: LayoutDashboard },
+  { href: "/inicio", label: "Inicio", icon: LayoutDashboard },
   { href: "/presupuestos", label: "Presupuestos", icon: Target },
-  // El centro es el botón FAB (+)
-  { href: "/analisis", label: "Análisis", icon: BarChart3 },
+  { href: "/analisis", label: "Análisis IA", icon: Bot },
+  { href: "/menu", label: "Menú", icon: Grid2x2 },
+]
+
+type QuickActionRow =
+  | {
+      key: string
+      kind: "link"
+      href: string
+      title: string
+      subtitle: string
+      Icon: LucideIcon
+      iconClassName: string
+    }
+  | {
+      key: string
+      kind: "voice"
+      title: string
+      subtitle: string
+      Icon: LucideIcon
+      iconClassName: string
+    }
+  | {
+      key: string
+      kind: "soon"
+      title: string
+      subtitle: string
+      Icon: LucideIcon
+      iconClassName: string
+    }
+
+const quickActionRows: QuickActionRow[] = [
+  {
+    key: "new",
+    kind: "link",
+    href: "/transacciones?new=1",
+    title: "Nuevo movimiento",
+    subtitle: "Registrar ingreso o gasto",
+    Icon: CirclePlus,
+    iconClassName: "text-primary",
+  },
+  {
+    key: "voice",
+    kind: "voice",
+    title: "Registro por voz",
+    subtitle: "Dictá tu movimiento",
+    Icon: Mic,
+    iconClassName: "text-violet-400",
+  },
+  {
+    key: "scan",
+    kind: "link",
+    href: "/escaner",
+    title: "Escanear foto",
+    subtitle: "Subí ticket o factura",
+    Icon: Camera,
+    iconClassName: "text-primary",
+  },
+  {
+    key: "transfer",
+    kind: "soon",
+    title: "Nueva transferencia",
+    subtitle: "Próximamente",
+    Icon: ArrowLeftRight,
+    iconClassName: "text-muted-foreground",
+  },
+  {
+    key: "template",
+    kind: "soon",
+    title: "Usar plantilla",
+    subtitle: "Próximamente",
+    Icon: Bookmark,
+    iconClassName: "text-muted-foreground",
+  },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
   const router = useRouter()
-  const { isAdmin } = useAuth()
+  const { isAdmin, profile } = useAuth()
   const [open, setOpen] = useState(false)
-  const [moreOpen, setMoreOpen] = useState(false)
+  const [quickActionsOpen, setQuickActionsOpen] = useState(false)
 
   const navItems = [
     ...baseNavItems,
@@ -62,145 +139,159 @@ export function Sidebar() {
     { href: "/configuracion", label: "Configuración", icon: Settings },
   ]
 
-  // Items que van en "Más" (los que no están en la bottom nav)
-  const moreItems = navItems.filter(
-    (item) => !bottomNavItems.some((b) => b.href === item.href)
-  )
-
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push("/login")
   }
 
-  const currentItem = navItems.find(
-    (item) => pathname === item.href || pathname.startsWith(item.href + "/")
-  )
-  const pageTitle = currentItem?.label ?? "PLATITA"
-
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/")
 
+  const firstName = profile?.name?.split(" ")[0] || "Hola"
+  const isMenuPage = pathname === "/menu"
+
+  function openVoiceAssistant() {
+    window.dispatchEvent(new CustomEvent("fintrack:open-voice-assistant"))
+    setQuickActionsOpen(false)
+  }
+
   return (
     <>
-      {/* Mobile top bar - simplified */}
-      <header className="fixed top-0 left-0 right-0 z-40 md:hidden h-14 bg-card/80 backdrop-blur-lg border-b border-border/50 flex items-center px-4 gap-3">
+      {/* Mobile top bar */}
+      <header className="fixed top-0 left-0 right-0 z-40 md:hidden h-16 bg-card/80 backdrop-blur-xl border-b border-border/50 flex items-center px-4 gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-lg font-bold text-primary">$</span>
-          <h1 className="text-base font-semibold truncate">{pageTitle}</h1>
+          {isMenuPage ? (
+            <h1 className="text-3xl font-semibold tracking-tight">Menú</h1>
+          ) : (
+            <>
+              <span className="h-8 w-8 rounded-full border border-border/70 inline-flex items-center justify-center">
+                <User className="h-4 w-4 text-muted-foreground" />
+              </span>
+              <span className="text-xl font-semibold truncate">{firstName}</span>
+            </>
+          )}
         </div>
-        <ThemeToggle />
-        <button
-          onClick={() => setOpen(true)}
-          className="p-1.5 rounded-lg hover:bg-accent transition-colors"
-        >
-          <Menu className="h-5 w-5" />
-        </button>
+        {isMenuPage ? (
+          <Link
+            href="/configuracion"
+            className="h-10 w-10 rounded-full bg-muted/60 inline-flex items-center justify-center hover:bg-muted transition-colors"
+          >
+            <Settings className="h-5 w-5" />
+          </Link>
+        ) : (
+          <>
+            <span className="hidden min-[380px]:inline-flex">
+              <PlatitaBrandLockup size="sm" href="/inicio" wordmarkClassName="text-base" />
+            </span>
+            <span className="min-[380px]:hidden inline-flex">
+              <ThemeToggle />
+            </span>
+          </>
+        )}
       </header>
 
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-card/80 backdrop-blur-lg border-t border-border/50">
-        <div className="flex items-center justify-around h-16 px-2 pb-safe">
-          {bottomNavItems.map((item, i) => {
+      <nav className="fixed bottom-3 left-3 right-3 z-40 md:hidden rounded-3xl border border-white/10 bg-card/65 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]">
+        <div className="flex items-center justify-around h-16 px-2">
+          {bottomNavItems.map((item) => {
             const NavIcon = item.icon
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
-                  isActive(item.href) ? "text-primary" : "text-muted-foreground"
+                  "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-300",
+                  isActive(item.href)
+                    ? "bg-primary/18 text-primary scale-105 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.25)]"
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <NavIcon className="h-5 w-5" />
                 <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             )
-          }).slice(0, 2)}
-
-          {/* FAB center button */}
-          <Link
-            href="/transacciones?new=1"
-            className="flex items-center justify-center h-12 w-12 -mt-5 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 active:scale-95 transition-transform"
-          >
-            <Plus className="h-6 w-6" />
-          </Link>
-
-          {(() => {
-            const item = bottomNavItems[2]
-            const NavIcon = item.icon
-            return (
-                <Link
-              href={item.href}
-              className={cn(
-              "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
-                  isActive(item.href) ? "text-primary" : "text-muted-foreground"
-                )}
-              >
-                <NavIcon className="h-5 w-5" />
-                <span className="text-[10px] font-medium">{item.label}</span>
-              </Link>
-            )
-          })()}
-
-          {/* Más */}
-            <button
-              onClick={() => setMoreOpen(true)}
-              className={cn(
-              "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
-              moreOpen ? "text-primary" : "text-muted-foreground"
-            )}
-          >
-            <MoreHorizontal className="h-5 w-5" />
-            <span className="text-[10px] font-medium">Más</span>
-          </button>
+          })}
         </div>
       </nav>
-
-      {/* "Más" drawer overlay */}
-      {moreOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-50 md:hidden"
-          onClick={() => setMoreOpen(false)}
+      {quickActionsOpen && (
+        <button
+          onClick={() => setQuickActionsOpen(false)}
+          className="fixed inset-0 z-40 bg-black/45"
+          aria-label="Cerrar acciones rápidas"
         />
       )}
 
-      {/* "Más" bottom sheet */}
-      <div
-        className={cn(
-          "fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card rounded-t-2xl transition-transform duration-300 ease-out",
-          moreOpen ? "translate-y-0" : "translate-y-full"
-        )}
-      >
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-muted-foreground/30" />
-        </div>
-        <nav className="px-4 pb-8 pt-2 space-y-1 max-h-[60vh] overflow-y-auto">
-          {moreItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setMoreOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
-                isActive(item.href)
-                  ? "bg-primary/10 text-primary"
-                  : "text-foreground hover:bg-accent"
-              )}
-            >
-              <item.icon className="h-5 w-5" />
-              {item.label}
-            </Link>
-          ))}
-          <div className="border-t border-border mt-2 pt-2">
-            <button
-              onClick={() => { setMoreOpen(false); handleLogout() }}
-              className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors w-full"
-            >
-              <LogOut className="h-5 w-5" />
-              Cerrar sesión
-            </button>
+      <div className={cn("fixed z-50 right-4", "bottom-24 md:bottom-8 md:right-8")}>
+        {quickActionsOpen && (
+          <div className="mb-3 w-[310px] max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-card/90 backdrop-blur-xl p-3 shadow-[0_18px_40px_rgba(0,0,0,0.5)]">
+            {quickActionRows.map((row) => {
+              const Icon = row.Icon
+              const text = (
+                <span className="flex-1 min-w-0 text-right">
+                  <span className="block text-xl leading-none font-semibold">{row.title}</span>
+                  <span className="block text-muted-foreground">{row.subtitle}</span>
+                </span>
+              )
+              const iconEl = (
+                <Icon className={cn("h-5 w-5 shrink-0 mt-0.5", row.iconClassName)} aria-hidden />
+              )
+              const rowClass = cn(
+                "flex w-full flex-row-reverse items-start gap-3 rounded-2xl px-3 py-2.5 transition-colors"
+              )
+
+              if (row.kind === "link") {
+                return (
+                  <Link
+                    key={row.key}
+                    href={row.href}
+                    onClick={() => setQuickActionsOpen(false)}
+                    className={cn(rowClass, "hover:bg-accent/60")}
+                  >
+                    {iconEl}
+                    {text}
+                  </Link>
+                )
+              }
+              if (row.kind === "voice") {
+                return (
+                  <button
+                    key={row.key}
+                    type="button"
+                    onClick={openVoiceAssistant}
+                    className={cn(rowClass, "hover:bg-accent/60")}
+                  >
+                    {iconEl}
+                    {text}
+                  </button>
+                )
+              }
+              return (
+                <button
+                  key={row.key}
+                  type="button"
+                  onClick={() => setQuickActionsOpen(false)}
+                  className={cn(rowClass, "opacity-70")}
+                >
+                  {iconEl}
+                  {text}
+                </button>
+              )
+            })}
           </div>
-        </nav>
+        )}
+
+        <button
+          onClick={() => setQuickActionsOpen((prev) => !prev)}
+          className={cn(
+            "flex items-center justify-center h-14 w-14 md:h-[3.75rem] md:w-[3.75rem] rounded-full shadow-lg active:scale-95 transition-all",
+            quickActionsOpen
+              ? "bg-primary/90 text-primary-foreground rotate-45"
+              : "bg-primary text-primary-foreground shadow-primary/30"
+          )}
+          aria-label="Acciones rápidas"
+        >
+          <Plus className="h-6 w-6" />
+        </button>
       </div>
 
       {/* Sidebar drawer overlay (legacy, still used for drawer) */}

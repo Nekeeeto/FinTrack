@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Acciones rápidas (FAB): alineación de íconos y orden «Próximamente»
+
+### Cambiado
+- `Sidebar`: en el menú del botón flotante, los íconos quedan alineados a la derecha (misma columna que el FAB) con texto alineado a la derecha; las entradas «Próximamente» (transferencia y plantilla) pasan al final de la lista.
+
 ## [2026-04-09] - Admin: costo modelo (model_usage) usa cost_usd
 
 ### Corregido
