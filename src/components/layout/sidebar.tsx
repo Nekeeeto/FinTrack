@@ -232,16 +232,21 @@ export function Sidebar() {
             {quickActionRows.map((row) => {
               const Icon = row.Icon
               const text = (
-                <span className="flex-1 min-w-0">
+                <span className="min-w-0 flex-1 text-left">
                   <span className="block text-lg leading-tight font-semibold">{row.title}</span>
                   <span className="block text-sm text-muted-foreground">{row.subtitle}</span>
                 </span>
               )
               const iconEl = (
-                <Icon className={cn("h-4 w-4 shrink-0 mt-px", row.iconClassName)} aria-hidden />
+                <span
+                  className="flex h-8 w-8 shrink-0 items-center justify-center"
+                  aria-hidden
+                >
+                  <Icon className={cn("h-[15px] w-[15px]", row.iconClassName)} />
+                </span>
               )
               const rowClass = cn(
-                "flex w-full items-start gap-2.5 rounded-2xl px-2.5 py-2 transition-colors"
+                "flex w-full items-start justify-start gap-2.5 rounded-2xl px-2.5 py-2 text-left transition-colors"
               )
 
               if (row.kind === "link") {

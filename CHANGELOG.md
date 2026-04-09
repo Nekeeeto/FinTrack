@@ -6,6 +6,7 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 
 ### Cambiado
 - `Sidebar`: contenedor `flex flex-col items-end` para que el botón flotante siga pegado a la derecha al abrir el panel (antes el ancho del panel empujaba el FAB hacia la izquierda); panel y tipografía un poco más compactos; FAB e ícono «+» reducidos; filas del menú con ícono a la izquierda; entradas «Próximamente» al final de la lista.
+- `Sidebar` (menú FAB): `justify-start` y `text-left` en cada fila para anular el centrado por defecto de `<button>` (la primera fila es `<Link>` y se veía distinta); celda fija 8×8 para alinear íconos; SVG de fila un poco más chico.
 
 ## [2026-04-09] - Admin: costo modelo (model_usage) usa cost_usd
 
