@@ -274,8 +274,9 @@ export function VoiceAssistant() {
       })
 
       if (!res.ok) {
+        const errData = await res.json().catch(() => ({ error: "Error desconocido" }))
         setState("error")
-        setFeedback("Error al procesar el audio. Intentá de nuevo.")
+        setFeedback(errData.error || "Error al procesar el audio. Intentá de nuevo.")
         return
       }
 

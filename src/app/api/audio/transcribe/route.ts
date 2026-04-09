@@ -7,7 +7,7 @@ export async function POST(req: NextRequest) {
 
   const apiKey = process.env.GROQ_API_KEY
   if (!apiKey) {
-    return NextResponse.json({ error: "GROQ_API_KEY no configurada" }, { status: 500 })
+    return NextResponse.json({ error: "GROQ_API_KEY no configurada. Agregala en Vercel." }, { status: 500 })
   }
 
   try {
@@ -18,9 +18,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No se recibió audio" }, { status: 400 })
     }
 
+    // Convertir a buffer para re-enviar a Groq correctamente
+    const arrayBuffer = await audio.arrayBuffer()
+    const buffer = Buffer.from(arrayBuffer)
+
+    // Detectar extensión según el tipo MIME
+    const mimeType = audio.type || "audio/webm"
+    const ext = mimeType.includes("mp4") ? "mp4"
+      : mimeType.includes("ogg") ? "ogg"
+      : mimeType.includes("wav") ? "wav"
+      : "webm"
+
+    const file = new File([buffer], `audio.${ext}`, { type: mimeType })
+
     // Enviar a Groq Whisper
     const groqForm = new FormData()
-    groqForm.append("file", audio, "audio.webm")
+    groqForm.append("file", file)
     groqForm.append("model", "whisper-large-v3-turbo")
     groqForm.append("language", "es")
     groqForm.append("response_format", "json")
@@ -34,9 +47,12 @@ export async function POST(req: NextRequest) {
     })
 
     if (!res.ok) {
-      const err = await res.text()
-      console.error("Groq error:", err)
-      return NextResponse.json({ error: "Error al transcribir audio" }, { status: 502 })
+      const errText = await res.text()
+      console.error("Groq error:", res.status, errText)
+      return NextResponse.json(
+        { error: `Error de Groq (${res.status}): ${errText}` },
+        { status: 502 }
+      )
     }
 
     const data = await res.json()
@@ -44,6 +60,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ text: data.text })
   } catch (err) {
     console.error("Error en transcripción:", err)
-    return NextResponse.json({ error: "Error interno" }, { status: 500 })
+    return NextResponse.json({ error: `Error interno: ${err}` }, { status: 500 })
   }
 }
