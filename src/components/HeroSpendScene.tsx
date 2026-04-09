@@ -1,157 +1,125 @@
 "use client"
 
-import { Bike, Coins, QrCode, Wallet } from "lucide-react"
+import { ArrowUpRight, Mic, Receipt, RefreshCcw, Sparkles } from "lucide-react"
 
-const BADGES: { label: string; sub: string; Icon: typeof Bike; delay: string; className: string }[] = [
-  {
-    label: "Delivery",
-    sub: "Pedidos Ya · apps",
-    Icon: Bike,
-    delay: "0s",
-    className:
-      "border-orange-500/25 bg-orange-500/10 text-orange-800 dark:text-orange-200 dark:border-orange-400/30 dark:bg-orange-500/15",
-  },
-  {
-    label: "Mercado Pago",
-    sub: "QR · billetera",
-    Icon: QrCode,
-    delay: "0.35s",
-    className:
-      "border-sky-500/25 bg-sky-500/10 text-sky-900 dark:text-sky-100 dark:border-sky-400/30 dark:bg-sky-500/15",
-  },
-  {
-    label: "Efectivo",
-    sub: "Caja · almacén",
-    Icon: Wallet,
-    delay: "0.7s",
-    className:
-      "border-emerald-500/25 bg-emerald-500/10 text-emerald-900 dark:text-emerald-100 dark:border-emerald-400/30 dark:bg-emerald-500/15",
-  },
-  {
-    label: "Dólares",
-    sub: "Ahorro · cambio",
-    Icon: Coins,
-    delay: "1.05s",
-    className:
-      "border-amber-400/35 bg-amber-400/15 text-amber-950 dark:text-amber-100 dark:border-amber-300/35 dark:bg-amber-400/10",
-  },
-]
-
-/** Hero: lata / alcancía + píldoras de gasto típicos (sin logotipos de terceros). */
+/** Hero: widget de balance central con píldoras flotantes (minimalista, pro, glassmorphism). */
 export function HeroSpendScene() {
   return (
     <div
-      className="mx-auto mb-8 max-w-2xl px-1 sm:mb-10"
+      className="relative mx-auto mb-16 mt-8 w-full max-w-2xl px-2 sm:mb-24 sm:px-6"
       role="img"
-      aria-label="Ilustración: delivery, pagos con QR, efectivo y dólares reunidos en un solo registro, como una alcancía."
+      aria-label="Ilustración: dashboard minimalista con balance total y notificaciones flotantes de gastos por voz, escaneo y cambio de moneda."
     >
-      <p className="text-center text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground sm:text-[11px]">
-        Un solo lugar para todo lo que gastás
-      </p>
+      {/* Resplandor de fondo */}
+      <div className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#5DBCD2]/20 blur-[100px] dark:bg-[#5DBCD2]/15 dark:blur-[120px]" />
 
-      <div className="relative mx-auto mt-5 flex h-[min(200px,42vw)] max-h-[220px] min-h-[160px] w-full max-w-md items-center justify-center sm:mt-6 sm:h-[220px] sm:max-h-none">
-        {/* anillo decorativo */}
-        <div
-          className="pointer-events-none absolute inset-[8%] rounded-full border border-dashed border-[#5DBCD2]/20 dark:border-[#5DBCD2]/25 hero-orbit-spin"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute inset-[18%] rounded-full border border-[#5DBCD2]/10 opacity-60 dark:opacity-80 hero-orbit-spin-reverse"
-          aria-hidden
-        />
-
-        {/* monedas flotando detrás */}
-        <span
-          className="pointer-events-none absolute left-[12%] top-[18%] h-7 w-7 rounded-full bg-linear-to-br from-amber-300 to-amber-600 opacity-80 shadow-md hero-coin-float"
-          style={{ animationDelay: "0.2s" }}
-          aria-hidden
-        />
-        <span
-          className="pointer-events-none absolute right-[14%] top-[22%] h-5 w-5 rounded-full bg-linear-to-br from-slate-200 to-slate-400 opacity-90 shadow hero-coin-float"
-          style={{ animationDelay: "0.8s" }}
-          aria-hidden
-        />
-        <span
-          className="pointer-events-none absolute bottom-[20%] left-[20%] h-4 w-4 rounded-full bg-[#5DBCD2]/40 blur-[1px] hero-coin-float"
-          style={{ animationDelay: "1.1s" }}
-          aria-hidden
-        />
-
-        {/* lata / alcancía */}
-        <div className="relative z-10 hero-can-wobble" style={{ transformStyle: "preserve-3d" }}>
-          <div className="relative drop-shadow-[0_20px_40px_rgba(93,188,210,0.25)] dark:drop-shadow-[0_24px_48px_rgba(0,0,0,0.45)]">
-            <svg
-              width="120"
-              height="168"
-              viewBox="0 0 120 168"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-[140px] w-[min(100px,26vw)] sm:h-[168px] sm:w-[120px]"
-              aria-hidden
-            >
-              <defs>
-                <linearGradient id="heroCanBody" x1="0" y1="60" x2="120" y2="60" gradientUnits="userSpaceOnUse">
-                  <stop offset="0" stopColor="#475569" />
-                  <stop offset="0.32" stopColor="#cbd5e1" />
-                  <stop offset="0.55" stopColor="#64748b" />
-                  <stop offset="1" stopColor="#334155" />
-                </linearGradient>
-                <linearGradient id="heroCanShine" x1="60" y1="48" x2="60" y2="140" gradientUnits="userSpaceOnUse">
-                  <stop offset="0" stopColor="#5DBCD2" stopOpacity="0.38" />
-                  <stop offset="1" stopColor="#5DBCD2" stopOpacity="0" />
-                </linearGradient>
-              </defs>
-              {/* tapa elipse */}
-              <ellipse cx="60" cy="36" rx="38" ry="14" className="fill-slate-500 dark:fill-slate-600" />
-              <ellipse cx="60" cy="34" rx="34" ry="11" className="fill-slate-400/90 dark:fill-slate-500" />
-              {/* cuerpo */}
-              <path
-                d="M22 40c0-4 17-8 38-8s38 4 38 8v108c0 6-17 12-38 12S22 154 22 148V40z"
-                fill="url(#heroCanBody)"
-              />
-              <path d="M26 48h68v92H26z" fill="url(#heroCanShine)" opacity="0.9" />
-              {/* ranura */}
-              <rect x="34" y="52" width="52" height="7" rx="3.5" className="fill-slate-800/80 dark:fill-black/50" />
-              <rect x="36" y="53.5" width="48" height="4" rx="2" className="fill-slate-950/60 dark:fill-black/40" />
-              {/* $ */}
-              <text
-                x="60"
-                y="118"
-                textAnchor="middle"
-                fill="#5DBCD2"
-                style={{
-                  fontFamily: "system-ui, sans-serif",
-                  fontSize: 44,
-                  fontWeight: 800,
-                  opacity: 0.92,
-                }}
-              >
-                $
-              </text>
-              {/* brillo lateral */}
-              <path
-                d="M28 52c8-2 16-3 24-3v90c-8 0-16-1-24-3V52z"
-                className="fill-white/25 dark:fill-white/10"
-              />
-            </svg>
-            {/* resplandor */}
-            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-full bg-[#5DBCD2]/15 blur-2xl hero-can-glow" />
+      {/* Tarjeta central (Balance) */}
+      <div className="relative z-10 mx-auto w-full max-w-[320px] rounded-[2.5rem] border border-border/50 bg-background/40 p-6 shadow-2xl backdrop-blur-2xl sm:max-w-[360px] sm:p-8 dark:border-white/10 dark:bg-[#020617]/40 dark:shadow-[0_0_80px_rgba(93,188,210,0.15)]">
+        <div className="mb-6 flex items-center justify-between sm:mb-8">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#5DBCD2]/20">
+              <span className="text-sm font-bold text-[#5DBCD2]">$</span>
+            </div>
+            <span className="text-sm font-semibold text-muted-foreground">
+              Mi Billetera
+            </span>
           </div>
+          <Sparkles className="h-4 w-4 animate-pulse text-[#5DBCD2]" />
+        </div>
+
+        <div className="space-y-2 text-left">
+          <h3 className="text-4xl font-bold tracking-tighter text-foreground sm:text-5xl">
+            $ 142.500
+          </h3>
+          <div className="flex items-center gap-1.5 text-sm font-medium text-emerald-600 dark:text-emerald-400">
+            <div className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20">
+              <ArrowUpRight className="h-3 w-3" />
+            </div>
+            <span>+12.5% este mes</span>
+          </div>
+        </div>
+
+        {/* Mini gráfico SVG */}
+        <div className="mt-8 h-20 w-full">
+          <svg
+            viewBox="0 0 200 60"
+            className="h-full w-full overflow-visible"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#5DBCD2" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#5DBCD2" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <path
+              d="M0 50 Q 20 45, 40 50 T 80 30 T 120 40 T 160 15 T 200 5 L 200 60 L 0 60 Z"
+              fill="url(#chartGrad)"
+            />
+            <path
+              d="M0 50 Q 20 45, 40 50 T 80 30 T 120 40 T 160 15 T 200 5"
+              fill="none"
+              stroke="#5DBCD2"
+              strokeWidth="3"
+              strokeLinecap="round"
+              className="drop-shadow-[0_4px_6px_rgba(93,188,210,0.5)]"
+            />
+            <circle
+              cx="200"
+              cy="5"
+              r="4"
+              fill="#020617"
+              stroke="#5DBCD2"
+              strokeWidth="2"
+              className="dark:fill-white"
+            />
+          </svg>
         </div>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-2 sm:mt-6 sm:grid-cols-4 sm:gap-3">
-        {BADGES.map(({ label, sub, Icon, delay, className }) => (
-          <div
-            key={label}
-            className={`hero-badge-float flex flex-col items-center gap-1 rounded-2xl border px-2.5 py-2.5 text-center sm:px-3 sm:py-3 ${className}`}
-            style={{ animationDelay: delay }}
-          >
-            <Icon className="h-4 w-4 shrink-0 opacity-90 sm:h-[18px] sm:w-[18px]" strokeWidth={2.2} />
-            <span className="text-[11px] font-bold leading-tight sm:text-xs">{label}</span>
-            <span className="text-[9px] font-medium leading-tight opacity-80 sm:text-[10px]">{sub}</span>
-          </div>
-        ))}
+      {/* Píldora flotante 1: Voz */}
+      <div className="hero-badge-float absolute -left-2 top-[10%] z-20 flex items-center gap-3 rounded-2xl border border-border bg-background/90 p-3 shadow-xl backdrop-blur-xl sm:-left-12 sm:top-[15%] dark:border-white/10 dark:bg-[#0a101a]/90">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-violet-500/15">
+          <Mic className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+        </div>
+        <div className="text-left">
+          <p className="text-[10px] font-medium italic text-muted-foreground">
+            "Cena en el bar mil doscientos"
+          </p>
+          <p className="text-sm font-bold text-foreground">🍔 -$1.200</p>
+        </div>
+      </div>
+
+      {/* Píldora flotante 2: Escaneo */}
+      <div
+        className="hero-badge-float absolute -right-2 top-[45%] z-20 flex items-center gap-3 rounded-2xl border border-border bg-background/90 p-3 shadow-xl backdrop-blur-xl sm:-right-12 sm:top-[40%] dark:border-white/10 dark:bg-[#0a101a]/90"
+        style={{ animationDelay: "1s" }}
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
+          <Receipt className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        </div>
+        <div className="text-left">
+          <p className="text-[10px] font-medium text-muted-foreground">
+            Ticket escaneado
+          </p>
+          <p className="text-sm font-bold text-foreground">🛒 -$3.450</p>
+        </div>
+      </div>
+
+      {/* Píldora flotante 3: Multimoneda */}
+      <div
+        className="hero-badge-float absolute -bottom-5 left-1/2 z-20 flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-border bg-background/90 px-4 py-3 shadow-xl backdrop-blur-xl sm:-bottom-8 dark:border-white/10 dark:bg-[#0a101a]/90"
+        style={{ animationDelay: "2s" }}
+      >
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-sky-500/15">
+          <RefreshCcw className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+        </div>
+        <div className="text-left">
+          <p className="text-[10px] font-medium text-muted-foreground">
+            Cambio automático
+          </p>
+          <p className="text-sm font-bold text-foreground">US$ 1 = $ 39.50</p>
+        </div>
       </div>
     </div>
   )
