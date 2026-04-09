@@ -2,6 +2,17 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Soporte público /soporte y footer
+
+### Agregado
+- `src/app/(public)/soporte/page.tsx`: landing pública de ayuda (esbozo) con bloques Documentación, Changelog y Asistencia/tickets; metadatos y anclas `#documentacion`, `#changelog`, `#asistencia`. La ruta es `/soporte` para no chocar con `/ayuda` del panel (usuarios logueados).
+
+### Cambiado
+- `MarketingFooter`: enlace «Ayuda» a `/soporte`; eliminado el texto «Redes y contacto público: próximamente».
+- `PublicStickyHeader`: enlace «Ayuda» a `/soporte` en la navegación desktop.
+- `src/lib/supabase/middleware.ts`: `/soporte` accesible sin sesión.
+- `src/app/sitemap.ts`: entrada `/soporte`.
+
 ## [2026-04-09] - Landing: mejorar animación en StoreSection
 
 ### Cambiado

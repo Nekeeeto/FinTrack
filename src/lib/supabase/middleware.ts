@@ -62,6 +62,15 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
+  // Páginas legales y centro de ayuda (landing): visibles sin sesión
+  if (
+    pathname === "/privacidad" ||
+    pathname === "/terminos" ||
+    pathname === "/soporte"
+  ) {
+    return supabaseResponse
+  }
+
   // Todas las demás rutas requieren autenticación
   if (!user) {
     const url = request.nextUrl.clone()

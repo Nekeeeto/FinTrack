@@ -22,13 +22,16 @@ export function MarketingFooter() {
             <a href="#store" className="text-muted-foreground hover:text-foreground transition-colors">
               Web y PWA
             </a>
+            <Link href="/soporte" className="text-muted-foreground hover:text-foreground transition-colors">
+              Ayuda
+            </Link>
             <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
               Iniciar sesión
             </Link>
           </nav>
 
           <p className="text-xs text-muted-foreground text-center max-w-sm leading-relaxed">
-            Redes y contacto público: próximamente. Cómo tratamos tus datos:{" "}
+            Cómo tratamos tus datos:{" "}
             <Link href="/privacidad" className="text-[#5DBCD2] hover:underline">
               política de privacidad
             </Link>

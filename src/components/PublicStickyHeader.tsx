@@ -72,6 +72,9 @@ export function PublicStickyHeader() {
             <a className="hover:text-foreground transition-colors" href="#store">
               Web y PWA
             </a>
+            <Link className="hover:text-foreground transition-colors" href="/soporte">
+              Ayuda
+            </Link>
           </nav>
 
           <div className="flex items-center gap-2 sm:gap-3">
