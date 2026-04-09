@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Admin: costo modelo (model_usage) usa cost_usd
+
+### Corregido
+- `GET /api/admin/users` y `GET|PATCH /api/admin/users/[id]`: el costo se agregaba con la columna inexistente `cost`; en la base el campo es `cost_usd` (como en `trackUsage` y `/api/settings/model-usage`). El panel mostraba 0 aunque hubiera uso. El listado de usuarios ahora hace una sola lectura de `model_usage` y reparte totales por `user_id`.
+
 ## [2026-04-09] - Admin: edición completa de usuarios
 
 ### Agregado

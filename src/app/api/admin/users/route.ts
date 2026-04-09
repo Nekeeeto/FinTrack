@@ -19,39 +19,33 @@ export async function GET() {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
-    // Para cada usuario, obtener cantidad de transacciones y costo total de model_usage
+    const { data: usageRows, error: usageErr } = await supabaseAdmin
+      .from("model_usage")
+      .select("user_id, cost_usd")
+
+    if (usageErr) {
+      return NextResponse.json({ error: usageErr.message }, { status: 500 })
+    }
+
+    const costByUserId = new Map<string, number>()
+    for (const row of usageRows ?? []) {
+      if (row.user_id == null) continue
+      const add = Number(row.cost_usd) || 0
+      costByUserId.set(row.user_id, (costByUserId.get(row.user_id) ?? 0) + add)
+    }
+
+    // Por usuario: transacciones + costo modelo (columna real: cost_usd)
     const usersWithStats = await Promise.all(
       (profiles ?? []).map(async (profile) => {
-        const [txResult, costResult] = await Promise.all([
-          supabaseAdmin
-            .from("transactions")
-            .select("id", { count: "exact", head: true })
-            .eq("user_id", profile.user_id),
-          supabaseAdmin
-            .rpc("sum_model_usage_cost", { p_user_id: profile.user_id })
-            .single(),
-        ])
-
-        // Si no existe la función RPC, fallback a query directa
-        let totalCost = 0
-        if (costResult.error) {
-          const { data: usageData } = await supabaseAdmin
-            .from("model_usage")
-            .select("cost")
-            .eq("user_id", profile.user_id)
-
-          totalCost = (usageData ?? []).reduce(
-            (sum, row) => sum + (Number(row.cost) || 0),
-            0
-          )
-        } else {
-          totalCost = Number(costResult.data) || 0
-        }
+        const { count: txCount } = await supabaseAdmin
+          .from("transactions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", profile.user_id)
 
         return {
           ...profile,
-          transaction_count: txResult.count ?? 0,
-          total_model_cost: totalCost,
+          transaction_count: txCount ?? 0,
+          total_model_cost: costByUserId.get(profile.user_id) ?? 0,
         }
       })
     )

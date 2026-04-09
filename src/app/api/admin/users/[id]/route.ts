@@ -33,14 +33,13 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       .select("id", { count: "exact", head: true })
       .eq("user_id", id)
 
-    // Obtener costo total de model_usage
     const { data: usageData } = await supabaseAdmin
       .from("model_usage")
-      .select("cost")
+      .select("cost_usd")
       .eq("user_id", id)
 
     const totalModelCost = (usageData ?? []).reduce(
-      (sum, row) => sum + (Number(row.cost) || 0),
+      (sum, row) => sum + (Number(row.cost_usd) || 0),
       0
     )
 
@@ -207,11 +206,11 @@ export async function PATCH(req: NextRequest, { params }: RouteParams) {
 
     const { data: usageData } = await supabaseAdmin
       .from("model_usage")
-      .select("cost")
+      .select("cost_usd")
       .eq("user_id", id)
 
     const totalModelCost = (usageData ?? []).reduce(
-      (sum, r) => sum + (Number(r.cost) || 0),
+      (sum, r) => sum + (Number(r.cost_usd) || 0),
       0
     )
 
