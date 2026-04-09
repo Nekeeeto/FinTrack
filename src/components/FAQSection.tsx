@@ -52,17 +52,19 @@ export function FAQSection() {
               <div
                 key={it.q}
                 className={[
-                  "reveal rounded-2xl border bg-card/90 backdrop-blur-sm overflow-hidden transition-colors duration-300 dark:bg-white/[0.03]",
+                  "rounded-2xl border bg-card/90 backdrop-blur-sm overflow-hidden transition-colors duration-300 dark:bg-white/[0.03]",
                   isOpen
                     ? "border-[#5DBCD2]/35"
                     : "border-border hover:border-slate-300/90 dark:border-white/10 dark:hover:border-white/15",
                 ].join(" ")}
-                style={{ "--stagger": idx } as React.CSSProperties}
               >
                 <button
                   type="button"
                   onClick={() => setOpenIdx((v) => (v === idx ? null : idx))}
-                  className="w-full px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between gap-3 sm:gap-4 text-left bg-transparent"
+                  className="w-full px-4 sm:px-5 py-3.5 sm:py-4 flex items-center justify-between gap-3 sm:gap-4 text-left bg-transparent cursor-pointer"
+                  aria-expanded={isOpen}
+                  aria-controls={`faq-panel-${idx}`}
+                  id={`faq-trigger-${idx}`}
                 >
                   <span className="text-sm sm:text-base font-semibold text-foreground/90">
                     {it.q}
@@ -81,11 +83,12 @@ export function FAQSection() {
                 </button>
 
                 <div
-                  className={`grid transition-all duration-300 ease-in-out ${
-                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-                  }`}
+                  id={`faq-panel-${idx}`}
+                  role="region"
+                  aria-labelledby={`faq-trigger-${idx}`}
+                  className={["faq-answer", isOpen ? "open" : ""].filter(Boolean).join(" ")}
                 >
-                  <div className="overflow-hidden">
+                  <div>
                     <div className="px-4 sm:px-5 pb-4 sm:pb-5 pt-0 text-sm text-muted-foreground leading-relaxed">
                       {it.a}
                     </div>

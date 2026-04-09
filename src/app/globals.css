@@ -371,21 +371,19 @@
     border-color: rgba(93, 188, 210, 0.35);
   }
 
-  /* ─── FAQ accordion smooth animation ─── */
+  /* ─── FAQ accordion (solo grid rows; sin opacity para evitar panel “fantasma”) ─── */
   .faq-answer {
     display: grid;
     grid-template-rows: 0fr;
-    transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
-                opacity 0.25s ease;
-    opacity: 0;
+    transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
   .faq-answer.open {
     grid-template-rows: 1fr;
-    opacity: 1;
   }
 
   .faq-answer > div {
+    min-height: 0;
     overflow: hidden;
   }
 

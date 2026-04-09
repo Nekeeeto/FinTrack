@@ -2,6 +2,24 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - SEO y copy landing Platita (Uruguay)
+
+### Agregado
+- `src/lib/site-url.ts`: URL base desde `NEXT_PUBLIC_APP_URL` con fallback a Vercel.
+- `src/app/robots.ts` y `src/app/sitemap.ts`: rastreo explícito (home, login, privacidad, términos).
+- `src/components/PlatitaJsonLd.tsx`: JSON-LD Organization, WebSite y SoftwareApplication.
+- `src/components/MobileDownloadBar.tsx`: barra inferior en móvil con CTA a `/login` (sin enlaces falsos a tiendas).
+
+### Cambiado
+- Layout raíz: `metadataBase`, plantilla de título `%s | Platita`, Open Graph/Twitter por defecto, `lang="es-UY"`, viewport sin bloquear zoom, `appleWebApp.title` Platita.
+- Home pública: metadatos (canonical, OG, Twitter), un solo `<h1>`, copy Uruguay (pesos/dólares, web/PWA), CTA a la web; apps nativas como próximamente.
+- `MarketingCarousel`, `FeaturesGrid`: jerarquía h2/h3; copy alineado a web (nube, PWA, seguridad sin hiperbole “militar”).
+- `TestimonialsCarousel`: rejilla de casos de uso Uruguay sin fotos ni reseñas inventadas.
+- `StoreSection`: foco navegador/PWA e imagen con `next/image`.
+- `FAQSection`, `PricingSection`, `MarketingFooter`, `PublicStickyHeader`: marca Platita y mensajes coherentes con el producto; footer sin enlaces sociales rotos.
+- `LandingRevealWrapper`: padding inferior en móvil para la barra fija.
+- `public/manifest.json`: nombre/descripción Platita y `theme_color` / `background_color` #020617.
+
 ## [2026-04-09] - Landing: modo claro, layout y sin barra inferior
 
 ### Agregado
@@ -19,6 +37,7 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - Testimonios: tarjetas con ancho máximo respecto al viewport para evitar overflow en pantallas chicas.
 - Hero: CTA principal ancho completo en móvil dentro de un `max-w-lg` centrado.
 - Sección tienda / mockup: hover del screenshot con clip interno, zoom más marcado (`scale-[1.12]`), brillo y overlay que cede; marco con leve elevación y sombra; respeta `prefers-reduced-motion`.
+- FAQ landing: acordeón con clases `.faq-answer` / `.open`, hijo con `min-height: 0` y sin animar opacidad del panel (evita que el texto desaparezca al abrir); ítems sin clase `reveal` para no chocar con `opacity`/`transform` del scroll-reveal.
 
 ## [2026-04-08] - Asistente de voz con Groq
 
