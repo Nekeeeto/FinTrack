@@ -32,16 +32,77 @@ function normalizeText(text: string): string {
     .trim()
 }
 
+// Convertir palabras numéricas en español a número
+function wordsToNumber(text: string): number | null {
+  const normalized = normalizeText(text)
+
+  const units: Record<string, number> = {
+    cero: 0, un: 1, uno: 1, una: 1, dos: 2, tres: 3, cuatro: 4, cinco: 5,
+    seis: 6, siete: 7, ocho: 8, nueve: 9, diez: 10, once: 11, doce: 12,
+    trece: 13, catorce: 14, quince: 15, dieciseis: 16, diecisiete: 17,
+    dieciocho: 18, diecinueve: 19, veinte: 20, veintiuno: 21, veintidos: 22,
+    veintitres: 23, veinticuatro: 24, veinticinco: 25, veintiseis: 26,
+    veintisiete: 27, veintiocho: 28, veintinueve: 29,
+  }
+  const tens: Record<string, number> = {
+    treinta: 30, cuarenta: 40, cincuenta: 50, sesenta: 60,
+    setenta: 70, ochenta: 80, noventa: 90,
+  }
+  const hundreds: Record<string, number> = {
+    cien: 100, ciento: 100, doscientos: 200, doscientas: 200,
+    trescientos: 300, trescientas: 300, cuatrocientos: 400, cuatrocientas: 400,
+    quinientos: 500, quinientas: 500, seiscientos: 600, seiscientas: 600,
+    setecientos: 700, setecientas: 700, ochocientos: 800, ochocientas: 800,
+    novecientos: 900, novecientas: 900,
+  }
+
+  // Limpiar conectores
+  const words = normalized
+    .replace(/\by\b/g, "")
+    .replace(/\bcon\b/g, ".")
+    .split(/\s+/)
+    .filter(Boolean)
+
+  let total = 0
+  let current = 0
+  let found = false
+
+  for (const word of words) {
+    if (units[word] !== undefined) {
+      current += units[word]
+      found = true
+    } else if (tens[word] !== undefined) {
+      current += tens[word]
+      found = true
+    } else if (hundreds[word] !== undefined) {
+      current += hundreds[word]
+      found = true
+    } else if (word === "mil") {
+      current = current === 0 ? 1000 : current * 1000
+      found = true
+    } else if (word === "millon" || word === "millones") {
+      current = current === 0 ? 1000000 : current * 1000000
+      found = true
+    } else if (found) {
+      // Si ya encontramos números y ahora hay una palabra no numérica, paramos
+      break
+    }
+  }
+
+  total += current
+  return found && total > 0 ? total : null
+}
+
 function extractAmount(text: string): { amount: number | null; remaining: string } {
-  // Buscar patrones de monto: "$1500", "1500 pesos", "1.500", "1500,50", etc.
-  const patterns = [
+  // 1. Buscar dígitos primero: "$1500", "1500 pesos", "1.500", "1500,50"
+  const digitPatterns = [
     /\$\s?([\d.,]+)/,
     /([\d.,]+)\s*(?:pesos|dolares|dólares|reales)/i,
     /(?:de|por|en)\s+([\d.,]+)/,
     /(\d[\d.,]*)/,
   ]
 
-  for (const pattern of patterns) {
+  for (const pattern of digitPatterns) {
     const match = text.match(pattern)
     if (match) {
       const raw = match[1].replace(/\./g, "").replace(",", ".")
@@ -52,6 +113,31 @@ function extractAmount(text: string): { amount: number | null; remaining: string
       }
     }
   }
+
+  // 2. Buscar números en palabras: "mil quinientos", "doscientos cincuenta"
+  const wordAmount = wordsToNumber(text)
+  if (wordAmount) {
+    // Remover las palabras numéricas del texto restante
+    const numWords = [
+      "cero", "un", "uno", "una", "dos", "tres", "cuatro", "cinco", "seis",
+      "siete", "ocho", "nueve", "diez", "once", "doce", "trece", "catorce",
+      "quince", "dieciseis", "diecisiete", "dieciocho", "diecinueve", "veinte",
+      "veintiuno", "veintidos", "veintitres", "veinticuatro", "veinticinco",
+      "veintiseis", "veintisiete", "veintiocho", "veintinueve", "treinta",
+      "cuarenta", "cincuenta", "sesenta", "setenta", "ochenta", "noventa",
+      "cien", "ciento", "doscientos", "doscientas", "trescientos", "trescientas",
+      "cuatrocientos", "cuatrocientas", "quinientos", "quinientas", "seiscientos",
+      "seiscientas", "setecientos", "setecientas", "ochocientos", "ochocientas",
+      "novecientos", "novecientas", "mil", "millon", "millones",
+    ]
+    let remaining = normalizeText(text)
+    for (const w of numWords) {
+      remaining = remaining.replace(new RegExp(`\\b${w}\\b`, "g"), "")
+    }
+    remaining = remaining.replace(/\s+/g, " ").trim()
+    return { amount: wordAmount, remaining }
+  }
+
   return { amount: null, remaining: text }
 }
 
@@ -67,16 +153,20 @@ function matchCategory(text: string, categories: Category[]): { id: string; name
     }
   }
 
-  // Aliases comunes
+  // Aliases comunes (todo normalizado, sin acentos)
   const aliases: Record<string, string[]> = {
-    supermercado: ["super", "mercado", "almacen", "almacén", "compras"],
-    transporte: ["uber", "taxi", "bondi", "omnibus", "bus", "nafta", "combustible", "gasolina"],
-    restaurante: ["restaurant", "comida", "restaurante", "cena", "almuerzo", "comí", "comi"],
-    salud: ["farmacia", "medico", "médico", "doctor", "remedio"],
-    entretenimiento: ["cine", "netflix", "spotify", "juego", "juegos"],
-    servicios: ["luz", "agua", "gas", "internet", "telefono", "teléfono", "celular"],
+    supermercado: ["super", "supers", "mercado", "almacen", "compras", "chino"],
+    transporte: ["uber", "taxi", "bondi", "omnibus", "bus", "nafta", "combustible", "gasolina", "estacionamiento"],
+    restaurante: ["restaurant", "comida", "cena", "almuerzo", "comi", "morfi"],
+    salud: ["farmacia", "medico", "doctor", "remedio", "hospital", "clinica"],
+    entretenimiento: ["cine", "netflix", "spotify", "juego", "juegos", "salida", "salidas", "bar", "boliche"],
+    servicios: ["luz", "agua", "gas", "internet", "telefono", "celular", "ute", "ose", "antel"],
     alquiler: ["renta", "alquiler"],
-    sueldo: ["salario", "sueldo", "nomina", "nómina"],
+    sueldo: ["salario", "sueldo", "nomina"],
+    educacion: ["curso", "cursos", "universidad", "facultad", "colegio", "escuela", "libro", "libros"],
+    ropa: ["ropa", "zapatillas", "zapatos", "vestimenta", "remera", "pantalon"],
+    hogar: ["casa", "mueble", "muebles", "electrodomestico", "limpieza"],
+    mascotas: ["mascota", "veterinaria", "veterinario", "perro", "gato"],
   }
 
   for (const cat of sorted) {
@@ -84,6 +174,17 @@ function matchCategory(text: string, categories: Category[]): { id: string; name
     const catAliases = aliases[catKey] || []
     for (const alias of catAliases) {
       if (normalized.includes(alias)) {
+        return { id: cat.id, name: cat.name }
+      }
+    }
+  }
+
+  // Búsqueda parcial: si el nombre de la categoría contiene parte del texto o viceversa
+  for (const cat of sorted) {
+    const catName = normalizeText(cat.name)
+    const words = normalized.split(/\s+/)
+    for (const word of words) {
+      if (word.length >= 4 && (catName.includes(word) || word.includes(catName))) {
         return { id: cat.id, name: cat.name }
       }
     }

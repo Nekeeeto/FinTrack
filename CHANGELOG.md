@@ -4,6 +4,13 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 
 ## [2026-04-08] - Asistente de voz con Groq
 
+### Mejorado
+- Parsing de números en palabras: "mil quinientos" → 1500, "doscientos cincuenta" → 250, etc.
+- Mejor detección de categorías con búsqueda parcial (ej: "súper" matchea "Supermercado")
+- Aliases ampliados para categorías reales del sistema (delivery, café, bar, UTE, OSE, etc.)
+- Errores de Groq ahora muestran el detalle real para debug
+- Manejo correcto del formato de audio según MIME type del navegador
+
 ### Agregado
 - Botón flotante de micrófono (violeta) visible en todas las pantallas de la app
 - Modal de asistente de voz con grabación de audio
