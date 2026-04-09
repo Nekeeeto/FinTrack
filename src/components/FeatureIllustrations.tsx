@@ -215,7 +215,7 @@ export function FeatureIllustrationPwa({ className }: Props) {
 
       {/* Platita App Icon */}
       <g>
-        <animateTransform attributeName="transform" type="scale" values="1; 1.15; 1" dur="2s" repeatCount="indefinite" transformOrigin="100 52" />
+        <animateTransform attributeName="transform" type="scale" values="1; 1.15; 1" dur="2s" repeatCount="indefinite" />
         <rect x="94" y="46" width="12" height="12" rx="3" fill={ACCENT} />
         <path d="M98 52h4M100 50v4" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
         <circle cx="100" cy="52" r="10" fill={ACCENT} opacity="0.3">

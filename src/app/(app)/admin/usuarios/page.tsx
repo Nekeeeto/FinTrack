@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Loader2, UserPlus } from "lucide-react"
+import { Loader2, UserPlus, Pencil } from "lucide-react"
 import type { UserProfile } from "@/types/database"
 
 interface UserWithStats extends UserProfile {
@@ -82,6 +82,7 @@ export default function AdminUsersPage() {
                 <TableHead>Plan</TableHead>
                 <TableHead className="text-right">Fotos</TableHead>
                 <TableHead>Registro</TableHead>
+                <TableHead className="w-[100px] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -121,6 +122,16 @@ export default function AdminUsersPage() {
                   <TableCell className="text-right">{user.photo_count_month}</TableCell>
                   <TableCell>
                     {new Date(user.created_at).toLocaleDateString("es-UY")}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Link
+                      href={`/admin/usuarios/${user.user_id}`}
+                      className="inline-flex items-center gap-1 text-sm text-emerald-600 hover:underline dark:text-emerald-400"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                      Editar
+                    </Link>
                   </TableCell>
                 </TableRow>
               ))}

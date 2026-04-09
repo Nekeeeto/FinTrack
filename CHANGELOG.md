@@ -2,6 +2,15 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Admin: edición completa de usuarios
+
+### Agregado
+- `PATCH /api/admin/users/[id]`: admite email (sync con Auth), contraseña (`auth.admin.updateUserById`), onboarding completado, contador de fotos del mes; validación de email duplicado; no permite quitarse el rol admin a uno mismo ni dejar el sistema sin administradores.
+- `/admin/usuarios/[id]`: formulario «Editar usuario» (nombre, email, rol, plan, fotos/mes, onboarding, contraseña opcional) más mensaje de éxito; columna «Acciones → Editar» en `/admin` y `/admin/usuarios`.
+
+### Corregido
+- `FeatureIllustrations.tsx`: eliminado atributo `transformOrigin` en `animateTransform` (no está en los tipos de React para SVG) para que `npm run build` pase el chequeo de TypeScript.
+
 ## [2026-04-09] - Soporte público /soporte y footer
 
 ### Agregado

@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button, buttonVariants } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -17,11 +27,14 @@ import {
   ArrowLeft,
   Loader2,
   Trash2,
-  CreditCard,
   DollarSign,
+  Save,
+  Eye,
+  EyeOff,
 } from "lucide-react"
-import type { UserProfile } from "@/types/database"
+import type { UserProfile, UserRole, UserPlan } from "@/types/database"
 import type { Transaction } from "@/types/database"
+import { useAuth } from "@/lib/auth-context"
 
 interface UserDetail extends UserProfile {
   transaction_count: number
@@ -35,12 +48,26 @@ export default function AdminUserDetailPage({
 }) {
   const { id } = use(params)
   const router = useRouter()
+  const { profile: adminProfile } = useAuth()
   const [user, setUser] = useState<UserDetail | null>(null)
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
+  const [saveLoading, setSaveLoading] = useState(false)
   const [error, setError] = useState("")
+  const [success, setSuccess] = useState("")
   const [confirmDelete, setConfirmDelete] = useState(false)
+
+  const [formName, setFormName] = useState("")
+  const [formEmail, setFormEmail] = useState("")
+  const [formRole, setFormRole] = useState<UserRole>("user")
+  const [formPlan, setFormPlan] = useState<UserPlan>("free")
+  const [formOnboarding, setFormOnboarding] = useState(false)
+  const [formPhotoCount, setFormPhotoCount] = useState(0)
+  const [newPassword, setNewPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+
+  const isSelf = adminProfile?.user_id === id
 
   useEffect(() => {
     async function fetchData() {
@@ -60,6 +87,17 @@ export default function AdminUserDetailPage({
   }, [id])
 
   useEffect(() => {
+    if (!user) return
+    setFormName(user.name ?? "")
+    setFormEmail(user.email ?? "")
+    setFormRole(user.role)
+    setFormPlan(user.plan)
+    setFormOnboarding(user.onboarding_completed)
+    setFormPhotoCount(user.photo_count_month)
+    setNewPassword("")
+  }, [user])
+
+  useEffect(() => {
     async function fetchTransactions() {
       try {
         const res = await fetch(`/api/admin/users/${id}/transactions`)
@@ -75,30 +113,53 @@ export default function AdminUserDetailPage({
     fetchTransactions()
   }, [id])
 
-  async function handleTogglePlan() {
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault()
     if (!user) return
-    setActionLoading(true)
+    setSaveLoading(true)
+    setError("")
+    setSuccess("")
+
+    const payload: Record<string, unknown> = {
+      name: formName.trim(),
+      email: formEmail.trim(),
+      role: formRole,
+      plan: formPlan,
+      onboarding_completed: formOnboarding,
+      photo_count_month: formPhotoCount,
+    }
+
+    const trimmedPass = newPassword.trim()
+    if (trimmedPass.length > 0) {
+      if (trimmedPass.length < 6) {
+        setError("La contraseña debe tener al menos 6 caracteres")
+        setSaveLoading(false)
+        return
+      }
+      payload.password = trimmedPass
+    }
 
     try {
-      const newPlan = user.plan === "free" ? "premium" : "free"
       const res = await fetch(`/api/admin/users/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan: newPlan }),
+        body: JSON.stringify(payload),
       })
 
+      const data = await res.json()
+
       if (!res.ok) {
-        const data = await res.json()
-        setError(data.error || "Error al actualizar plan")
+        setError(data.error || "Error al guardar")
         return
       }
 
-      const updated: UserProfile = await res.json()
-      setUser((prev) => (prev ? { ...prev, ...updated } : prev))
+      setUser(data as UserDetail)
+      setNewPassword("")
+      setSuccess("Cambios guardados.")
     } catch {
       setError("Error de conexión")
     } finally {
-      setActionLoading(false)
+      setSaveLoading(false)
     }
   }
 
@@ -156,83 +217,145 @@ export default function AdminUserDetailPage({
       {error && (
         <p className="text-sm text-destructive">{error}</p>
       )}
+      {success && (
+        <p className="text-sm text-emerald-600 dark:text-emerald-400">{success}</p>
+      )}
 
-      {/* Perfil */}
+      {/* Editar perfil */}
       <Card>
         <CardHeader>
-          <CardTitle>Perfil de {user.name || user.email}</CardTitle>
+          <CardTitle>Editar usuario</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
-              <p className="text-sm text-muted-foreground">Nombre</p>
-              <p className="font-medium">{user.name || "Sin nombre"}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Email</p>
-              <p className="font-medium">{user.email}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Rol</p>
-              <p className="font-medium">
-                <span
-                  className={
-                    user.role === "admin"
-                      ? "text-emerald-500"
-                      : "text-muted-foreground"
-                  }
+          <form onSubmit={handleSave} className="space-y-6">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit-name">Nombre</Label>
+                <Input
+                  id="edit-name"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  required
+                  maxLength={100}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit-email">Email</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">Rol</Label>
+                <Select
+                  value={formRole}
+                  onValueChange={(v) => setFormRole(v as UserRole)}
+                  disabled={isSelf}
                 >
-                  {user.role}
-                </span>
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Plan</p>
-              <p className="font-medium">
-                <span
-                  className={
-                    user.plan === "premium"
-                      ? "text-amber-500"
-                      : "text-muted-foreground"
-                  }
+                  <SelectTrigger id="edit-role" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">user</SelectItem>
+                    <SelectItem value="admin">admin</SelectItem>
+                  </SelectContent>
+                </Select>
+                {isSelf && (
+                  <p className="text-xs text-muted-foreground">
+                    No podés cambiar tu propio rol desde acá.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-plan">Plan</Label>
+                <Select
+                  value={formPlan}
+                  onValueChange={(v) => setFormPlan(v as UserPlan)}
                 >
-                  {user.plan}
+                  <SelectTrigger id="edit-plan" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="free">free</SelectItem>
+                    <SelectItem value="premium">premium</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-photos">Fotos este mes (contador)</Label>
+                <Input
+                  id="edit-photos"
+                  type="number"
+                  min={0}
+                  value={formPhotoCount}
+                  onChange={(e) =>
+                    setFormPhotoCount(Math.max(0, parseInt(e.target.value, 10) || 0))
+                  }
+                />
+              </div>
+              <div className="flex items-end pb-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Checkbox
+                    checked={formOnboarding}
+                    onCheckedChange={(c) => setFormOnboarding(c === true)}
+                  />
+                  <span className="text-sm font-medium">Onboarding completado</span>
+                </label>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="edit-password">Nueva contraseña (opcional)</Label>
+                <div className="relative">
+                  <Input
+                    id="edit-password"
+                    type={showPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Dejar vacío para no cambiar"
+                    autoComplete="new-password"
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-3 border-t pt-4">
+              <Button type="submit" disabled={saveLoading}>
+                {saveLoading ? (
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4 mr-2" />
+                )}
+                Guardar cambios
+              </Button>
+              <div className="text-sm text-muted-foreground">
+                <span>Transacciones: {user.transaction_count}</span>
+                <span className="mx-2">·</span>
+                <span>
+                  Registro: {new Date(user.created_at).toLocaleDateString("es-UY")}
                 </span>
-              </p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Fotos este mes</p>
-              <p className="font-medium">{user.photo_count_month}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Transacciones</p>
-              <p className="font-medium">{user.transaction_count}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Registro</p>
-              <p className="font-medium">
-                {new Date(user.created_at).toLocaleDateString("es-UY")}
-              </p>
-            </div>
-          </div>
+          </form>
         </CardContent>
       </Card>
 
-      {/* Acciones */}
+      {/* Acciones destructivas */}
       <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={handleTogglePlan}
-          disabled={actionLoading}
-        >
-          {actionLoading ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <CreditCard className="h-4 w-4 mr-2" />
-          )}
-          Cambiar a {user.plan === "free" ? "premium" : "free"}
-        </Button>
-
         {!confirmDelete ? (
           <Button variant="destructive" onClick={() => setConfirmDelete(true)}>
             <Trash2 className="h-4 w-4 mr-2" />
