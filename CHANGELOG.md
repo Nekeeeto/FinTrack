@@ -41,6 +41,16 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - `LandingRevealWrapper`: padding inferior en móvil para la barra fija.
 - `public/manifest.json`: nombre/descripción Platita y `theme_color` / `background_color` #020617.
 
+## [2026-04-09] - Landing: hero con alcancía y tipos de gasto
+
+### Agregado
+- `HeroSpendScene`: encima del H1, lata/alcancía en SVG con animación 3D, anillos giratorios, monedas flotantes y cuatro píldoras (Delivery / Pedidos Ya, Mercado Pago, Efectivo, Dólares) con iconos genéricos — sin logotipos de terceros.
+
+### Cambiado
+- `globals.css`: keyframes `hero-can-wobble`, `hero-can-glow`, `hero-badge-float`, `hero-coin-float`, órbitas; respeto a `prefers-reduced-motion`.
+- `LandingRevealWrapper`: eliminado `pb-28` reservado para barra inferior.
+- Home pública: sin `MobileDownloadBar` en el hero (CTA sigue en el cuerpo de la página).
+
 ## [2026-04-09] - Landing: ilustraciones SVG en grilla de features
 
 ### Agregado

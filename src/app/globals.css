@@ -270,6 +270,89 @@
     }
   }
 
+  /* Hero: lata / alcancía y órbita de gastos */
+  @keyframes hero-can-wobble {
+    0%, 100% {
+      transform: perspective(400px) rotateY(-16deg) rotateX(6deg) scale(1);
+    }
+    50% {
+      transform: perspective(400px) rotateY(16deg) rotateX(4deg) scale(1.03);
+    }
+  }
+
+  @keyframes hero-can-glow {
+    0%, 100% {
+      opacity: 0.45;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.88;
+      transform: scale(1.1);
+    }
+  }
+
+  @keyframes hero-badge-float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-5px);
+    }
+  }
+
+  @keyframes hero-coin-float {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-10px) rotate(14deg);
+    }
+  }
+
+  @keyframes hero-orbit-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes hero-orbit-spin-reverse {
+    from {
+      transform: rotate(360deg);
+    }
+    to {
+      transform: rotate(0deg);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-can-wobble {
+      animation: hero-can-wobble 4.5s ease-in-out infinite;
+    }
+
+    .hero-can-glow {
+      animation: hero-can-glow 2.8s ease-in-out infinite;
+    }
+
+    .hero-badge-float {
+      animation: hero-badge-float 2.9s ease-in-out infinite;
+    }
+
+    .hero-coin-float {
+      animation: hero-coin-float 3.1s ease-in-out infinite;
+    }
+
+    .hero-orbit-spin {
+      animation: hero-orbit-spin 32s linear infinite;
+    }
+
+    .hero-orbit-spin-reverse {
+      animation: hero-orbit-spin-reverse 24s linear infinite;
+    }
+  }
+
   .feature-icon-anim {
     animation: feature-float 3.6s ease-in-out infinite;
     will-change: transform;
@@ -479,6 +562,14 @@
     .feature-illustration animate,
     .feature-illustration animateTransform {
       display: none;
+    }
+    .hero-can-wobble,
+    .hero-can-glow,
+    .hero-badge-float,
+    .hero-coin-float,
+    .hero-orbit-spin,
+    .hero-orbit-spin-reverse {
+      animation: none !important;
     }
     .hero-animated-bg::after,
     .hero-waves,

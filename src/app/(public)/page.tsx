@@ -11,8 +11,8 @@ import { FAQSection } from "@/components/FAQSection"
 import { StoreSection } from "@/components/StoreSection"
 import { MarketingFooter } from "@/components/MarketingFooter"
 import { LandingRevealWrapper } from "@/components/LandingRevealWrapper"
-import { MobileDownloadBar } from "@/components/MobileDownloadBar"
 import { PlatitaJsonLd } from "@/components/PlatitaJsonLd"
+import { HeroSpendScene } from "@/components/HeroSpendScene"
 import { getSiteUrl } from "@/lib/site-url"
 import { LANDING_CONTAINER } from "@/lib/landing-layout"
 
@@ -51,7 +51,6 @@ export default function LandingPage() {
     <LandingRevealWrapper>
       <PlatitaJsonLd />
       <PublicStickyHeader />
-      <MobileDownloadBar />
 
       {/* Hero */}
       <section className="relative overflow-hidden bg-background">
@@ -91,6 +90,7 @@ export default function LandingPage() {
         <div
           className={`relative z-10 ${LANDING_CONTAINER} pb-16 sm:pb-20 md:pb-24 pt-24 sm:pt-28 md:pt-32 text-center`}
         >
+          <HeroSpendScene />
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight text-foreground leading-[1.15]">
             Controlá tus finanzas con{" "}
             <br className="hidden sm:block" />

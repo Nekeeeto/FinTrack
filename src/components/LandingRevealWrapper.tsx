@@ -11,7 +11,7 @@ export function LandingRevealWrapper({
   return (
     <div ref={ref} className="min-h-screen w-full bg-background relative">
       <div className="hero-noise pointer-events-none" />
-      <div className="relative z-10 pb-28 md:pb-0">
+      <div className="relative z-10">
         {children}
       </div>
     </div>
