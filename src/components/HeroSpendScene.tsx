@@ -84,9 +84,9 @@ export function HeroSpendScene() {
         </div>
         <div className="text-left">
           <p className="text-[10px] font-medium italic text-muted-foreground">
-            "Cena en el bar mil doscientos"
+            "Bizcochos y yerba cuatrocientos"
           </p>
-          <p className="text-sm font-bold text-foreground">🍔 -$1.200</p>
+          <p className="text-sm font-bold text-foreground">🧉 -$400</p>
         </div>
       </div>
 
@@ -116,9 +116,9 @@ export function HeroSpendScene() {
         </div>
         <div className="text-left">
           <p className="text-[10px] font-medium text-muted-foreground">
-            Cambio automático
+            Cotización BROU
           </p>
-          <p className="text-sm font-bold text-foreground">US$ 1 = $ 39.50</p>
+          <p className="text-sm font-bold text-foreground">US$ 1 = $ 39.20</p>
         </div>
       </div>
     </div>

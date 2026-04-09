@@ -91,7 +91,7 @@ export default function LandingPage() {
         >
           <HeroSpendScene />
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight text-foreground leading-[1.15]">
-            Controlá tus finanzas con{" "}
+            Manejá tu plata con{" "}
             <br className="hidden sm:block" />
             <RotatingPillText
               words={["inteligencia", "solvencia", "claridad", "control", "tranquilidad"]}
@@ -99,9 +99,9 @@ export default function LandingPage() {
           </h1>
 
           <p className="mt-4 sm:mt-5 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Finanzas personales desde el navegador, pensadas para Uruguay: pesos
-            y dólares en un solo lugar. Escaneá tickets, usá la voz para cargar
-            gastos y mirá tus números con claridad.
+            Finanzas personales desde el navegador, 100% pensadas para Uruguay.
+            Llevá tus cuentas en pesos y dólares, escaneá tickets del súper, anotá
+            los bizcochos con la voz y mirá tus números claritos.
           </p>
 
           <div className="mt-6 sm:mt-7 flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-muted-foreground">
