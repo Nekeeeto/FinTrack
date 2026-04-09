@@ -1,17 +1,13 @@
 import Link from "next/link"
 import { LANDING_CONTAINER, LANDING_FOOTER_Y } from "@/lib/landing-layout"
+import { PlatitaBrandLockup } from "@/components/PlatitaBrandLockup"
 
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-background">
       <div className={`${LANDING_CONTAINER} ${LANDING_FOOTER_Y}`}>
         <div className="flex flex-col items-center text-center gap-5 sm:gap-6">
-          <div className="flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#5DBCD2]/15 border border-[#5DBCD2]/25">
-              <span className="text-[#5DBCD2] font-extrabold text-xl">$</span>
-            </span>
-            <span className="text-xl font-bold tracking-tight text-foreground">Platita</span>
-          </div>
+          <PlatitaBrandLockup size="md" href="/" />
 
           <nav className="flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-6 gap-y-2 sm:gap-y-3 text-sm">
             <a href="#features" className="text-muted-foreground hover:text-foreground transition-colors">

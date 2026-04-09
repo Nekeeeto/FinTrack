@@ -5,6 +5,7 @@ import * as React from "react"
 import { ArrowRight } from "lucide-react"
 import { LandingThemeSwitch } from "@/components/LandingThemeSwitch"
 import { LANDING_CONTAINER } from "@/lib/landing-layout"
+import { PlatitaBrandLockup } from "@/components/PlatitaBrandLockup"
 
 export function PublicStickyHeader() {
   const [visible, setVisible] = React.useState(true)
@@ -54,11 +55,8 @@ export function PublicStickyHeader() {
               : "border-slate-200/60 bg-white/60 shadow-[0_12px_40px_rgba(15,23,42,0.06)] dark:border-white/10 dark:bg-black/35 dark:shadow-[0_20px_80px_rgba(0,0,0,0.45)]",
           ].join(" ")}
         >
-          <div className="flex items-center gap-2 px-1 sm:px-2">
-            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#5DBCD2]/20 text-[#5DBCD2] font-semibold text-sm">
-              $
-            </span>
-            <span className="text-sm font-semibold text-foreground/90">Platita</span>
+          <div className="flex items-center px-1 sm:px-2">
+            <PlatitaBrandLockup size="sm" href="/" />
           </div>
 
           <nav className="hidden md:flex items-center gap-5 text-xs text-muted-foreground">

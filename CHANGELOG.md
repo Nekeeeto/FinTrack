@@ -2,6 +2,17 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Landing: lockup Platita (isotipo + texto) y glow animado
+
+### Agregado
+- `src/components/PlatitaIsotype.tsx`: SVG del gesto “platita” con destello en `#10b981`.
+- `src/components/PlatitaBrandLockup.tsx`: isotipo + wordmark “Platita” en texto (Inter), tamaños `sm` / `md` / `lg`.
+- `globals.css`: animaciones `platita-neon-dark` / `platita-neon-light` (drop-shadow tipo neon) y pulso suave del destello; respeta `prefers-reduced-motion`.
+
+### Cambiado
+- Hero de la home pública: lockup grande con reveal scroll.
+- `PublicStickyHeader` y `MarketingFooter`: sustituyen el ícono `$` por el nuevo lockup (enlace a `/`).
+
 ## [2026-04-09] - SEO y copy landing Platita (Uruguay)
 
 ### Agregado

@@ -413,6 +413,54 @@
     animation: pill-glow 3s ease-in-out infinite;
   }
 
+  /* ─── Platita isotipo: glow “neon” suave (landing) ─── */
+  @keyframes platita-neon-dark {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 6px rgb(16 185 129 / 0.55))
+        drop-shadow(0 0 16px rgb(16 185 129 / 0.28));
+    }
+    50% {
+      filter: drop-shadow(0 0 10px rgb(16 185 129 / 0.95))
+        drop-shadow(0 0 26px rgb(16 185 129 / 0.45));
+    }
+  }
+
+  @keyframes platita-neon-light {
+    0%,
+    100% {
+      filter: drop-shadow(0 0 4px rgb(16 185 129 / 0.4))
+        drop-shadow(0 0 12px rgb(16 185 129 / 0.18));
+    }
+    50% {
+      filter: drop-shadow(0 0 8px rgb(16 185 129 / 0.65))
+        drop-shadow(0 0 18px rgb(16 185 129 / 0.28));
+    }
+  }
+
+  @keyframes platita-sparkle-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.78;
+    }
+  }
+
+  .platita-isotype-neon {
+    animation: platita-neon-dark 3.4s ease-in-out infinite;
+    will-change: filter;
+  }
+
+  .platita-isotype-neon .platita-sparkle-fill {
+    animation: platita-sparkle-pulse 2.6s ease-in-out infinite;
+  }
+
+  html.light .platita-isotype-neon {
+    animation-name: platita-neon-light;
+  }
+
   /* ─── Feature card hover ─── */
   .feature-card {
     transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
@@ -438,6 +486,11 @@
     .cta-shimmer::after,
     .pill-glow {
       animation: none !important;
+    }
+    .platita-isotype-neon,
+    .platita-isotype-neon .platita-sparkle-fill {
+      animation: none !important;
+      filter: none !important;
     }
     .reveal {
       opacity: 1;
