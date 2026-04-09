@@ -95,12 +95,12 @@ export function HeroSpendScene() {
         className="hero-badge-float absolute -right-2 top-[45%] z-20 flex items-center gap-3 rounded-2xl border border-border bg-background/90 p-3 shadow-xl backdrop-blur-xl sm:-right-12 sm:top-[40%] dark:border-white/10 dark:bg-[#0a101a]/90"
         style={{ animationDelay: "1s" }}
       >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-500/15">
-          <Receipt className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/50 bg-white">
+          <img src="/tata-logo.png" alt="Ta-Ta" className="h-full w-full object-cover" />
         </div>
         <div className="text-left">
           <p className="text-[10px] font-medium text-muted-foreground">
-            Ticket escaneado
+            Ticket Ta-Ta
           </p>
           <p className="text-sm font-bold text-foreground">🛒 -$3.450</p>
         </div>
