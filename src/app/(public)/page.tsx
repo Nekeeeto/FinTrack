@@ -90,11 +90,11 @@ export default function LandingPage() {
           className={`relative z-10 ${LANDING_CONTAINER} pb-16 sm:pb-20 md:pb-24 pt-24 sm:pt-28 md:pt-32 text-center`}
         >
           <HeroSpendScene />
-          <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight text-foreground leading-[1.15]">
+          <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight text-foreground leading-[1.25] sm:leading-[1.2]">
             Manejá tu plata con{" "}
             <br className="hidden sm:block" />
             <RotatingPillText
-              words={["inteligencia", "solvencia", "claridad", "control", "tranquilidad"]}
+              words={["inteligencia", "claridad", "control", "facilidad", "tranquilidad"]}
             />
           </h1>
 
