@@ -2,6 +2,16 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Landing: eliminar sección de testimonios
+
+### Eliminado
+- `src/components/TestimonialsCarousel.tsx`: se eliminó el componente y su uso en la landing page (`src/app/(public)/page.tsx`) a pedido del usuario.
+
+## [2026-04-09] - Middleware: páginas legales públicas
+
+### Cambiado
+- `src/lib/supabase/middleware.ts`: `/privacidad` y `/terminos` accesibles sin login (enlaces del footer de la landing).
+
 ## [2026-04-09] - Auth: registro público, OAuth social y perfil automático
 
 ### Agregado

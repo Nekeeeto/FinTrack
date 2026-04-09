@@ -5,7 +5,6 @@ import { RotatingPillText } from "@/components/RotatingPillText"
 import { PublicStickyHeader } from "@/components/PublicStickyHeader"
 import { MarketingCarousel } from "@/components/MarketingCarousel"
 import { FeaturesGrid } from "@/components/FeaturesGrid"
-import { TestimonialsCarousel } from "@/components/TestimonialsCarousel"
 import { PricingSection } from "@/components/PricingSection"
 import { FAQSection } from "@/components/FAQSection"
 import { StoreSection } from "@/components/StoreSection"
@@ -140,8 +139,6 @@ export default function LandingPage() {
       <MarketingCarousel />
 
       <FeaturesGrid />
-
-      <TestimonialsCarousel />
 
       <PricingSection />
 
