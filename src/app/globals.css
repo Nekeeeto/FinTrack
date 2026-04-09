@@ -47,6 +47,19 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
+  /* Remap global: utilidades emerald-* -> celeste de la marca */
+  --color-emerald-50: #eef8fb;
+  --color-emerald-100: #d7edf4;
+  --color-emerald-200: #b0dde9;
+  --color-emerald-300: #89cddd;
+  --color-emerald-400: #5dbcd2;
+  --color-emerald-500: #3caec8;
+  --color-emerald-600: #2e8ea7;
+  --color-emerald-700: #236f84;
+  --color-emerald-800: #1d5969;
+  --color-emerald-900: #194b57;
+  --color-emerald-950: #0f2e36;
+
   --animate-marquee: marquee 45s linear infinite;
   --animate-marquee-reverse: marquee-reverse 45s linear infinite;
 
@@ -94,7 +107,7 @@
   --ring: #5dbcd2;
   --chart-1: #5dbcd2;
   --chart-2: #1d4ed8;
-  --chart-3: #0f766e;
+  --chart-3: #3caec8;
   --chart-4: #facc15;
   --chart-5: #f97316;
   --radius: 0.625rem;
@@ -130,7 +143,7 @@
   --ring: #5dbcd2;
   --chart-1: #5dbcd2;
   --chart-2: #38bdf8;
-  --chart-3: #22c55e;
+  --chart-3: #3caec8;
   --chart-4: #facc15;
   --chart-5: #fb923c;
   --sidebar: #020617;
@@ -242,13 +255,13 @@
 
   @keyframes feature-pulse {
     0% {
-      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0);
+      box-shadow: 0 0 0 0 rgba(93, 188, 210, 0.0);
     }
     50% {
-      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.08);
+      box-shadow: 0 0 0 10px rgba(93, 188, 210, 0.08);
     }
     100% {
-      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0);
+      box-shadow: 0 0 0 0 rgba(93, 188, 210, 0.0);
     }
   }
 
@@ -501,24 +514,24 @@
   @keyframes platita-neon-dark {
     0%,
     100% {
-      filter: drop-shadow(0 0 5px rgb(16 185 129 / 0.5))
-        drop-shadow(0 0 12px rgb(16 185 129 / 0.22));
+      filter: drop-shadow(0 0 5px rgb(93 188 210 / 0.5))
+        drop-shadow(0 0 12px rgb(93 188 210 / 0.22));
     }
     50% {
-      filter: drop-shadow(0 0 7px rgb(16 185 129 / 0.75))
-        drop-shadow(0 0 18px rgb(16 185 129 / 0.32));
+      filter: drop-shadow(0 0 7px rgb(93 188 210 / 0.75))
+        drop-shadow(0 0 18px rgb(93 188 210 / 0.32));
     }
   }
 
   @keyframes platita-neon-light {
     0%,
     100% {
-      filter: drop-shadow(0 0 3px rgb(16 185 129 / 0.35))
-        drop-shadow(0 0 10px rgb(16 185 129 / 0.14));
+      filter: drop-shadow(0 0 3px rgb(93 188 210 / 0.35))
+        drop-shadow(0 0 10px rgb(93 188 210 / 0.14));
     }
     50% {
-      filter: drop-shadow(0 0 5px rgb(16 185 129 / 0.55))
-        drop-shadow(0 0 14px rgb(16 185 129 / 0.22));
+      filter: drop-shadow(0 0 5px rgb(93 188 210 / 0.55))
+        drop-shadow(0 0 14px rgb(93 188 210 / 0.22));
     }
   }
 

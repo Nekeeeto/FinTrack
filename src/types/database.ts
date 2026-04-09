@@ -110,3 +110,16 @@ export interface UserProfile {
   onboarding_completed: boolean
   created_at: string
 }
+
+export interface OnboardingSession {
+  id: string
+  user_id: string
+  flow_version: string
+  objectives: string[]
+  selected_categories: unknown[]
+  total_duration_ms: number | null
+  steps_timing_ms: Record<string, number> | null
+  ai_used: boolean
+  ai_attempts: number
+  created_at: string
+}

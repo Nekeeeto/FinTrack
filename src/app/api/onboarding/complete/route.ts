@@ -3,7 +3,6 @@ import { z } from "zod"
 import { requireAuth, isAuthError } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase/server"
 
-// Schema de validacion para el request de onboarding
 const subcategorySchema = z.object({
   name: z.string().min(1),
   color: z.string(),
@@ -18,19 +17,26 @@ const categorySchema = z.object({
   subcategories: z.array(subcategorySchema),
 })
 
-const accountSchema = z.object({
-  name: z.string().min(1),
-  type: z.string(),
-  currency: z.string(),
+const metadataSchema = z.object({
+  flow_version: z.string().default("onboarding_v2_mobile"),
+  total_duration_ms: z.number().int().nonnegative().optional(),
+  steps_timing_ms: z.record(z.string(), z.number().int().nonnegative()).optional(),
+  ai_used: z.boolean().optional(),
+  ai_attempts: z.number().int().min(0).max(2).optional(),
 })
 
 const onboardingSchema = z.object({
-  name: z.string().min(1, "El nombre es obligatorio"),
+  objectives: z.array(z.string().min(1)).min(1, "Selecciona al menos un objetivo"),
   categories: z.array(categorySchema).min(1, "Selecciona al menos una categoria"),
-  accounts: z.array(accountSchema).min(1, "Crea al menos una cuenta"),
+  metadata: metadataSchema.optional(),
 })
 
-// POST /api/onboarding/complete — Completa el onboarding del usuario nuevo
+function getDefaultUserName(email: string): string {
+  if (!email) return "Usuario"
+  const base = email.split("@")[0] || "Usuario"
+  return base.slice(0, 40)
+}
+
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (isAuthError(auth)) return auth
@@ -40,33 +46,36 @@ export async function POST(req: NextRequest) {
     const parsed = onboardingSchema.safeParse(body)
 
     if (!parsed.success) {
-      return NextResponse.json(
-        { error: parsed.error.flatten() },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    const { name, categories, accounts } = parsed.data
+    const { objectives, categories, metadata } = parsed.data
     const userId = auth.userId
 
-    // Obtener email del usuario autenticado
-    const { data: { user } } = await auth.supabase.auth.getUser()
+    const {
+      data: { user },
+    } = await auth.supabase.auth.getUser()
     const userEmail = user?.email ?? ""
 
-    // 1. Asegurar que existe el perfil sin pisar role/plan/onboarding
-    const { data: existingProfile } = await supabaseAdmin
+    const { data: existingProfile, error: existingProfileError } = await supabaseAdmin
       .from("user_profiles")
       .select("user_id")
       .eq("user_id", userId)
-      .single()
+      .maybeSingle()
+
+    if (existingProfileError) {
+      return NextResponse.json(
+        { error: `Error verificando perfil: ${existingProfileError.message}` },
+        { status: 500 }
+      )
+    }
 
     if (!existingProfile) {
-      // No existe → crear
       const { error: insertError } = await supabaseAdmin
         .from("user_profiles")
         .insert({
           user_id: userId,
-          name,
+          name: getDefaultUserName(userEmail),
           email: userEmail,
           role: "user",
           plan: "free",
@@ -80,43 +89,33 @@ export async function POST(req: NextRequest) {
         )
       }
     } else {
-      // Ya existe → solo actualizar nombre y email
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateEmailError } = await supabaseAdmin
         .from("user_profiles")
-        .update({ name, email: userEmail })
+        .update({ email: userEmail })
         .eq("user_id", userId)
 
-      if (updateError) {
+      if (updateEmailError) {
         return NextResponse.json(
-          { error: `Error actualizando perfil: ${updateError.message}` },
+          { error: `Error actualizando perfil: ${updateEmailError.message}` },
           { status: 500 }
         )
       }
     }
 
-    // 2. Limpiar categorías y cuentas previas (por si es un retry)
-    await supabaseAdmin
-      .from("categories")
-      .delete()
-      .eq("user_id", userId)
+    await supabaseAdmin.from("categories").delete().eq("user_id", userId)
+    await supabaseAdmin.from("accounts").delete().eq("user_id", userId)
 
-    await supabaseAdmin
-      .from("accounts")
-      .delete()
-      .eq("user_id", userId)
-
-    // 3. Insertar categorias padre e hijas
     for (let sortOrder = 0; sortOrder < categories.length; sortOrder++) {
-      const cat = categories[sortOrder]
+      const category = categories[sortOrder]
 
       const { data: parentData, error: parentError } = await supabaseAdmin
         .from("categories")
         .insert({
           user_id: userId,
-          name: cat.name,
-          color: cat.color,
-          icon: cat.icon,
-          type: cat.type,
+          name: category.name,
+          color: category.color,
+          icon: category.icon,
+          type: category.type,
           sort_order: sortOrder + 1,
         })
         .select("id")
@@ -124,58 +123,72 @@ export async function POST(req: NextRequest) {
 
       if (parentError || !parentData) {
         return NextResponse.json(
-          { error: `Error insertando categoria "${cat.name}": ${parentError?.message}` },
+          { error: `Error insertando categoria "${category.name}": ${parentError?.message}` },
           { status: 500 }
         )
       }
 
-      if (cat.subcategories.length > 0) {
-        const subcats = cat.subcategories.map((sub, subIndex) => ({
+      if (category.subcategories.length > 0) {
+        const subcategoryRows = category.subcategories.map((subcategory, subIndex) => ({
           user_id: userId,
           parent_id: parentData.id,
-          name: sub.name,
-          color: sub.color,
-          icon: sub.icon,
-          type: cat.type,
+          name: subcategory.name,
+          color: subcategory.color,
+          icon: subcategory.icon,
+          type: category.type,
           sort_order: subIndex + 1,
         }))
 
-        const { error: subError } = await supabaseAdmin
+        const { error: subcategoryError } = await supabaseAdmin
           .from("categories")
-          .insert(subcats)
+          .insert(subcategoryRows)
 
-        if (subError) {
+        if (subcategoryError) {
           return NextResponse.json(
-            { error: `Error insertando subcategorias de "${cat.name}": ${subError.message}` },
+            { error: `Error insertando subcategorias de "${category.name}": ${subcategoryError.message}` },
             { status: 500 }
           )
         }
       }
     }
 
-    // 4. Insertar cuentas
-    const accountRows = accounts.map((acc) => ({
+    const { error: accountError } = await supabaseAdmin.from("accounts").insert({
       user_id: userId,
-      name: acc.name,
-      type: acc.type,
-      currency: acc.currency,
+      name: "General",
+      type: "checking",
+      currency: "UYU",
       balance: 0,
-      color: acc.type === "cash" ? "#1a1a1a" : acc.type === "business" ? "#1e3a8a" : "#6b7280",
-      icon: acc.type === "cash" ? "wallet" : acc.type === "business" ? "briefcase" : "landmark",
-    }))
+      color: "#1a1a1a",
+      icon: "wallet",
+    })
 
-    const { error: accountsError } = await supabaseAdmin
-      .from("accounts")
-      .insert(accountRows)
-
-    if (accountsError) {
+    if (accountError) {
       return NextResponse.json(
-        { error: `Error insertando cuentas: ${accountsError.message}` },
+        { error: `Error creando cuenta inicial: ${accountError.message}` },
         { status: 500 }
       )
     }
 
-    // 5. Marcar onboarding como completado (paso final)
+    const { error: analyticsError } = await supabaseAdmin
+      .from("onboarding_sessions")
+      .insert({
+        user_id: userId,
+        flow_version: metadata?.flow_version ?? "onboarding_v2_mobile",
+        objectives,
+        selected_categories: categories,
+        total_duration_ms: metadata?.total_duration_ms ?? null,
+        steps_timing_ms: metadata?.steps_timing_ms ?? null,
+        ai_used: metadata?.ai_used ?? false,
+        ai_attempts: metadata?.ai_attempts ?? 0,
+      })
+
+    if (analyticsError) {
+      return NextResponse.json(
+        { error: `Error guardando analytics de onboarding: ${analyticsError.message}` },
+        { status: 500 }
+      )
+    }
+
     const { error: completeError } = await supabaseAdmin
       .from("user_profiles")
       .update({ onboarding_completed: true })
@@ -190,9 +203,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true })
   } catch {
-    return NextResponse.json(
-      { error: "Error interno del servidor" },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 })
   }
 }

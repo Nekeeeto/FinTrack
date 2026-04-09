@@ -17,6 +17,36 @@ export async function GET() {
   return NextResponse.json(data)
 }
 
+const createAccountSchema = z.object({
+  name: z.string().min(1).max(50),
+  type: z.enum(["checking", "savings", "cash", "investment", "business"]).default("cash"),
+  currency: z.enum(["UYU", "USD", "BRL", "ARS"]).default("UYU"),
+  balance: z.number().min(0).default(0),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#1a1a1a"),
+  icon: z.string().min(1).max(30).default("wallet"),
+})
+
+export async function POST(request: NextRequest) {
+  const auth = await requireAuth()
+  if (isAuthError(auth)) return auth
+
+  const body = await request.json()
+  const parsed = createAccountSchema.safeParse(body)
+  if (!parsed.success) {
+    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
+  }
+
+  const { data, error } = await auth.supabase
+    .from("accounts")
+    .insert({ ...parsed.data, user_id: auth.userId })
+    .select()
+    .single()
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+
+  return NextResponse.json(data, { status: 201 })
+}
+
 const updateAccountSchema = z.object({
   id: z.string().uuid(),
   name: z.string().min(1).max(50).optional(),

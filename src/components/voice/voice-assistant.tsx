@@ -297,7 +297,7 @@ function parseTranscription(
   }
 }
 
-export function VoiceAssistant() {
+export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
   const [isOpen, setIsOpen] = useState(false)
   const [state, setState] = useState<VoiceState>("idle")
   const [transcription, setTranscription] = useState("")
@@ -322,6 +322,16 @@ export function VoiceAssistant() {
       setCategories(catData.data || [])
     })
   }, [isOpen])
+
+  useEffect(() => {
+    function handleOpenVoiceAssistant() {
+      setIsOpen(true)
+    }
+    window.addEventListener("fintrack:open-voice-assistant", handleOpenVoiceAssistant)
+    return () => {
+      window.removeEventListener("fintrack:open-voice-assistant", handleOpenVoiceAssistant)
+    }
+  }, [])
 
   const startRecording = useCallback(async () => {
     try {
@@ -475,13 +485,15 @@ export function VoiceAssistant() {
   return (
     <>
       {/* Botón flotante */}
-      <button
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-30 h-14 w-14 rounded-full bg-violet-500 text-white shadow-lg shadow-violet-500/30 hover:bg-violet-600 active:scale-95 transition-all flex items-center justify-center"
-        aria-label="Asistente de voz"
-      >
-        <Mic className="h-6 w-6" />
-      </button>
+      {showFab && (
+        <button
+          onClick={() => setIsOpen(true)}
+          className="fixed bottom-20 right-4 md:bottom-8 md:right-8 z-30 h-14 w-14 rounded-full bg-violet-500 text-white shadow-lg shadow-violet-500/30 hover:bg-violet-600 active:scale-95 transition-all flex items-center justify-center"
+          aria-label="Asistente de voz"
+        >
+          <Mic className="h-6 w-6" />
+        </button>
+      )}
 
       {/* Modal */}
       {isOpen && (
