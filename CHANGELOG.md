@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Menú FAB: un color por acción
+
+### Cambiado
+- `Sidebar` (`quickActionRows`): «Escanear foto» usa ícono sky (antes repetía el primary); «Nueva transferencia» y «Usar plantilla» usan azul y ámbar suaves en lugar del mismo gris.
+
 ## [2026-04-09] - Acciones rápidas (FAB): anclaje, tamaño y orden
 
 ### Cambiado

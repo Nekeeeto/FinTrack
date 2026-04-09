@@ -106,7 +106,7 @@ const quickActionRows: QuickActionRow[] = [
     title: "Escanear foto",
     subtitle: "Subí ticket o factura",
     Icon: Camera,
-    iconClassName: "text-primary",
+    iconClassName: "text-sky-400",
   },
   {
     key: "transfer",
@@ -114,7 +114,7 @@ const quickActionRows: QuickActionRow[] = [
     title: "Nueva transferencia",
     subtitle: "Próximamente",
     Icon: ArrowLeftRight,
-    iconClassName: "text-muted-foreground",
+    iconClassName: "text-blue-400/85",
   },
   {
     key: "template",
@@ -122,7 +122,7 @@ const quickActionRows: QuickActionRow[] = [
     title: "Usar plantilla",
     subtitle: "Próximamente",
     Icon: Bookmark,
-    iconClassName: "text-muted-foreground",
+    iconClassName: "text-amber-400/85",
   },
 ]
 
