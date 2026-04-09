@@ -75,7 +75,7 @@ export function Sidebar() {
   const currentItem = navItems.find(
     (item) => pathname === item.href || pathname.startsWith(item.href + "/")
   )
-  const pageTitle = currentItem?.label ?? "Biyuya"
+  const pageTitle = currentItem?.label ?? "PLATITA"
 
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/")
@@ -85,7 +85,7 @@ export function Sidebar() {
       {/* Mobile top bar - simplified */}
       <header className="fixed top-0 left-0 right-0 z-40 md:hidden h-14 bg-card/80 backdrop-blur-lg border-b border-border/50 flex items-center px-4 gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-lg font-bold text-emerald-500">$</span>
+          <span className="text-lg font-bold text-primary">$</span>
           <h1 className="text-base font-semibold truncate">{pageTitle}</h1>
         </div>
         <ThemeToggle />
@@ -108,7 +108,7 @@ export function Sidebar() {
                 href={item.href}
                 className={cn(
                   "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
-                  isActive(item.href) ? "text-emerald-500" : "text-muted-foreground"
+                  isActive(item.href) ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <NavIcon className="h-5 w-5" />
@@ -120,7 +120,7 @@ export function Sidebar() {
           {/* FAB center button */}
           <Link
             href="/transacciones?new=1"
-            className="flex items-center justify-center h-12 w-12 -mt-5 rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/30 active:scale-95 transition-transform"
+            className="flex items-center justify-center h-12 w-12 -mt-5 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 active:scale-95 transition-transform"
           >
             <Plus className="h-6 w-6" />
           </Link>
@@ -129,11 +129,11 @@ export function Sidebar() {
             const item = bottomNavItems[2]
             const NavIcon = item.icon
             return (
-              <Link
-                href={item.href}
-                className={cn(
-                  "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
-                  isActive(item.href) ? "text-emerald-500" : "text-muted-foreground"
+                <Link
+              href={item.href}
+              className={cn(
+              "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
+                  isActive(item.href) ? "text-primary" : "text-muted-foreground"
                 )}
               >
                 <NavIcon className="h-5 w-5" />
@@ -143,11 +143,11 @@ export function Sidebar() {
           })()}
 
           {/* Más */}
-          <button
-            onClick={() => setMoreOpen(true)}
-            className={cn(
+            <button
+              onClick={() => setMoreOpen(true)}
+              className={cn(
               "flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors",
-              moreOpen ? "text-emerald-500" : "text-muted-foreground"
+              moreOpen ? "text-primary" : "text-muted-foreground"
             )}
           >
             <MoreHorizontal className="h-5 w-5" />
@@ -183,7 +183,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-colors",
                 isActive(item.href)
-                  ? "bg-emerald-500/10 text-emerald-500"
+                  ? "bg-primary/10 text-primary"
                   : "text-foreground hover:bg-accent"
               )}
             >
@@ -220,7 +220,7 @@ export function Sidebar() {
       >
         <div className="p-6 flex items-center justify-between">
           <h1 className="text-xl font-bold tracking-tight">
-            <span className="text-emerald-500">$</span> Biyuya
+            <span className="text-primary">$</span> PLATITA
           </h1>
           <div className="flex items-center gap-1">
             <span className="hidden md:inline-flex"><ThemeToggle /></span>
@@ -239,7 +239,7 @@ export function Sidebar() {
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
                 isActive(item.href)
-                  ? "bg-emerald-500/10 text-emerald-500"
+                  ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               )}
             >
@@ -257,7 +257,7 @@ export function Sidebar() {
             <LogOut className="h-5 w-5" />
             Cerrar sesión
           </button>
-          <p className="text-xs text-muted-foreground">Biyuya v1.0</p>
+          <p className="text-xs text-muted-foreground">PLATITA v1.0</p>
         </div>
       </aside>
     </>

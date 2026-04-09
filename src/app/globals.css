@@ -46,75 +46,101 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --animate-marquee: marquee 45s linear infinite;
+  --animate-marquee-reverse: marquee-reverse 45s linear infinite;
+
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+  }
+
+  @keyframes marquee-reverse {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(0); }
+  }
+
+  @keyframes vertical-marquee {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(calc(-100% + 40px)); }
+  }
+
+  @keyframes toast-pop {
+    0%, 5% { opacity: 0; transform: translateY(10px) scale(0.95); }
+    15%, 85% { opacity: 1; transform: translateY(0) scale(1); }
+    95%, 100% { opacity: 0; transform: translateY(-10px) scale(0.95); }
+  }
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
+  /* Light theme — base Uruguay celeste */
+  --background: #f9fafb;
+  --foreground: #020617;
+  --card: #ffffff;
+  --card-foreground: #020617;
+  --popover: #ffffff;
+  --popover-foreground: #020617;
+  --primary: #5dbcd2; /* celeste bandera */
+  --primary-foreground: #020617;
+  --secondary: #e5f3f7;
+  --secondary-foreground: #020617;
+  --muted: #e5e7eb;
+  --muted-foreground: #4b5563;
+  --accent: #0f172a;
+  --accent-foreground: #e5f3f7;
+  --destructive: #f97373;
+  --border: #d0d7e2;
+  --input: #d0d7e2;
+  --ring: #5dbcd2;
+  --chart-1: #5dbcd2;
+  --chart-2: #1d4ed8;
+  --chart-3: #0f766e;
+  --chart-4: #facc15;
+  --chart-5: #f97316;
   --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #020617;
+  --sidebar-primary: #5dbcd2;
+  --sidebar-primary-foreground: #020617;
+  --sidebar-accent: #e5f3f7;
+  --sidebar-accent-foreground: #020617;
+  --sidebar-border: #d0d7e2;
+  --sidebar-ring: #5dbcd2;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Dark theme — hero style carried to app */
+  --background: #020617;
+  --foreground: #e5f3f7;
+  --card: #020617;
+  --card-foreground: #e5f3f7;
+  --popover: #020617;
+  --popover-foreground: #e5f3f7;
+  --primary: #5dbcd2;
+  --primary-foreground: #020617;
+  --secondary: #0b1720;
+  --secondary-foreground: #e5f3f7;
+  --muted: #020617;
+  --muted-foreground: #9ca3af;
+  --accent: #0b1720;
+  --accent-foreground: #e5f3f7;
+  --destructive: #f97373;
+  --border: rgba(148, 163, 184, 0.35);
+  --input: rgba(148, 163, 184, 0.35);
+  --ring: #5dbcd2;
+  --chart-1: #5dbcd2;
+  --chart-2: #38bdf8;
+  --chart-3: #22c55e;
+  --chart-4: #facc15;
+  --chart-5: #fb923c;
+  --sidebar: #020617;
+  --sidebar-foreground: #e5f3f7;
+  --sidebar-primary: #5dbcd2;
+  --sidebar-primary-foreground: #020617;
+  --sidebar-accent: #0b1720;
+  --sidebar-accent-foreground: #e5f3f7;
+  --sidebar-border: rgba(148, 163, 184, 0.35);
+  --sidebar-ring: #5dbcd2;
 }
 
 @layer base {
@@ -126,6 +152,7 @@
   }
   html {
     @apply font-sans;
+    scroll-behavior: smooth;
   }
 }
 
@@ -139,5 +166,249 @@
   }
   .pb-safe {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* ─── Scroll-reveal animation ─── */
+  @keyframes revealUp {
+    from {
+      opacity: 0;
+      transform: translateY(32px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(32px);
+    transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* Staggered children */
+  .reveal-stagger > .reveal {
+    transition-delay: calc(var(--stagger, 0) * 80ms);
+  }
+
+  /* ─── Hero background (landing) ─── */
+  @keyframes hero-float {
+    0% {
+      transform: translate3d(-2%, -2%, 0) scale(1);
+    }
+    50% {
+      transform: translate3d(2%, 2%, 0) scale(1.03);
+    }
+    100% {
+      transform: translate3d(-2%, -2%, 0) scale(1);
+    }
+  }
+
+  @keyframes hero-drift {
+    0% {
+      transform: translate3d(-6%, 0, 0);
+    }
+    100% {
+      transform: translate3d(6%, 0, 0);
+    }
+  }
+
+  @keyframes hero-wave {
+    0% {
+      transform: translate3d(-6%, 0, 0);
+    }
+    100% {
+      transform: translate3d(6%, 0, 0);
+    }
+  }
+
+  @keyframes feature-float {
+    0% {
+      transform: translate3d(0, 0, 0);
+    }
+    50% {
+      transform: translate3d(0, -4px, 0);
+    }
+    100% {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes feature-pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0);
+    }
+    50% {
+      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0.08);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.0);
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+
+  @keyframes pill-glow {
+    0%, 100% {
+      box-shadow: 0 10px 40px rgba(93, 188, 210, 0.3);
+    }
+    50% {
+      box-shadow: 0 10px 50px rgba(93, 188, 210, 0.5);
+    }
+  }
+
+  .feature-icon-anim {
+    animation: feature-float 3.6s ease-in-out infinite;
+    will-change: transform;
+  }
+
+  .feature-icon-pulse {
+    animation: feature-pulse 2.8s ease-in-out infinite;
+  }
+
+  .hero-animated-bg {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .hero-animated-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(900px 360px at 50% 18%, rgba(93, 188, 210, 0.18), transparent 62%),
+      radial-gradient(720px 320px at 55% 60%, rgba(93, 188, 210, 0.12), transparent 68%),
+      radial-gradient(1150px 520px at 50% 118%, rgba(2, 6, 23, 0.9), transparent 58%),
+      linear-gradient(to bottom, #020a12, #020810 45%, #020617 100%);
+    filter: saturate(0.98);
+  }
+
+  .hero-animated-bg::after {
+    content: "";
+    position: absolute;
+    inset: -40%;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(93, 188, 210, 0.28), transparent 46%),
+      radial-gradient(circle at 70% 35%, rgba(93, 188, 210, 0.18), transparent 50%),
+      radial-gradient(circle at 50% 62%, rgba(255, 255, 255, 0.06), transparent 52%);
+    filter: blur(36px);
+    opacity: 0.85;
+    animation: hero-float 10s ease-in-out infinite;
+  }
+
+  .hero-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.08;
+    mix-blend-mode: overlay;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.05) 0 1px, transparent 1px 2px),
+      repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 3px);
+    transform: translateZ(0);
+  }
+
+  .hero-waves {
+    position: absolute;
+    left: 50%;
+    bottom: -24px;
+    width: 1200px;
+    max-width: 160%;
+    transform: translateX(-50%);
+    opacity: 0.28;
+    filter: blur(0px);
+    animation: hero-wave 8s ease-in-out infinite alternate;
+  }
+
+  .hero-waves path {
+    stroke: rgba(255, 255, 255, 0.22);
+  }
+
+  /* ─── FAQ accordion smooth animation ─── */
+  .faq-answer {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+                opacity 0.25s ease;
+    opacity: 0;
+  }
+
+  .faq-answer.open {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+
+  .faq-answer > div {
+    overflow: hidden;
+  }
+
+  /* ─── CTA button shimmer ─── */
+  .cta-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.2) 50%,
+      transparent 70%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 3s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ─── Pill glow animation ─── */
+  .pill-glow {
+    animation: pill-glow 3s ease-in-out infinite;
+  }
+
+  /* ─── Feature card hover ─── */
+  .feature-card {
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 0.3s ease,
+                border-color 0.3s ease;
+  }
+
+  .feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    border-color: rgba(93, 188, 210, 0.25);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-animated-bg::after,
+    .hero-waves,
+    .feature-icon-anim,
+    .feature-icon-pulse,
+    .cta-shimmer::after,
+    .pill-glow {
+      animation: none !important;
+    }
+    .reveal {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   }
 }
