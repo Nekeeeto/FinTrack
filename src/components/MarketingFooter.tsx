@@ -1,16 +1,16 @@
 import Link from "next/link"
-import { Globe, Music2, Mail } from "lucide-react"
+import { LANDING_CONTAINER, LANDING_FOOTER_Y } from "@/lib/landing-layout"
 
 export function MarketingFooter() {
   return (
     <footer className="border-t border-border bg-background">
-      <div className="max-w-5xl mx-auto px-5 sm:px-6 py-10 sm:py-12">
+      <div className={`${LANDING_CONTAINER} ${LANDING_FOOTER_Y}`}>
         <div className="flex flex-col items-center text-center gap-5 sm:gap-6">
           <div className="flex items-center gap-3">
             <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[#5DBCD2]/15 border border-[#5DBCD2]/25">
               <span className="text-[#5DBCD2] font-extrabold text-xl">$</span>
             </span>
-            <span className="text-xl font-bold tracking-tight text-foreground">PLATITA</span>
+            <span className="text-xl font-bold tracking-tight text-foreground">Platita</span>
           </div>
 
           <nav className="flex flex-wrap items-center justify-center gap-x-5 sm:gap-x-6 gap-y-2 sm:gap-y-3 text-sm">
@@ -23,25 +23,24 @@ export function MarketingFooter() {
             <a href="#faq" className="text-muted-foreground hover:text-foreground transition-colors">
               FAQ
             </a>
+            <a href="#store" className="text-muted-foreground hover:text-foreground transition-colors">
+              Web y PWA
+            </a>
             <Link href="/login" className="text-muted-foreground hover:text-foreground transition-colors">
               Iniciar sesión
             </Link>
           </nav>
 
-          <div className="flex items-center gap-4 sm:gap-5">
-            <a href="#" aria-label="Instagram" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Globe className="h-5 w-5" />
-            </a>
-            <a href="#" aria-label="TikTok" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Music2 className="h-5 w-5" />
-            </a>
-            <a href="#" aria-label="Contacto" className="text-muted-foreground hover:text-foreground transition-colors">
-              <Mail className="h-5 w-5" />
-            </a>
-          </div>
+          <p className="text-xs text-muted-foreground text-center max-w-sm leading-relaxed">
+            Redes y contacto público: próximamente. Cómo tratamos tus datos:{" "}
+            <Link href="/privacidad" className="text-[#5DBCD2] hover:underline">
+              política de privacidad
+            </Link>
+            .
+          </p>
 
           <p className="text-xs text-muted-foreground flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-            <span>© {new Date().getFullYear()} PLATITA. Todos los derechos reservados.</span>
+            <span>© {new Date().getFullYear()} Platita. Todos los derechos reservados.</span>
             <span className="hidden sm:inline text-border">|</span>
             <Link
               href="/privacidad"

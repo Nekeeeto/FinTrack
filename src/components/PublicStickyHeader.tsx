@@ -4,6 +4,7 @@ import Link from "next/link"
 import * as React from "react"
 import { ArrowRight } from "lucide-react"
 import { LandingThemeSwitch } from "@/components/LandingThemeSwitch"
+import { LANDING_CONTAINER } from "@/lib/landing-layout"
 
 export function PublicStickyHeader() {
   const [visible, setVisible] = React.useState(true)
@@ -44,7 +45,7 @@ export function PublicStickyHeader() {
         visible ? "translate-y-0" : "-translate-y-full",
       ].join(" ")}
     >
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-4 sm:pt-5 pb-2 sm:pb-3">
+      <div className={`${LANDING_CONTAINER} pt-4 sm:pt-5 pb-2 sm:pb-3`}>
         <div
           className={[
             "mx-auto w-full rounded-full border backdrop-blur-md px-3 py-2 flex items-center justify-between transition-all duration-300",
@@ -57,7 +58,7 @@ export function PublicStickyHeader() {
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-[#5DBCD2]/20 text-[#5DBCD2] font-semibold text-sm">
               $
             </span>
-            <span className="text-sm font-semibold text-foreground/90">PLATITA</span>
+            <span className="text-sm font-semibold text-foreground/90">Platita</span>
           </div>
 
           <nav className="hidden md:flex items-center gap-5 text-xs text-muted-foreground">
@@ -69,6 +70,9 @@ export function PublicStickyHeader() {
             </a>
             <a className="hover:text-foreground transition-colors" href="#faq">
               FAQ
+            </a>
+            <a className="hover:text-foreground transition-colors" href="#store">
+              Web y PWA
             </a>
           </nav>
 

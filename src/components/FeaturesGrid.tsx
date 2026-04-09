@@ -1,6 +1,7 @@
 "use client"
 
-import { ShieldCheck, WifiOff, Zap, Lock, AlertCircle, Bell } from "lucide-react"
+import { ShieldCheck, Cloud, Smartphone, Lock, AlertCircle, Bell } from "lucide-react"
+import { LANDING_CONTAINER, LANDING_SECTION_Y } from "@/lib/landing-layout"
 
 const cardBase =
   "reveal md:col-span-1 rounded-3xl border border-border bg-card/80 p-6 sm:p-8 transition-all group overflow-hidden flex flex-col justify-between min-h-[220px] hover:bg-card dark:border-white/10 dark:bg-white/[0.02] dark:hover:bg-white/[0.04]"
@@ -9,13 +10,13 @@ export function FeaturesGrid() {
   return (
     <section
       id="features"
-      className="bg-background border-t border-border overflow-hidden py-14 sm:py-20 md:py-24"
+      className={`bg-background border-t border-border overflow-hidden ${LANDING_SECTION_Y}`}
     >
-      <div className="max-w-6xl mx-auto px-5 sm:px-6">
+      <div className={LANDING_CONTAINER}>
         <div className="text-center mb-12 sm:mb-16">
-          <h3 className="reveal text-2xl sm:text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight">
-            Herramientas <span className="text-[#5DBCD2]">Invisibles</span>
-          </h3>
+          <h2 className="reveal text-2xl sm:text-3xl md:text-5xl font-semibold tracking-tight text-foreground leading-tight">
+            Herramientas <span className="text-[#5DBCD2]">invisibles</span>
+          </h2>
           <p className="reveal mt-3 sm:mt-4 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Las funciones están ahí trabajando para vos, aunque no las veas.
           </p>
@@ -44,9 +45,10 @@ export function FeaturesGrid() {
             </div>
 
             <div>
-              <h4 className="font-semibold text-foreground text-lg">Multimoneda</h4>
+              <h3 className="font-semibold text-foreground text-lg">Multimoneda</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Gastá en pesos, dólares o reales. La tasa se calcula automática o podés fijar tu propio tipo de cambio.
+                Llevá el día a día en pesos uruguayos y dólares (y otras monedas si
+                las usás). La tasa se calcula sola o podés fijar tu tipo de cambio.
               </p>
             </div>
           </div>
@@ -81,7 +83,7 @@ export function FeaturesGrid() {
             </div>
 
             <div>
-              <h4 className="font-semibold text-foreground text-lg">Avisos Proactivos</h4>
+              <h3 className="font-semibold text-foreground text-lg">Avisos proactivos</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
                 La IA analiza tus fechas y límites. Recibí una alerta si vas a romper un presupuesto o si vence un pago.
               </p>
@@ -92,12 +94,13 @@ export function FeaturesGrid() {
             className={`${cardBase} hover:border-slate-300/90 dark:hover:border-white/15 feature-card`}
           >
             <div className="h-12 w-12 rounded-full border border-border bg-muted/50 flex items-center justify-center mb-6 group-hover:bg-muted transition-colors duration-300 dark:border-white/10 dark:bg-white/5 dark:group-hover:bg-white/10">
-              <WifiOff className="h-5 w-5 text-muted-foreground" />
+              <Cloud className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground text-lg">Internet no requerido</h4>
+              <h3 className="font-semibold text-foreground text-lg">Tus datos en la nube</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Registrá todo en el supermercado aunque no tengas señal. La app sincroniza apenas te conectás.
+                Iniciás sesión desde el navegador y tus movimientos quedan asociados
+                a tu cuenta, con respaldo en servidores seguros.
               </p>
             </div>
           </div>
@@ -106,12 +109,13 @@ export function FeaturesGrid() {
             className={`${cardBase} hover:border-slate-300/90 dark:hover:border-white/15 feature-card`}
           >
             <div className="h-12 w-12 rounded-full border border-border bg-muted/50 flex items-center justify-center mb-6 group-hover:-rotate-12 transition-transform duration-300 dark:border-white/10 dark:bg-white/5">
-              <Zap className="h-5 w-5 text-amber-500" />
+              <Smartphone className="h-5 w-5 text-amber-500" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground text-lg">Widgets Rápidos</h4>
+              <h3 className="font-semibold text-foreground text-lg">PWA en tu celular</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                No hace falta abrir la app completa. Configurá atajos en tu pantalla de inicio para anotar en 1 toque.
+                Agregá Platita a la pantalla de inicio desde Chrome o Safari: queda
+                como una app para abrir rápido y registrar al toque.
               </p>
             </div>
           </div>
@@ -124,9 +128,11 @@ export function FeaturesGrid() {
               <ShieldCheck className="h-6 w-6 text-green-600 dark:text-green-400 relative z-10" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground text-lg">Cifrado Militar</h4>
+              <h3 className="font-semibold text-foreground text-lg">Seguridad seria</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Aislamos tus datos con encriptación AES-256. Todo se guarda de forma anónima para máxima seguridad.
+                Tus datos viajan cifrados (HTTPS) y el acceso a tu cuenta está
+                protegido con las mismas prácticas que usan las apps financieras
+                modernas.
               </p>
             </div>
           </div>
@@ -138,9 +144,10 @@ export function FeaturesGrid() {
               <Lock className="h-5 w-5 text-muted-foreground" />
             </div>
             <div>
-              <h4 className="font-semibold text-foreground text-lg">Nos importa tu paz</h4>
+              <h3 className="font-semibold text-foreground text-lg">Nos importa tu paz</h3>
               <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
-                Tus finanzas son estrictamente tuyas. Nunca compartiremos tus listas con terceros ni te saturamos con ads.
+                Tus finanzas son estrictamente tuyas. No vendemos tu información
+                financiera ni te saturamos con publicidad.
               </p>
             </div>
           </div>

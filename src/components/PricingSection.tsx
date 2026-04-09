@@ -1,5 +1,6 @@
 import { Check } from "lucide-react"
 import Link from "next/link"
+import { LANDING_CONTAINER, LANDING_SECTION_Y } from "@/lib/landing-layout"
 
 export function PricingSection() {
   return (
@@ -7,7 +8,7 @@ export function PricingSection() {
       {/* Decorative pattern for the celeste background */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff20_1px,transparent_1px),linear-gradient(to_bottom,#ffffff20_1px,transparent_1px)] bg-[size:32px_32px]" />
       
-      <div className="max-w-5xl mx-auto px-5 sm:px-6 py-14 sm:py-16 md:py-20 text-center relative z-10">
+      <div className={`${LANDING_CONTAINER} ${LANDING_SECTION_Y} text-center relative z-10`}>
         <div className="reveal inline-flex items-center gap-3 rounded-full border border-white/30 bg-white/20 backdrop-blur-md px-4 py-2">
           <span className="inline-flex items-center gap-2 text-[#020617] font-bold text-xs">
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-white/40 border border-white/50">
@@ -34,7 +35,7 @@ export function PricingSection() {
                 Todo gratis, <span className="text-[#5DBCD2]">temporalmente</span>
               </h3>
               <p className="mt-2 text-sm text-slate-500 font-medium">
-                Activá tu descarga y empezá a registrar en minutos.
+                Creá tu cuenta y empezá a registrar en minutos desde la web.
               </p>
             </div>
 
@@ -73,7 +74,7 @@ export function PricingSection() {
             </div>
 
             <p className="mt-6 sm:mt-8 text-xs text-slate-400 font-medium">
-              Descargá PLATITA y disfrutá mientras dure el período especial.
+              Entrá a Platita y disfrutá mientras dure el período especial.
             </p>
 
             <div className="mt-5 sm:mt-6 flex items-center justify-center">
@@ -81,7 +82,7 @@ export function PricingSection() {
                 href="/login"
                 className="cta-shimmer inline-flex items-center justify-center gap-2 rounded-2xl bg-[#020617] px-8 py-4 text-sm font-bold text-white shadow-[0_20px_50px_rgba(2,6,23,0.2)] hover:bg-[#0f172a] hover:shadow-[0_25px_60px_rgba(2,6,23,0.3)] transition-all active:scale-[0.97]"
               >
-                Descargar PLATITA
+                Empezá gratis en la web
               </Link>
             </div>
           </div>

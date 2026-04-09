@@ -2,15 +2,22 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
-## [2026-04-09] - Landing: modo claro y interruptor de tema
+## [2026-04-09] - Landing: modo claro, layout y sin barra inferior
 
 ### Agregado
 - Interruptor de tema (sol/luna) en el header público de la landing, usando `next-themes` con persistencia en `localStorage` (`fintrack-theme`).
-- Estilos de modo claro para hero (gradientes y olas), secciones de marketing, FAQ, testimonios, tienda, footer y barra móvil de descargas.
+- Estilos de modo claro para hero (gradientes y olas), secciones de marketing, FAQ, testimonios, tienda y footer.
+- `src/lib/landing-layout.ts`: `LANDING_CONTAINER` y `LANDING_SECTION_Y` / `LANDING_FOOTER_Y` para alinear `max-w-5xl`, paddings (`px-5 sm:px-6 lg:px-8`) y alturas de sección en toda la landing.
+
+### Eliminado
+- Barra fija inferior de descargas (`MobileDownloadBar`) en la home pública.
 
 ### Cambiado
 - `body` del layout raíz usa `bg-background` para respetar claro/oscuro en toda la app.
 - Tokens semánticos (`foreground`, `muted-foreground`, `card`, `border`) y utilidades `dark:` donde hacía falta para mantener el look oscuro actual.
+- Carousel de marketing: grid de dos columnas dentro del mismo contenedor (sin `calc(50vw)`), orden en móvil (carrusel arriba), tarjetas con ancho fluido y foco visible.
+- Testimonios: tarjetas con ancho máximo respecto al viewport para evitar overflow en pantallas chicas.
+- Hero: CTA principal ancho completo en móvil dentro de un `max-w-lg` centrado.
 
 ## [2026-04-08] - Asistente de voz con Groq
 

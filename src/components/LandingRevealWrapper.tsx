@@ -9,9 +9,9 @@ export function LandingRevealWrapper({
 }) {
   const ref = useReveal<HTMLDivElement>()
   return (
-    <div ref={ref} className="min-h-screen w-full bg-background relative pb-28 md:pb-0">
+    <div ref={ref} className="min-h-screen w-full bg-background relative">
       <div className="hero-noise pointer-events-none" />
-      <div className="relative z-10">
+      <div className="relative z-10 pb-28 md:pb-0">
         {children}
       </div>
     </div>

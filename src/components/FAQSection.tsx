@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { Plus, X } from "lucide-react"
+import { LANDING_CONTAINER, LANDING_SECTION_Y } from "@/lib/landing-layout"
 
 type FAQItem = {
   q: string
@@ -10,24 +11,24 @@ type FAQItem = {
 
 const ITEMS: FAQItem[] = [
   {
-    q: "¿Qué es PLATITA?",
-    a: "PLATITA es una app para registrar gastos e ingresos de forma rápida. Escaneás tickets, organizás por categorías y visualizás tus números con claridad.",
+    q: "¿Qué es Platita?",
+    a: "Platita es un gestor financiero personal que usás desde el navegador (y como PWA en el celular). Registrás gastos e ingresos al toque, escaneás tickets con IA, organizás por categorías y ves tus números con claridad.",
   },
   {
     q: "¿Cuánto cuesta?",
-    a: "Durante el período especial las funciones premium están habilitadas sin costo. Después podés seguir con el plan básico y actualizar cuando quieras.",
+    a: "Durante el período especial las funciones premium están habilitadas sin costo. Después podés seguir con lo esencial y actualizar cuando quieras.",
   },
   {
-    q: "¿PLATITA se conecta a mis bancos automáticamente?",
-    a: "Por ahora el registro es manual y por captura/voz. Estamos trabajando en integraciones futuras para automatizar más procesos.",
+    q: "¿Platita se conecta a mis bancos automáticamente?",
+    a: "Hoy el registro es manual, por voz o escaneando tickets. Estamos evaluando integraciones futuras para automatizar más procesos.",
   },
   {
     q: "¿Necesito conocimientos técnicos?",
-    a: "No. Todo está pensado para ser simple: cargás, confirmás y el sistema te ayuda a ordenar el resto.",
+    a: "No. Cargás, confirmás y el sistema te ayuda a ordenar el resto. Solo necesitás un navegador y una cuenta.",
   },
   {
     q: "¿Tiene publicidad?",
-    a: "No. La app prioriza tu experiencia. Podés esperar una interfaz limpia y sin interrupciones.",
+    a: "No. Priorizamos una interfaz limpia, sin banners ni interrupciones.",
   },
 ]
 
@@ -36,12 +37,12 @@ export function FAQSection() {
 
   return (
     <section id="faq" className="border-t border-border bg-background">
-      <div className="max-w-5xl mx-auto px-5 sm:px-6 py-14 sm:py-16 md:py-20">
+      <div className={`${LANDING_CONTAINER} ${LANDING_SECTION_Y}`}>
         <h2 className="reveal text-2xl sm:text-3xl md:text-5xl font-semibold tracking-tight text-foreground text-center">
           Preguntas Frecuentes
         </h2>
         <p className="reveal mt-3 text-sm sm:text-base text-muted-foreground text-center max-w-2xl mx-auto leading-relaxed">
-          Respuestas rápidas para que te sientas seguro antes de probar PLATITA.
+          Respuestas rápidas para que te sientas seguro antes de probar Platita.
         </p>
 
         <div className="mt-8 sm:mt-10 space-y-3 sm:space-y-4 max-w-3xl mx-auto">
