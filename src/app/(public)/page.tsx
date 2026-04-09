@@ -98,10 +98,10 @@ export default function LandingPage() {
             />
           </h1>
 
-          <p className="mt-4 sm:mt-5 text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Finanzas personales desde el navegador, 100% pensadas para Uruguay.
-            Llevá tus cuentas en pesos y dólares, escaneá tickets del súper, anotá
-            los bizcochos con la voz y mirá tus números claritos.
+          <p className="mt-4 sm:mt-5 text-sm sm:text-base text-muted-foreground max-w-xl mx-auto leading-relaxed text-pretty">
+            Tu plata organizada, <strong className="text-foreground font-semibold">100% pensada para Uruguay</strong>. 
+            Llevá cuentas en <strong className="text-foreground font-semibold">pesos y dólares</strong>, escaneá tickets del súper 
+            y anotá gastos <strong className="text-foreground font-semibold">con la voz</strong> en segundos.
           </p>
 
           <div className="mt-6 sm:mt-7 flex flex-wrap justify-center gap-4 sm:gap-6 text-xs text-muted-foreground">
