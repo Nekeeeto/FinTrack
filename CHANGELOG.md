@@ -20,6 +20,14 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - `LandingRevealWrapper`: padding inferior en móvil para la barra fija.
 - `public/manifest.json`: nombre/descripción Platita y `theme_color` / `background_color` #020617.
 
+## [2026-04-09] - Landing: ilustraciones SVG en grilla de features
+
+### Agregado
+- `FeatureIllustrations.tsx`: seis ilustraciones vectoriales animadas (SMIL) alineadas a Platita (multicuenta/monedas, avisos, nube, PWA, seguridad, privacidad) y marco común `FeatureIllustrationFrame`.
+
+### Cambiado
+- `FeaturesGrid`: sustituye marquesina y toasts HTML por las ilustraciones; grilla `md:2` / `lg:3` columnas y altura mínima de tarjeta más uniforme.
+
 ## [2026-04-09] - Landing: modo claro, layout y sin barra inferior
 
 ### Agregado

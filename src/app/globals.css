@@ -427,6 +427,10 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .feature-illustration animate,
+    .feature-illustration animateTransform {
+      display: none;
+    }
     .hero-animated-bg::after,
     .hero-waves,
     .feature-icon-anim,
