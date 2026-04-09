@@ -46,15 +46,38 @@ export function StoreSection() {
         <div className="reveal relative mx-auto w-full max-w-sm">
           <div className="absolute -inset-4 bg-[#5DBCD2]/20 blur-3xl rounded-full opacity-50" />
 
-          <div className="relative group">
-            <div className="relative rounded-[2.5rem] p-3 border border-border bg-card/80 backdrop-blur-sm shadow-xl overflow-hidden aspect-[9/16] dark:border-white/10 dark:bg-white/5 dark:shadow-2xl">
-              <img
-                src="/marketing-hero.png"
-                alt="Platita: gestor financiero en el navegador"
-                className="w-full h-full object-cover rounded-[1.8rem] transition-transform duration-700 group-hover:scale-105"
-              />
+          <div className="relative pb-8 sm:pb-10">
+            <div
+              className={[
+                "relative rounded-[2.5rem] p-3 border border-border bg-card/80 backdrop-blur-sm",
+                "shadow-xl aspect-[9/16] group cursor-default",
+                "transition-[box-shadow,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                "motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-2xl",
+                "dark:border-white/10 dark:bg-white/5 dark:shadow-2xl dark:hover:shadow-[0_32px_64px_rgba(0,0,0,0.45)]",
+              ].join(" ")}
+            >
+              <div className="relative h-full w-full overflow-hidden rounded-[1.8rem]">
+                <img
+                  src="/marketing-hero.png"
+                  alt="Platita: gestor financiero en el navegador"
+                  className={[
+                    "h-full w-full object-cover object-top",
+                    "transform-gpu will-change-transform",
+                    "transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
+                    "scale-100 motion-safe:group-hover:scale-[1.12] motion-reduce:transition-none",
+                    "motion-safe:group-hover:brightness-[1.04] dark:motion-safe:group-hover:brightness-[1.06]",
+                  ].join(" ")}
+                  style={{ transformOrigin: "50% 42%" }}
+                />
 
-              <div className="absolute inset-0 pointer-events-none bg-linear-to-tr from-white/10 via-transparent to-transparent opacity-50" />
+                <div
+                  className={[
+                    "absolute inset-0 pointer-events-none bg-linear-to-br from-white/25 via-white/5 to-transparent",
+                    "opacity-60 transition-opacity duration-500 ease-out",
+                    "motion-safe:group-hover:opacity-20 dark:from-white/15 dark:via-transparent",
+                  ].join(" ")}
+                />
+              </div>
             </div>
 
             <div className="absolute -bottom-6 -right-6 sm:-right-10 bg-card/95 backdrop-blur-md border border-border p-4 rounded-2xl shadow-lg hidden sm:block dark:bg-white/10 dark:border-white/20 dark:shadow-xl">

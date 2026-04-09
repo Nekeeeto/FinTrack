@@ -18,6 +18,7 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 - Carousel de marketing: grid de dos columnas dentro del mismo contenedor (sin `calc(50vw)`), orden en móvil (carrusel arriba), tarjetas con ancho fluido y foco visible.
 - Testimonios: tarjetas con ancho máximo respecto al viewport para evitar overflow en pantallas chicas.
 - Hero: CTA principal ancho completo en móvil dentro de un `max-w-lg` centrado.
+- Sección tienda / mockup: hover del screenshot con clip interno, zoom más marcado (`scale-[1.12]`), brillo y overlay que cede; marco con leve elevación y sombra; respeta `prefers-reduced-motion`.
 
 ## [2026-04-08] - Asistente de voz con Groq
 
