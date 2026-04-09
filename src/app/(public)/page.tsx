@@ -15,7 +15,6 @@ import { MobileDownloadBar } from "@/components/MobileDownloadBar"
 import { PlatitaJsonLd } from "@/components/PlatitaJsonLd"
 import { getSiteUrl } from "@/lib/site-url"
 import { LANDING_CONTAINER } from "@/lib/landing-layout"
-import { PlatitaBrandLockup } from "@/components/PlatitaBrandLockup"
 
 const siteUrl = getSiteUrl()
 
@@ -92,10 +91,6 @@ export default function LandingPage() {
         <div
           className={`relative z-10 ${LANDING_CONTAINER} pb-16 sm:pb-20 md:pb-24 pt-24 sm:pt-28 md:pt-32 text-center`}
         >
-          <div className="reveal flex justify-center mb-6 sm:mb-8">
-            <PlatitaBrandLockup size="lg" />
-          </div>
-
           <h1 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight text-foreground leading-[1.15]">
             Controlá tus finanzas con{" "}
             <br className="hidden sm:block" />

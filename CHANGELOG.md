@@ -2,6 +2,12 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Landing: isotipo Platita (pinch legible) y lockup solo en header
+
+### Cambiado
+- `PlatitaIsotype`: trazos en Q con puntas separadas y rombo centrado en el pinch (evita leerse como una sola onda).
+- Hero público: sin lockup duplicado; marca solo en header (y footer).
+
 ## [2026-04-09] - Landing: lockup Platita (isotipo + texto) y glow animado
 
 ### Agregado
