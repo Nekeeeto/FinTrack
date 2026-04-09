@@ -221,22 +221,27 @@ export function Sidebar() {
         />
       )}
 
-      <div className={cn("fixed z-50 right-4", "bottom-24 md:bottom-8 md:right-8")}>
+      <div
+        className={cn(
+          "fixed z-50 right-4 flex flex-col items-end gap-3",
+          "bottom-24 md:bottom-8 md:right-8"
+        )}
+      >
         {quickActionsOpen && (
-          <div className="mb-3 w-[310px] max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-card/90 backdrop-blur-xl p-3 shadow-[0_18px_40px_rgba(0,0,0,0.5)]">
+          <div className="w-[280px] max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-card/90 backdrop-blur-xl p-2.5 shadow-[0_18px_40px_rgba(0,0,0,0.5)]">
             {quickActionRows.map((row) => {
               const Icon = row.Icon
               const text = (
-                <span className="flex-1 min-w-0 text-right">
-                  <span className="block text-xl leading-none font-semibold">{row.title}</span>
-                  <span className="block text-muted-foreground">{row.subtitle}</span>
+                <span className="flex-1 min-w-0">
+                  <span className="block text-lg leading-tight font-semibold">{row.title}</span>
+                  <span className="block text-sm text-muted-foreground">{row.subtitle}</span>
                 </span>
               )
               const iconEl = (
-                <Icon className={cn("h-5 w-5 shrink-0 mt-0.5", row.iconClassName)} aria-hidden />
+                <Icon className={cn("h-4 w-4 shrink-0 mt-px", row.iconClassName)} aria-hidden />
               )
               const rowClass = cn(
-                "flex w-full flex-row-reverse items-start gap-3 rounded-2xl px-3 py-2.5 transition-colors"
+                "flex w-full items-start gap-2.5 rounded-2xl px-2.5 py-2 transition-colors"
               )
 
               if (row.kind === "link") {
@@ -283,14 +288,14 @@ export function Sidebar() {
         <button
           onClick={() => setQuickActionsOpen((prev) => !prev)}
           className={cn(
-            "flex items-center justify-center h-14 w-14 md:h-[3.75rem] md:w-[3.75rem] rounded-full shadow-lg active:scale-95 transition-all",
+            "flex shrink-0 items-center justify-center h-12 w-12 md:h-[3.25rem] md:w-[3.25rem] rounded-full shadow-lg active:scale-95 transition-all",
             quickActionsOpen
               ? "bg-primary/90 text-primary-foreground rotate-45"
               : "bg-primary text-primary-foreground shadow-primary/30"
           )}
           aria-label="Acciones rápidas"
         >
-          <Plus className="h-6 w-6" />
+          <Plus className="h-5 w-5" />
         </button>
       </div>
 
