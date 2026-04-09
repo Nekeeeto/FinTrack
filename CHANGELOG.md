@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Landing: mejorar animación en StoreSection
+
+### Cambiado
+- `src/components/StoreSection.tsx`: se cambió la animación de la imagen de la tienda. En lugar de hacer un zoom interno (`scale-[1.12]`) que daba la sensación de estar "hacia adentro", ahora la tarjeta completa se eleva y escala ligeramente hacia afuera (`hover:-translate-y-2 hover:scale-[1.02]`), logrando un efecto 3D más natural y agradable.
+
 ## [2026-04-09] - Landing: eliminar sección de testimonios
 
 ### Eliminado

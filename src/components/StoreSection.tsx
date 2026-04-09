@@ -53,7 +53,7 @@ export function StoreSection() {
                 "relative rounded-[2.5rem] p-3 border border-border bg-card/80 backdrop-blur-sm",
                 "shadow-xl aspect-[9/16] group cursor-default",
                 "transition-[box-shadow,transform] duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                "motion-safe:hover:-translate-y-1 motion-safe:hover:shadow-2xl",
+                "motion-safe:hover:-translate-y-2 motion-safe:hover:scale-[1.02] motion-safe:hover:shadow-2xl",
                 "dark:border-white/10 dark:bg-white/5 dark:shadow-2xl dark:hover:shadow-[0_32px_64px_rgba(0,0,0,0.45)]",
               ].join(" ")}
             >
@@ -65,12 +65,9 @@ export function StoreSection() {
                   sizes="(max-width: 768px) 100vw, 384px"
                   className={[
                     "object-cover object-top",
-                    "transform-gpu will-change-transform",
-                    "transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
-                    "scale-100 motion-safe:group-hover:scale-[1.12] motion-reduce:transition-none",
+                    "transition-[filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)]",
                     "motion-safe:group-hover:brightness-[1.04] dark:motion-safe:group-hover:brightness-[1.06]",
                   ].join(" ")}
-                  style={{ transformOrigin: "50% 42%" }}
                 />
 
                 <div
