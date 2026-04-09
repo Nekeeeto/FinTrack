@@ -2,6 +2,20 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Auth: registro público, OAuth social y perfil automático
+
+### Agregado
+- `src/lib/auth/ensure-user-profile.ts`: crea `user_profiles` automáticamente en el primer login (OAuth, signUp, magic link) con service role. Idempotente.
+- `src/components/auth/SocialLoginButtons.tsx`: botones OAuth (Google, Facebook, Apple) condicionados por variables de entorno `NEXT_PUBLIC_OAUTH_*`. Solo se muestran si el proveedor está habilitado.
+- `src/app/registro/page.tsx`: página de registro con email + contraseña + confirmación. Mismo look glassmorphism que login. Muestra mensaje de confirmación por email.
+- Enlace "¿No tenés cuenta? Creá una gratis" en login y "¿Ya tenés cuenta? Iniciá sesión" en registro.
+- `/registro` en sitemap.
+
+### Cambiado
+- `src/app/auth/callback/route.ts`: ya no rechaza usuarios sin perfil (`no-profile`). Llama a `ensureUserProfile` para crear la fila, y luego redirige a `/onboarding` si falta completar o a `/inicio` si ya está listo. Cookies fijadas correctamente en el `NextResponse`.
+- `src/app/login/page.tsx`: incluye `SocialLoginButtons` y link a `/registro`.
+- `src/lib/supabase/middleware.ts`: `/registro` es ruta pública (misma lógica que `/login`).
+
 ## [2026-04-09] - Landing: isotipo Platita (pinch legible) y lockup solo en header
 
 ### Cambiado

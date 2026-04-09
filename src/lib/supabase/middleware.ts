@@ -52,8 +52,8 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Login: si ya está autenticado, redirigir a /inicio
-  if (pathname === "/login") {
+  // Login y Registro: si ya está autenticado, redirigir a /inicio
+  if (pathname === "/login" || pathname === "/registro") {
     if (user) {
       const url = request.nextUrl.clone()
       url.pathname = "/inicio"

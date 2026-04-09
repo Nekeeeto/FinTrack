@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2, Lock, Mail, Eye, EyeOff, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { SocialLoginButtons } from "@/components/auth/SocialLoginButtons"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -209,6 +210,15 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            <SocialLoginButtons />
+
+            <p className="text-center text-sm text-white/50 mt-6">
+              ¿No tenés cuenta?{" "}
+              <Link href="/registro" className="text-[#5DBCD2] font-semibold hover:text-[#5DBCD2]/80 transition-colors">
+                Creá una gratis
+              </Link>
+            </p>
           </div>
         </div>
 
