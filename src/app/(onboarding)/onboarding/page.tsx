@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useRef, useState } from "react"
+import Image from "next/image"
 import {
   ArrowLeft,
   Check,
@@ -331,7 +332,7 @@ export default function OnboardingPage() {
 
   return (
     <main className="min-h-screen bg-black text-white">
-      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-8 pt-5 md:max-w-lg">
+      <section className="mx-auto flex min-h-screen w-full max-w-md flex-col px-6 pb-[max(1.25rem,env(safe-area-inset-bottom,0px))] pt-5 md:max-w-lg">
         {step !== "welcome" && step !== "done" && (
           <div className="mb-7 flex items-center gap-3">
             <button
@@ -347,7 +348,7 @@ export default function OnboardingPage() {
                   <div
                     className={cn(
                       "h-full rounded-full transition-all duration-300",
-                      progressIndex <= progressCurrent ? "bg-lime-400" : "bg-transparent"
+                      progressIndex <= progressCurrent ? "bg-emerald-400" : "bg-transparent"
                     )}
                   />
                 </div>
@@ -357,30 +358,34 @@ export default function OnboardingPage() {
         )}
 
         {step === "welcome" && (
-          <div className="relative flex flex-1 flex-col justify-between overflow-hidden rounded-[2rem] bg-gradient-to-b from-zinc-950 to-black p-5">
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute -right-24 bottom-24 h-72 w-72 rounded-full bg-lime-400/80 blur-2xl" />
-              <div className="absolute -left-20 top-40 h-52 w-52 rounded-full bg-lime-300/50 blur-2xl" />
-              <div className="absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black via-black/80 to-transparent" />
-              <div className="absolute left-1/2 top-24 h-[480px] w-[290px] -translate-x-1/2 rounded-[8rem] bg-[radial-gradient(circle_at_40%_20%,rgba(255,255,255,0.42),rgba(120,120,120,0.15)_28%,rgba(40,40,40,0.8)_72%)] opacity-70" />
+          <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] bg-[#020617]">
+            <div className="relative h-[min(36vh,300px)] w-full shrink-0 sm:h-[min(38vh,320px)]">
+              <Image
+                src="/onboarding-welcome-hero.png"
+                alt="Ilustración: persona revisando el teléfono con una sonrisa"
+                fill
+                priority
+                className="object-cover object-[center_15%]"
+                sizes="(max-width: 768px) 100vw, 512px"
+              />
             </div>
 
-            <div className="relative z-10">
-              <p className="text-4xl font-black tracking-tight">
+            <div className="flex flex-1 flex-col justify-end px-5 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pt-4">
+              <p className="text-3xl font-black leading-tight tracking-tight sm:text-4xl">
                 Toma el control de tus finanzas
               </p>
-              <p className="mt-3 max-w-xs text-sm text-zinc-300">
+              <p className="mt-2 max-w-sm text-sm leading-relaxed text-zinc-400">
                 En pocos pasos dejas tu cuenta pronta para registrar gastos e ingresos.
               </p>
-            </div>
 
-            <Button
-              type="button"
-              onClick={handleNext}
-              className="relative z-10 h-14 rounded-full bg-lime-400 text-black hover:bg-lime-300"
-            >
-              Continuar
-            </Button>
+              <Button
+                type="button"
+                onClick={handleNext}
+                className="mt-5 h-11 shrink-0 rounded-full bg-emerald-400 px-6 text-sm font-semibold text-black hover:bg-emerald-300"
+              >
+                Continuar
+              </Button>
+            </div>
           </div>
         )}
 

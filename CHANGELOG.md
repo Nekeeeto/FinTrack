@@ -2,6 +2,14 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Onboarding: bienvenida con imagen de marca y CTA más seguro en móvil
+
+### Agregado
+- `public/onboarding-welcome-hero.png`: ilustración tipo hero (persona con celular, ola y paleta alineada a la landing: #020617 y celeste de marca).
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: paso «welcome» usa la imagen con `next/image`, fondo `#020617`, botón «Continuar» más bajo (`h-11`, texto chico) y `padding` con `env(safe-area-inset-bottom)` para Chrome móvil; barra de progreso de pasos con `emerald-400` (celeste del tema) en lugar de lima.
+
 ## [2026-04-09] - Menú FAB: un color por acción
 
 ### Cambiado
