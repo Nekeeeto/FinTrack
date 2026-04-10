@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Inicio: cotizaciones como dropdown
+
+### Cambiado
+- `src/components/dashboard/exchange-rates-widget.tsx`: el bloque de cotizaciones ahora funciona como desplegable (acordeón) con chevron; por defecto queda cerrado y al abrir muestra lista + fuente.
+
 ## [2026-04-10] - Inicio: montos de Ingresos/Gastos más compactos
 
 ### Cambiado

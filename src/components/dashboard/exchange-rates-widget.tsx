@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { RefreshCw, TrendingUp, TrendingDown } from "lucide-react"
+import { ChevronDown, RefreshCw } from "lucide-react"
 import type { ExchangeRate } from "@/types/database"
 
 const CURRENCY_FLAGS: Record<string, string> = {
@@ -21,6 +21,7 @@ export function ExchangeRatesWidget() {
   const [lastUpdated, setLastUpdated] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+  const [expanded, setExpanded] = useState(false)
 
   async function fetchRates() {
     try {
@@ -80,16 +81,29 @@ export function ExchangeRatesWidget() {
 
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-3 border-b border-border">
-        <h3 className="font-semibold text-sm">Cotizaciones</h3>
-        <div className="flex items-center gap-2">
-          {timeAgo && (
-            <span className="text-xs text-muted-foreground">{timeAgo}</span>
-          )}
+      <div className="flex items-center gap-2 px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex min-w-0 flex-1 items-center justify-between rounded-md px-1 py-0.5 text-left transition-colors hover:bg-accent/60"
+          aria-expanded={expanded}
+          aria-label="Mostrar u ocultar cotizaciones"
+        >
+          <span className="flex items-center gap-2">
+            <h3 className="text-sm font-semibold">Cotizaciones</h3>
+            {timeAgo ? <span className="text-xs text-muted-foreground">{timeAgo}</span> : null}
+          </span>
+          <ChevronDown
+            className={`h-4 w-4 text-muted-foreground transition-transform ${expanded ? "rotate-180" : ""}`}
+            aria-hidden
+          />
+        </button>
+        <div className="flex items-center">
           <button
+            type="button"
             onClick={handleRefresh}
             disabled={refreshing}
-            className="p-1 rounded-md hover:bg-accent transition-colors disabled:opacity-50"
+            className="rounded-md p-1 transition-colors hover:bg-accent disabled:opacity-50"
             title="Actualizar cotizaciones"
           >
             <RefreshCw className={`h-3.5 w-3.5 text-muted-foreground ${refreshing ? "animate-spin" : ""}`} />
@@ -97,65 +111,68 @@ export function ExchangeRatesWidget() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-          Cargando cotizaciones...
-        </div>
-      ) : rates.length === 0 ? (
-        <div className="px-4 py-6 text-center text-sm text-muted-foreground">
-          Sin cotizaciones disponibles.
-          <button onClick={handleRefresh} className="text-emerald-500 ml-1 hover:underline">
-            Actualizar
-          </button>
-        </div>
-      ) : (
-        <div className="divide-y divide-border">
-          {rates
-            .filter((r) => r.target_currency !== "UYU")
-            .sort((a, b) => {
-              const order = ["USD", "BRL", "ARS"]
-              return order.indexOf(a.target_currency) - order.indexOf(b.target_currency)
-            })
-            .map((rate) => {
-              const display = getDisplayRate(rate)
-              const spread = ((display.sell - display.buy) / display.buy) * 100
-              return (
-                <div key={rate.id} className="flex items-center gap-3 px-4 py-3">
-                  <span className="text-lg">{CURRENCY_FLAGS[rate.target_currency] || "💱"}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">
-                      {CURRENCY_NAMES[rate.target_currency] || rate.target_currency}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{display.label}</p>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-3 text-sm">
-                      <div>
-                        <span className="text-xs text-muted-foreground block">Compra</span>
-                        <span className="font-semibold text-emerald-500">
-                          ${formatRate(display.buy)}
-                        </span>
+      {expanded ? (
+        <>
+          {loading ? (
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+              Cargando cotizaciones...
+            </div>
+          ) : rates.length === 0 ? (
+            <div className="px-4 py-6 text-center text-sm text-muted-foreground">
+              Sin cotizaciones disponibles.
+              <button onClick={handleRefresh} className="text-emerald-500 ml-1 hover:underline">
+                Actualizar
+              </button>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {rates
+                .filter((r) => r.target_currency !== "UYU")
+                .sort((a, b) => {
+                  const order = ["USD", "BRL", "ARS"]
+                  return order.indexOf(a.target_currency) - order.indexOf(b.target_currency)
+                })
+                .map((rate) => {
+                  const display = getDisplayRate(rate)
+                  return (
+                    <div key={rate.id} className="flex items-center gap-3 px-4 py-3">
+                      <span className="text-lg">{CURRENCY_FLAGS[rate.target_currency] || "💱"}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium">
+                          {CURRENCY_NAMES[rate.target_currency] || rate.target_currency}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{display.label}</p>
                       </div>
-                      <div>
-                        <span className="text-xs text-muted-foreground block">Venta</span>
-                        <span className="font-semibold text-red-400">
-                          ${formatRate(display.sell)}
-                        </span>
+                      <div className="text-right">
+                        <div className="flex items-center gap-3 text-sm">
+                          <div>
+                            <span className="text-xs text-muted-foreground block">Compra</span>
+                            <span className="font-semibold text-emerald-500">
+                              ${formatRate(display.buy)}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-xs text-muted-foreground block">Venta</span>
+                            <span className="font-semibold text-red-400">
+                              ${formatRate(display.sell)}
+                            </span>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </div>
-              )
-            })}
-        </div>
-      )}
-      {rates.length > 0 && (
-        <div className="px-4 py-2 border-t border-border">
-          <p className="text-[10px] text-muted-foreground">
-            Fuente: {rates[0]?.source === "bcu" ? "BCU (Banco Central del Uruguay)" : rates[0]?.source === "manual" ? "Manual" : "ExchangeRate API"}
-          </p>
-        </div>
-      )}
+                  )
+                })}
+            </div>
+          )}
+          {rates.length > 0 && (
+            <div className="px-4 py-2 border-t border-border">
+              <p className="text-[10px] text-muted-foreground">
+                Fuente: {rates[0]?.source === "bcu" ? "BCU (Banco Central del Uruguay)" : rates[0]?.source === "manual" ? "Manual" : "ExchangeRate API"}
+              </p>
+            </div>
+          )}
+        </>
+      ) : null}
     </div>
   )
 }
