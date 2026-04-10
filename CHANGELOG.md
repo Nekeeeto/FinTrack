@@ -2,6 +2,127 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Onboarding cuenta: edición habilitada siempre + personalizado en internacional
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: el campo `Nombre` de cuenta queda editable también cuando se selecciona un preset nacional (ya no solo en `Personalizado`).
+- `src/app/(onboarding)/onboarding/page.tsx`: el selector de `Icono` se muestra siempre para poder ajustar la cuenta aun partiendo de un preset.
+- `src/app/(onboarding)/onboarding/page.tsx`: al editar nombre o icono, el preset pasa automáticamente a estado `Personalizado`.
+- `src/app/(onboarding)/onboarding/page.tsx`: se agrega opción `Personalizado` también en la lista de cuentas internacionales.
+
+## [2026-04-09] - Onboarding cuenta: logos locales restantes + opción Personalizado
+
+### Cambiado
+- `public/banks/itau.png`, `public/banks/bbva.png`, `public/banks/scotiabank.png`, `public/banks/prex.png`, `public/banks/midinero.png`: se agregan logos locales de bancos/billeteras para evitar depender de hotlinks externos.
+- `src/app/(onboarding)/onboarding/page.tsx`: presets nacionales usan logos locales para Itaú, BBVA, Scotiabank, Prex y MiDinero.
+- `src/app/(onboarding)/onboarding/page.tsx`: se agrega opción `Personalizado` después de MiDinero; permite editar nombre e icono a elección.
+- `src/app/(onboarding)/onboarding/page.tsx`: el campo `Nombre` refleja automáticamente el preset seleccionado y queda editable solo en `Personalizado`.
+
+## [2026-04-09] - Onboarding cuenta: logo BROU local (estable)
+
+### Cambiado
+- `public/banks/brou.png`: se agrega asset local del logo de BROU para evitar dependencia de hotlink externo.
+- `src/app/(onboarding)/onboarding/page.tsx`: preset BROU usa `logoUrl` local (`/banks/brou.png`) en lugar de Clearbit.
+
+## [2026-04-09] - Onboarding cuenta: quitar Efectivo y corregir logos
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: se elimina la opción `Efectivo UYU` de la grilla de presets de cuenta.
+- `src/app/(onboarding)/onboarding/page.tsx`: se agrega `PresetBrandAvatar` con fallback visual para logos de banco/billetera (si el logo externo falla, se muestra icono en lugar de imagen rota).
+
+## [2026-04-09] - Onboarding cuenta: logos reales, efectivo destacado y prefijos de saldo
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: opciones de banco/billetera en el paso de cuenta ahora muestran logos reales (Clearbit) cuando hay disponibilidad, con fallback de icono.
+- `src/app/(onboarding)/onboarding/page.tsx`: se agrega `Efectivo UYU` como opción explícita y destacada en verde dentro de cuentas nacionales.
+- `src/app/(onboarding)/onboarding/page.tsx`: inputs de saldo muestran prefijo automático de moneda (`$` o `US$`) para mejorar legibilidad mientras se escribe.
+- `src/app/(onboarding)/onboarding/page.tsx`: al cambiar entre Nacional/Internacional se resetea a un preset coherente del scope para evitar combinaciones cruzadas.
+
+## [2026-04-09] - Dashboard: calculadora de divisas más completa en mobile
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: el panel de conversor se rediseña como mini-calculadora más pro y en mobile se despliega casi full-width (`fixed inset-x-3`) en lugar de popover pequeño.
+- `src/app/(app)/inicio/page.tsx`: se agrega botón para recargar cotización en tiempo real (POST `/api/exchange-rates`) con estado de carga visual.
+- `src/app/(app)/inicio/page.tsx`: se muestra fecha/hora de última actualización de cotizaciones en formato `es-UY`.
+- `src/app/(app)/inicio/page.tsx`: mejoras visuales de selección de monedas (banderas más visibles), input de monto y bloque de resultado para una lectura más clara.
+
+## [2026-04-09] - Onboarding: paso de primera cuenta + checklist inicial más útil
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: se agrega el paso `account` antes de categorías con UI estilo modal (Nacional/Internacional, selección rápida de banco/billetera, nombre de cuenta, saldo inicial, paleta de color y switch para cuenta en dólares con saldo USD).
+- `src/app/(onboarding)/onboarding/page.tsx`: el flujo ahora es `welcome -> objectives -> account -> categories -> loading`, con navegación back/next ajustada y validación para exigir nombre de cuenta.
+- `src/app/(onboarding)/onboarding/page.tsx`: el payload final de onboarding ahora envía configuración de cuenta seleccionada.
+- `src/app/api/onboarding/complete/route.ts`: se valida `account` en el request y se crean cuentas según onboarding (principal + cuenta USD opcional cuando corresponde), en lugar de forzar siempre la cuenta `General`.
+- `src/app/(app)/inicio/page.tsx`: los “Primeros pasos” ya no aparecen auto-completados por datos creados durante onboarding; se guarda una línea base por usuario en `localStorage` y solo se marcan como completos cuando el usuario crea elementos adicionales manualmente.
+
+## [2026-04-09] - Onboarding: redirección directa sin pantalla final
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: se elimina el paso visual `done` del flujo; al terminar el guardado en `loading`, el usuario ahora redirige directo a `/inicio`.
+- `src/app/(onboarding)/onboarding/page.tsx`: limpieza de tipos/condicionales para quitar la UI de “Onboarding completado” y mantener el flujo más corto.
+
+## [2026-04-09] - Onboarding: analytics no bloquea finalización
+
+### Corregido
+- `src/app/api/onboarding/complete/route.ts`: si falla el guardado en `onboarding_sessions` (por ejemplo, tabla inexistente en Supabase), ahora se registra un `console.warn` y el flujo continúa. Esto evita que el usuario quede trabado al terminar onboarding por un error de analytics.
+
+## [2026-04-09] - Onboarding: iconos reales en categorías y subcategorías
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: se reemplazan iniciales de categorías por iconos reales usando el campo `icon` del catálogo (`getIcon`), mejorando identificación visual.
+- `src/app/(onboarding)/onboarding/page.tsx`: cada chip de subcategoría ahora muestra su icono correspondiente junto al nombre para escaneo más rápido.
+- `src/lib/icons.tsx`: se amplía el mapeo de iconos con claves usadas por el onboarding (`bus`, `smile`, `monitor`, `landmark`) para evitar fallback genérico.
+
+## [2026-04-09] - Onboarding: loader con copy corto y rotación más lenta
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: en la pantalla `loading` se reemplazan frases largas por una estructura más clara (línea superior fija y palabra única rotativa grande) para evitar cortes de texto.
+- `src/app/(onboarding)/onboarding/page.tsx`: se reduce la velocidad de rotación del texto de carga (`2400ms` por cambio, antes `1400ms`) para mejorar legibilidad.
+
+## [2026-04-09] - Onboarding: tabs Gastos/Ingresos con iconos y color semántico
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: selector de tipo en categorías ahora incluye iconografía directa (`ArrowDownLeft` para Gastos y `ArrowUpRight` para Ingresos) para reforzar comprensión visual.
+- `src/app/(onboarding)/onboarding/page.tsx`: estados activos del switch diferenciados por color semántico (rojo para gastos, verde para ingresos), con `hover` en el mismo lenguaje para mejorar legibilidad rápida.
+
+## [2026-04-09] - Onboarding: remover sugerencias IA en categorías
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: se elimina el bloque de UI «Sugerir categorías con IA (opcional)» del paso de categorías para evitar estados de carga en loop y simplificar el flujo de onboarding.
+- `src/app/(onboarding)/onboarding/page.tsx`: limpieza de estado y lógica asociada (`aiLoading`, `aiAttempts`, `aiUsed`, `suggestCategoriesWithAi`, `resetSelectionsFromCatalog`) y remoción de metadata de IA en el payload de finalización.
+
+## [2026-04-09] - Onboarding: bordes mobile, íconos en objetivos y estilo consistente
+
+### Corregido
+- `src/app/(onboarding)/layout.tsx`: se elimina el centrado por `flex` del contenedor raíz para evitar espacios laterales no deseados en mobile y permitir full-width real en el flujo de onboarding.
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: pasos de `objetivos` y `categorias` con el mismo lenguaje visual del `welcome` (base oscura, acentos `#5DBCD2`, bordes suaves y superficies glass), manteniendo coherencia dentro de la app.
+- `src/app/(onboarding)/onboarding/page.tsx`: `objetivos` incorpora íconos por opción (`Compass`, `HandCoins`, `PiggyBank`, `SlidersHorizontal`) para mejorar escaneo visual.
+- `src/app/(onboarding)/onboarding/page.tsx`: reducción de escalas tipográficas y densidad en headings, descripciones, tabs, tarjetas y chips para una lectura más limpia en mobile.
+- `src/app/(onboarding)/onboarding/page.tsx`: CTA y acentos de progreso/carga/finalización pasan a paleta de marca (`#5DBCD2`) para consistencia entre pasos.
+
+## [2026-04-09] - Onboarding: bienvenida abstracta sin foto
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: se elimina la imagen/persona del `welcome` y se reemplaza por una escena abstracta animada (orbes, anillos y partículas) para un look más épico y profesional sin depender de assets fotográficos.
+- `src/app/(onboarding)/onboarding/page.tsx`: ajuste del layout para mantener texto y CTA en la parte inferior, con mejor centrado visual y más aire debajo del botón (`pb` mayor con safe-area).
+- `src/app/(onboarding)/onboarding/page.tsx`: se retira el logo del `welcome` para dejar una pantalla inicial limpia enfocada en la bienvenida y el llamado a la acción.
+
+## [2026-04-09] - Onboarding: estilo inspiración con hero dominante
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: rediseño del paso `welcome` para lograr una estética más cercana al estilo de referencia: sujeto principal más grande, composición vertical más impactante y contenido final anclado al tercio inferior.
+- `src/app/(onboarding)/onboarding/page.tsx`: se elimina el logo del bloque inicial y se prioriza una bienvenida visual full-screen con fondo animado, brillos y CTA principal más protagonista.
+- `src/app/(onboarding)/onboarding/page.tsx`: ajustes de tipografía y espaciado para mantener coherencia con la landing (headline fuerte, cuerpo legible, botón redondeado de marca).
+
+## [2026-04-09] - Onboarding: welcome full-width y look & feel de landing
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: el paso de bienvenida ahora ocupa toda la pantalla en mobile (`min-h-svh`) sin bordes laterales ni card redondeada, para que funcione como pantalla de presentación post-registro.
+- `src/app/(onboarding)/onboarding/page.tsx`: se incorpora `PlatitaBrandLockup` arriba, fondo animado reutilizando capas visuales de la landing (`hero-animated-bg`, `hero-noise`, `hero-waves`) y CTA con estética consistente de marca (`#5DBCD2`, tipografía y microinteracciones).
+- `src/app/(onboarding)/onboarding/page.tsx`: reubicación del personaje con `object-contain` y layout vertical más balanceado para evitar cortes/espacios incómodos entre hero y bloque de texto.
+
 ## [2026-04-09] - Onboarding: bienvenida con imagen de marca y CTA más seguro en móvil
 
 ### Agregado

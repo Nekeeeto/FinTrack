@@ -8,7 +8,7 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { MonthlyFlow } from "@/components/dashboard/monthly-flow"
 import { BudgetProgress } from "@/components/dashboard/budget-progress"
 import { ExchangeRatesWidget } from "@/components/dashboard/exchange-rates-widget"
-import { Loader2, ArrowRight, Rocket, CircleCheck, Circle, Sparkles, HelpCircle, MessageCircle, Eye, EyeOff, ArrowUp, ArrowDown, ChevronRight, Calculator, Settings2, Share2, ArrowLeftRight } from "lucide-react"
+import { Loader2, ArrowRight, Rocket, CircleCheck, Circle, Sparkles, HelpCircle, MessageCircle, Eye, EyeOff, ArrowUp, ArrowDown, ChevronRight, Calculator, Settings2, Share2, ArrowLeftRight, RefreshCw } from "lucide-react"
 import type { Account, Transaction, Currency, ExchangeRate } from "@/types/database"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
@@ -23,6 +23,11 @@ interface DashboardData {
   budgetProgress: { id: string; category_id: string; category_name: string; category_color: string; limit: number; spent: number; percentage: number }[]
 }
 
+type FirstStepsBaseline = {
+  accounts: number
+  categories: number
+}
+
 export default function DashboardPage() {
   const { profile } = useAuth()
   const [data, setData] = useState<DashboardData | null>(null)
@@ -33,9 +38,11 @@ export default function DashboardPage() {
   const [selectedBalanceCurrency, setSelectedBalanceCurrency] = useState<Currency>("UYU")
   const [widgetOpen, setWidgetOpen] = useState<"converter" | null>(null)
   const [rates, setRates] = useState<ExchangeRate[]>([])
+  const [ratesRefreshing, setRatesRefreshing] = useState(false)
   const [convertAmount, setConvertAmount] = useState("1000")
   const [convertFrom, setConvertFrom] = useState<Currency>("UYU")
   const [convertTo, setConvertTo] = useState<Currency>("USD")
+  const [firstStepsBaseline, setFirstStepsBaseline] = useState<FirstStepsBaseline | null>(null)
 
   const currencyOptions: { code: Currency; label: string; flag: string }[] = [
     { code: "UYU", label: "$", flag: "🇺🇾" },
@@ -69,18 +76,60 @@ export default function DashboardPage() {
     fetchData()
   }, [fetchData])
 
-  useEffect(() => {
-    fetch("/api/exchange-rates")
-      .then((res) => res.json())
-      .then((json) => setRates(Array.isArray(json.rates) ? json.rates : []))
-      .catch(() => setRates([]))
+  const fetchRates = useCallback(async () => {
+    try {
+      const res = await fetch("/api/exchange-rates")
+      const json = await res.json()
+      setRates(Array.isArray(json.rates) ? json.rates : [])
+    } catch {
+      setRates([])
+    }
   }, [])
+
+  useEffect(() => {
+    void fetchRates()
+  }, [fetchRates])
+
+  useEffect(() => {
+    if (!profile?.user_id || !data) return
+
+    const storageKey = `fintrack:first-steps-baseline:${profile.user_id}`
+    const fallback: FirstStepsBaseline = profile.onboarding_completed
+      ? { accounts: data.accounts.length, categories: setup.categories }
+      : { accounts: 0, categories: 0 }
+
+    try {
+      const raw = window.localStorage.getItem(storageKey)
+      if (!raw) {
+        window.localStorage.setItem(storageKey, JSON.stringify(fallback))
+        setFirstStepsBaseline(fallback)
+        return
+      }
+
+      const parsed = JSON.parse(raw) as Partial<FirstStepsBaseline>
+      const baseline: FirstStepsBaseline = {
+        accounts: Number.isFinite(parsed.accounts) ? Number(parsed.accounts) : fallback.accounts,
+        categories: Number.isFinite(parsed.categories) ? Number(parsed.categories) : fallback.categories,
+      }
+      setFirstStepsBaseline(baseline)
+    } catch {
+      setFirstStepsBaseline(fallback)
+    }
+  }, [profile?.user_id, profile?.onboarding_completed, data, setup.categories])
 
   const displayName = profile?.name?.split(" ")[0] || "Hola"
 
+  const accountDone = firstStepsBaseline
+    ? (data?.accounts.length ?? 0) > firstStepsBaseline.accounts
+    : !profile?.onboarding_completed && (data?.accounts.length ?? 0) > 0
+
+  const categoryDone = firstStepsBaseline
+    ? setup.categories > firstStepsBaseline.categories
+    : !profile?.onboarding_completed && setup.categories > 0
+
   const firstSteps = [
-    { id: "account", label: "Crear una cuenta", subtitle: "Agregá tu banco o billetera", done: (data?.accounts.length ?? 0) > 0, href: "/cuentas" },
-    { id: "category", label: "Crear una categoría", subtitle: "Organizá tus gastos e ingresos", done: setup.categories > 0, href: "/categorias" },
+    { id: "account", label: "Crear una cuenta", subtitle: "Agregá tu banco o billetera", done: accountDone, href: "/cuentas" },
+    { id: "category", label: "Crear una categoría", subtitle: "Organizá tus gastos e ingresos", done: categoryDone, href: "/categorias" },
     { id: "tx", label: "Crear un movimiento", subtitle: "Registrá tu primer gasto o ingreso", done: setup.transactions > 0, href: "/transacciones?new=1" },
   ] as const
   const doneCount = firstSteps.filter((step) => step.done).length
@@ -131,6 +180,16 @@ export default function DashboardPage() {
 
   const parsedAmount = Number.parseFloat(convertAmount || "0")
   const convertedAmount = Number.isNaN(parsedAmount) ? 0 : convertBetween(parsedAmount, convertFrom, convertTo)
+  const lastRateUpdatedAtMs = rates.reduce((latest, rate) => {
+    const next = new Date(rate.fetched_at).getTime()
+    return Number.isFinite(next) && next > latest ? next : latest
+  }, 0)
+  const lastRateUpdatedLabel = lastRateUpdatedAtMs
+    ? new Intl.DateTimeFormat("es-UY", {
+        dateStyle: "medium",
+        timeStyle: "short",
+      }).format(new Date(lastRateUpdatedAtMs))
+    : "Sin datos de cotización"
 
   async function handleShareConversion() {
     const message = `${formatCurrency(parsedAmount, convertFrom)} = ${formatCurrency(convertedAmount, convertTo)}`
@@ -139,6 +198,17 @@ export default function DashboardPage() {
       return
     }
     await navigator.clipboard.writeText(message)
+  }
+
+  async function handleRefreshRates() {
+    if (ratesRefreshing) return
+    setRatesRefreshing(true)
+    try {
+      await fetch("/api/exchange-rates", { method: "POST" })
+      await fetchRates()
+    } finally {
+      setRatesRefreshing(false)
+    }
   }
 
   return (
@@ -181,7 +251,7 @@ export default function DashboardPage() {
             className="relative w-full overflow-hidden rounded-2xl border border-emerald-500/25 bg-card hover:border-emerald-500/40 transition-colors"
           >
             <div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-700 ease-out"
+              className="absolute inset-y-0 left-0 bg-linear-to-r from-emerald-500 to-emerald-400 transition-all duration-700 ease-out"
               style={{ width: `${progressPercentage}%` }}
             />
             <div
@@ -210,7 +280,7 @@ export default function DashboardPage() {
           </button>
         )}
 
-        <div className="rounded-3xl bg-gradient-to-br from-emerald-400 to-emerald-500 p-5 md:p-6 text-black relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]">
+        <div className="rounded-3xl bg-linear-to-br from-emerald-400 to-emerald-500 p-5 md:p-6 text-black relative overflow-hidden shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]">
           <div className="absolute -right-10 -top-12 h-44 w-44 rounded-full bg-white/12" />
           <div className="absolute -right-4 bottom-8 h-24 w-24 rounded-full bg-white/8" />
           <p className="text-2xl font-semibold mb-2 relative z-10">Tu Balance</p>
@@ -306,24 +376,35 @@ export default function DashboardPage() {
                 )}
                 <div className="relative z-40">
                   {widgetOpen === "converter" && (
-                    <div className="absolute left-0 bottom-full mb-3 w-[min(360px,calc(100vw-2rem))] rounded-2xl border border-border bg-card/95 backdrop-blur p-4 space-y-3 shadow-[0_12px_30px_rgba(0,0,0,0.45)]">
+                    <div className="fixed inset-x-3 bottom-24 z-40 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 space-y-4 shadow-[0_16px_38px_rgba(0,0,0,0.5)] md:absolute md:inset-x-auto md:left-0 md:bottom-full md:mb-3 md:w-[min(420px,calc(100vw-2rem))]">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-lg">Conversor rápido</h4>
-                        <button
-                          onClick={handleShareConversion}
-                          className="h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors"
-                          title="Compartir conversión"
-                        >
-                          <Share2 className="h-4 w-4" />
-                        </button>
+                        <h4 className="font-semibold text-lg">Calculadora</h4>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={handleRefreshRates}
+                            className="h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors disabled:opacity-50"
+                            title="Actualizar cotización"
+                            disabled={ratesRefreshing}
+                          >
+                            <RefreshCw className={`h-4 w-4 ${ratesRefreshing ? "animate-spin" : ""}`} />
+                          </button>
+                          <button
+                            onClick={handleShareConversion}
+                            className="h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors"
+                            title="Compartir conversión"
+                          >
+                            <Share2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       </div>
+
                       <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Desde</p>
                           <select
                             value={convertFrom}
                             onChange={(e) => setConvertFrom(e.target.value as Currency)}
-                            className="w-full rounded-xl border border-border bg-background px-3 py-2"
+                            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base font-semibold"
                           >
                             {currencyOptions.map((option) => (
                               <option key={option.code} value={option.code}>
@@ -339,7 +420,8 @@ export default function DashboardPage() {
                             setConvertFrom(to)
                             setConvertTo(from)
                           }}
-                          className="mb-1 h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors"
+                          className="mb-1 h-10 w-10 rounded-full bg-primary text-primary-foreground inline-flex items-center justify-center hover:opacity-90 transition-opacity"
+                          title="Invertir monedas"
                         >
                           <ArrowLeftRight className="h-4 w-4" />
                         </button>
@@ -348,7 +430,7 @@ export default function DashboardPage() {
                           <select
                             value={convertTo}
                             onChange={(e) => setConvertTo(e.target.value as Currency)}
-                            className="w-full rounded-xl border border-border bg-background px-3 py-2"
+                            className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base font-semibold"
                           >
                             {currencyOptions.map((option) => (
                               <option key={option.code} value={option.code}>
@@ -358,7 +440,8 @@ export default function DashboardPage() {
                           </select>
                         </div>
                       </div>
-                      <div>
+
+                      <div className="rounded-xl border border-border bg-background/70 px-3 py-2.5">
                         <p className="text-xs text-muted-foreground mb-1">Monto</p>
                         <input
                           type="number"
@@ -366,14 +449,18 @@ export default function DashboardPage() {
                           min="0"
                           value={convertAmount}
                           onChange={(e) => setConvertAmount(e.target.value)}
-                          className="w-full rounded-xl border border-border bg-background px-3 py-2"
+                          className="w-full bg-transparent text-3xl font-semibold tracking-tight outline-none"
                         />
                       </div>
+
                       <div className="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-3">
                         <p className="text-xs text-muted-foreground">Resultado</p>
-                        <p className="text-2xl font-bold">
-                          {formatCurrency(convertedAmount, convertTo)}
-                        </p>
+                        <p className="text-2xl font-bold">{formatCurrency(convertedAmount, convertTo)}</p>
+                      </div>
+
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>Cotización actualizada: {lastRateUpdatedLabel}</span>
+                        <span className="text-emerald-500 font-medium">Tiempo real</span>
                       </div>
                     </div>
                   )}
@@ -460,7 +547,7 @@ export default function DashboardPage() {
             <div className="mx-auto mb-4 h-1.5 w-14 rounded-full bg-muted-foreground/30" />
             <h3 className="text-2xl font-semibold">Primeros pasos</h3>
             <p className="mt-1 text-muted-foreground">
-              Completá estos pasos para empezar a usar FinTrack
+              Completá estos pasos y dejá de llevar la plata a ojo, bo.
             </p>
             <div className="mt-5 space-y-2">
               {firstSteps.map((step) => (

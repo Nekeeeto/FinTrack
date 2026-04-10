@@ -7,9 +7,7 @@ export default function OnboardingLayout({
 }) {
   return (
     <AuthProvider>
-      <main className="min-h-screen w-full flex items-center justify-center bg-background">
-        {children}
-      </main>
+      <main className="min-h-screen w-full bg-background">{children}</main>
     </AuthProvider>
   )
 }

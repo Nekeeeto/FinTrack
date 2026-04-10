@@ -17,6 +17,17 @@ const categorySchema = z.object({
   subcategories: z.array(subcategorySchema),
 })
 
+const accountSchema = z.object({
+  name: z.string().min(1).max(50),
+  type: z.enum(["checking", "savings", "cash", "investment", "business"]).default("checking"),
+  currency: z.enum(["UYU", "USD", "BRL", "ARS"]).default("UYU"),
+  balance: z.number().min(0).default(0),
+  color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#1a1a1a"),
+  icon: z.string().min(1).max(30).default("wallet"),
+  usd_enabled: z.boolean().default(false),
+  usd_balance: z.number().min(0).default(0),
+})
+
 const metadataSchema = z.object({
   flow_version: z.string().default("onboarding_v2_mobile"),
   total_duration_ms: z.number().int().nonnegative().optional(),
@@ -27,6 +38,7 @@ const metadataSchema = z.object({
 
 const onboardingSchema = z.object({
   objectives: z.array(z.string().min(1)).min(1, "Selecciona al menos un objetivo"),
+  account: accountSchema,
   categories: z.array(categorySchema).min(1, "Selecciona al menos una categoria"),
   metadata: metadataSchema.optional(),
 })
@@ -49,7 +61,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 })
     }
 
-    const { objectives, categories, metadata } = parsed.data
+    const { objectives, account, categories, metadata } = parsed.data
     const userId = auth.userId
 
     const {
@@ -154,12 +166,12 @@ export async function POST(req: NextRequest) {
 
     const { error: accountError } = await supabaseAdmin.from("accounts").insert({
       user_id: userId,
-      name: "General",
-      type: "checking",
-      currency: "UYU",
-      balance: 0,
-      color: "#1a1a1a",
-      icon: "wallet",
+      name: account.name,
+      type: account.type,
+      currency: account.currency,
+      balance: account.balance,
+      color: account.color,
+      icon: account.icon,
     })
 
     if (accountError) {
@@ -167,6 +179,25 @@ export async function POST(req: NextRequest) {
         { error: `Error creando cuenta inicial: ${accountError.message}` },
         { status: 500 }
       )
+    }
+
+    if (account.currency === "UYU" && account.usd_enabled) {
+      const { error: usdAccountError } = await supabaseAdmin.from("accounts").insert({
+        user_id: userId,
+        name: `${account.name} USD`,
+        type: account.type,
+        currency: "USD",
+        balance: account.usd_balance,
+        color: account.color,
+        icon: account.icon,
+      })
+
+      if (usdAccountError) {
+        return NextResponse.json(
+          { error: `Error creando cuenta en dólares: ${usdAccountError.message}` },
+          { status: 500 }
+        )
+      }
     }
 
     const { error: analyticsError } = await supabaseAdmin
@@ -183,10 +214,11 @@ export async function POST(req: NextRequest) {
       })
 
     if (analyticsError) {
-      return NextResponse.json(
-        { error: `Error guardando analytics de onboarding: ${analyticsError.message}` },
-        { status: 500 }
-      )
+      // Analytics no debe bloquear la finalizacion del onboarding.
+      console.warn("[onboarding.complete] No se pudo guardar analytics", {
+        userId,
+        error: analyticsError.message,
+      })
     }
 
     const { error: completeError } = await supabaseAdmin
