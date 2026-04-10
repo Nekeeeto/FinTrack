@@ -379,7 +379,7 @@ export default function DashboardPage() {
                     </span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <p className="mt-2 text-2xl md:text-3xl font-bold text-foreground truncate">
+                  <p className="mt-2 text-xl md:text-2xl font-bold text-foreground tabular-nums truncate">
                     {hideAmounts
                       ? "$ •••••"
                       : `$${formatCardAmount(data.cashFlow.income)}`}
@@ -397,7 +397,7 @@ export default function DashboardPage() {
                     </span>
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
-                  <p className="mt-2 text-2xl md:text-3xl font-bold text-foreground truncate">
+                  <p className="mt-2 text-xl md:text-2xl font-bold text-foreground tabular-nums truncate">
                     {hideAmounts
                       ? "$ •••••"
                       : `$${formatCardAmount(data.cashFlow.expenses)}`}

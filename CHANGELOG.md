@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Inicio: montos de Ingresos/Gastos más compactos
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: montos de las tarjetas «Ingresos» y «Gastos» pasan a `text-xl md:text-2xl` (antes `text-2xl md:text-3xl`) y se agrega `tabular-nums` para mejorar legibilidad cuando hay muchos dígitos.
+
 ## [2026-04-10] - Cuentas: texto de ayuda del sheet más corto
 
 ### Cambiado
