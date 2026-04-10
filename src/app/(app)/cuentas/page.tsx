@@ -17,11 +17,28 @@ import {
   Eye,
   EyeOff,
   LayoutGrid,
+  ChevronDown,
+  CircleHelp,
+  Wallet,
 } from "lucide-react"
 import { getIcon } from "@/lib/icons"
 import { formatMoney, formatDate } from "@/lib/format"
 import { AccountBrandAvatar } from "@/components/accounts/account-brand-avatar"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -57,6 +74,13 @@ const BALANCE_TOTAL_TABS: { id: BalanceTotalTab; label: string; showGrid?: boole
   { id: "USD", label: "US$ Dólares" },
   { id: "BRL", label: "R$ Reales" },
   { id: "ARS", label: "AR$ Pesos" },
+]
+
+const VIEW_CURRENCY_OPTIONS: { code: Currency; triggerLabel: string; menuLabel: string }[] = [
+  { code: "UYU", triggerLabel: "$", menuLabel: "Pesos uruguayos (UYU)" },
+  { code: "USD", triggerLabel: "US$", menuLabel: "Dólares (USD)" },
+  { code: "BRL", triggerLabel: "R$", menuLabel: "Reales (BRL)" },
+  { code: "ARS", triggerLabel: "AR$", menuLabel: "Pesos argentinos (ARS)" },
 ]
 
 /** Fila de UI: cuenta sola o par UYU + hermana `Nombre USD` (onboarding / alta nacional). */
@@ -173,6 +197,9 @@ export default function CuentasPage() {
   const [ratesRefreshing, setRatesRefreshing] = useState(false)
   const [balanceTotalTab, setBalanceTotalTab] = useState<BalanceTotalTab>("all")
   const [hideTotalBalance, setHideTotalBalance] = useState(false)
+  /** Moneda en la que se muestra el balance total (conversión en vivo con cotizaciones). */
+  const [balanceViewCurrency, setBalanceViewCurrency] = useState<Currency>("UYU")
+  const [helpSheetOpen, setHelpSheetOpen] = useState(false)
 
   function sortAccountsByStoredOrder(list: Account[]): Account[] {
     if (typeof window === "undefined") return list
@@ -482,6 +509,14 @@ export default function CuentasPage() {
       ? { amount: portfolioInUyu, currency: "UYU" as const }
       : { amount: sumBalanceByCurrency(balanceTotalTab), currency: balanceTotalTab }
 
+  const balanceAmountForView = convertBetween(
+    balanceTotalDisplay.amount,
+    balanceTotalDisplay.currency,
+    balanceViewCurrency
+  )
+  const triggerCurrencyLabel =
+    VIEW_CURRENCY_OPTIONS.find((o) => o.code === balanceViewCurrency)?.triggerLabel ?? "$"
+
   const lastRateUpdatedAtMs = rates.reduce((latest, rate) => {
     const next = new Date(rate.fetched_at).getTime()
     return Number.isFinite(next) && next > latest ? next : latest
@@ -523,7 +558,48 @@ export default function CuentasPage() {
 
   return (
     <div className="mx-auto max-w-md space-y-5 text-white">
-      <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mis Cuentas</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-xl font-bold tracking-tight text-white sm:text-2xl">Mis Cuentas</h1>
+        <div className="flex shrink-0 items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              type="button"
+              className="inline-flex h-10 min-w-10 items-center justify-center gap-0.5 rounded-full border border-white/10 bg-zinc-900/90 px-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-zinc-800"
+              aria-label="Moneda del balance total (conversión en vivo)"
+            >
+              <span className="leading-none">{triggerCurrencyLabel}</span>
+              <ChevronDown className="size-3.5 opacity-80" aria-hidden />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="min-w-44 border-white/10 bg-zinc-950 text-zinc-100"
+            >
+              {VIEW_CURRENCY_OPTIONS.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.code}
+                  className="cursor-pointer gap-2"
+                  onClick={() => setBalanceViewCurrency(opt.code)}
+                >
+                  <span className="flex-1">{opt.menuLabel}</span>
+                  {balanceViewCurrency === opt.code ? (
+                    <Check className="size-4 shrink-0 text-primary" aria-hidden />
+                  ) : (
+                    <span className="size-4 shrink-0" aria-hidden />
+                  )}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <button
+            type="button"
+            onClick={() => setHelpSheetOpen(true)}
+            className="inline-flex size-10 items-center justify-center rounded-full border border-white/10 bg-zinc-900/90 text-zinc-200 transition-colors hover:bg-zinc-800 hover:text-white"
+            aria-label="Ayuda sobre Mis Cuentas"
+          >
+            <CircleHelp className="size-5" />
+          </button>
+        </div>
+      </div>
 
       <section className="-mx-4 rounded-none bg-black px-4 pb-5 pt-2 text-white md:mx-0 md:rounded-2xl md:px-0">
         <div className="flex items-start justify-between gap-3">
@@ -552,7 +628,7 @@ export default function CuentasPage() {
         <p className="mt-2 text-[1.65rem] font-bold leading-none tracking-tight tabular-nums sm:text-4xl">
           {hideTotalBalance
             ? "••••••"
-            : formatTotalCurrency(balanceTotalDisplay.amount, balanceTotalDisplay.currency)}
+            : formatTotalCurrency(balanceAmountForView, balanceViewCurrency)}
         </p>
         <div className="mt-5 flex max-w-full gap-1 overflow-x-auto rounded-full bg-zinc-900/95 p-1 scrollbar-hide">
           {BALANCE_TOTAL_TABS.map((tab) => {
@@ -1156,6 +1232,37 @@ export default function CuentasPage() {
           )}
         </>
       )}
+
+      <Sheet open={helpSheetOpen} onOpenChange={setHelpSheetOpen}>
+        <SheetContent
+          side="bottom"
+          showCloseButton={false}
+          className="max-h-[88vh] rounded-t-[1.75rem] border border-white/10 border-b-0 bg-black px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-3 text-white shadow-2xl"
+        >
+          <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-white/25" aria-hidden />
+          <div className="mx-auto flex size-14 items-center justify-center rounded-full bg-primary/20 text-primary">
+            <Wallet className="size-7" />
+          </div>
+          <SheetHeader className="items-center space-y-3 pb-2 pt-4 text-center">
+            <SheetTitle className="text-lg font-bold text-white">Qué es Mis Cuentas</SheetTitle>
+            <SheetDescription className="text-sm leading-relaxed text-zinc-400">
+              Acá administrás tus cuentas en pesos uruguayos, dólares y otras monedas. Si activaste dólares en una cuenta
+              nacional, la vas a ver como una sola tarjeta con selector $ / US$. El total de arriba se filtra con las
+              pastillas (Todas, $ Pesos, etc.) y el botón con chevron convierte ese total en la moneda que elijas, con
+              cotización al día cuando hay datos. Tocá una cuenta para ver movimientos o el lápiz para editarla.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetFooter className="pt-2">
+            <Button
+              type="button"
+              className="h-12 w-full rounded-full bg-primary text-base font-bold text-primary-foreground hover:bg-[#74cade]"
+              onClick={() => setHelpSheetOpen(false)}
+            >
+              Entendido
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </div>
   )
 }

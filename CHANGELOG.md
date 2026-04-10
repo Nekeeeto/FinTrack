@@ -12,6 +12,9 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 ### Cambiado
 - `src/app/(app)/cuentas/page.tsx`: el total deja la tarjeta tipo inicio; ahora es bloque negro con «Balance total», ojo para ocultar montos, actualizar cotizaciones, monto grande y barra de pills (Todas + $ Pesos / US$ Dólares / R$ / AR$). Las pills filtran la lista de cuentas; el reordenamiento solo está activo en «Todas». «Todas» muestra el patrimonio combinado en pesos uruguayos (equivalente UYU).
 
+### Añadido
+- `src/app/(app)/cuentas/page.tsx`: junto al título, selector de moneda (menú con chevron) que convierte el balance total en vivo según cotizaciones; botón de ayuda que abre un sheet inferior con texto explicativo y «Entendido» (colores Platita).
+
 ## [2026-04-09] - Inicio: quitar línea de rango bajo tarjeta de balance
 
 ### Cambiado
