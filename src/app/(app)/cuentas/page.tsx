@@ -816,17 +816,23 @@ export default function CuentasPage() {
           )
         })}
         <button
+          type="button"
           onClick={() => {
             resetCreateForm()
             setCreating(true)
           }}
-          className="rounded-3xl border border-dashed border-white/20 bg-[#111318] min-h-[120px] p-4 text-left transition-colors hover:border-primary/50"
+          className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-white/20 bg-[#111318] px-3 py-2.5 text-left transition-colors hover:border-primary/50 sm:gap-3.5 sm:px-4"
         >
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary/15 text-primary">
-            <Plus className="h-5 w-5" />
+          <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary">
+            <Plus className="size-4" strokeWidth={2.5} />
           </span>
-          <p className="mt-3 text-sm font-semibold">Añadir cuenta</p>
-          <p className="mt-1 text-xs text-muted-foreground">Creá una nueva cuenta acá</p>
+          <span className="flex min-w-0 flex-1 items-center gap-2 overflow-hidden whitespace-nowrap">
+            <span className="shrink-0 text-sm font-semibold text-white">Añadir cuenta</span>
+            <span className="shrink-0 text-zinc-600" aria-hidden>
+              ·
+            </span>
+            <span className="truncate text-xs text-zinc-500">Creá una nueva cuenta acá</span>
+          </span>
         </button>
       </div>
 

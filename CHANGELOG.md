@@ -15,6 +15,9 @@ Todos los cambios relevantes del proyecto se documentan en este archivo.
 ### Añadido
 - `src/app/(app)/cuentas/page.tsx`: junto al título, selector de moneda (menú con chevron) que convierte el balance total en vivo según cotizaciones; botón de ayuda que abre un sheet inferior con texto explicativo y «Entendido» (colores Platita).
 
+### Cambiado
+- `src/app/(app)/cuentas/page.tsx`: el CTA «Añadir cuenta» pasa a una sola fila horizontal (ícono + título + subtítulo) y contenedor más bajo y fino.
+
 ## [2026-04-09] - Inicio: quitar línea de rango bajo tarjeta de balance
 
 ### Cambiado
