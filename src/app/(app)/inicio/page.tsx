@@ -408,7 +408,7 @@ export default function DashboardPage() {
 
             <div className="space-y-3">
               <h3 className="text-base font-semibold">Accesos rápidos</h3>
-              <div className="relative flex items-start gap-4">
+              <div className="relative -mx-4 px-4 md:mx-0 md:px-0">
                 {widgetOpen === "converter" && (
                   <button
                     onClick={() => setWidgetOpen(null)}
@@ -416,31 +416,32 @@ export default function DashboardPage() {
                     aria-label="Cerrar widgets"
                   />
                 )}
-                <div className="relative">
-                  {widgetOpen === "converter" && (
-                    <div className="fixed inset-x-3 bottom-24 z-50 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 space-y-4 shadow-[0_16px_38px_rgba(0,0,0,0.5)] md:absolute md:inset-x-auto md:left-0 md:bottom-full md:mb-3 md:w-[min(420px,calc(100vw-2rem))] md:z-40">
-                      <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-lg">Calculadora</h4>
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={handleRefreshRates}
-                            className="h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors disabled:opacity-50"
-                            title="Actualizar cotización"
-                            disabled={ratesRefreshing}
-                          >
-                            <RefreshCw className={`h-4 w-4 ${ratesRefreshing ? "animate-spin" : ""}`} />
-                          </button>
-                          <button
-                            onClick={handleShareConversion}
-                            className="h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors"
-                            title="Compartir conversión"
-                          >
-                            <Share2 className="h-4 w-4" />
-                          </button>
+                <div className="flex snap-x snap-mandatory scroll-smooth items-start gap-2 overflow-x-auto pb-1 pt-0.5 scrollbar-hide md:gap-4">
+                  <div className="relative w-[4.5rem] shrink-0 snap-start md:w-24">
+                    {widgetOpen === "converter" && (
+                      <div className="fixed inset-x-3 bottom-24 z-50 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 space-y-4 shadow-[0_16px_38px_rgba(0,0,0,0.5)] md:absolute md:inset-x-auto md:left-0 md:bottom-full md:mb-3 md:w-[min(420px,calc(100vw-2rem))] md:z-40">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-semibold text-lg">Calculadora</h4>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={handleRefreshRates}
+                              className="h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors disabled:opacity-50"
+                              title="Actualizar cotización"
+                              disabled={ratesRefreshing}
+                            >
+                              <RefreshCw className={`h-4 w-4 ${ratesRefreshing ? "animate-spin" : ""}`} />
+                            </button>
+                            <button
+                              onClick={handleShareConversion}
+                              className="h-9 w-9 rounded-full border border-border inline-flex items-center justify-center hover:bg-accent transition-colors"
+                              title="Compartir conversión"
+                            >
+                              <Share2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
+                        <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
                         <div>
                           <p className="text-xs text-muted-foreground mb-1">Desde</p>
                           <select
@@ -508,27 +509,30 @@ export default function DashboardPage() {
                   )}
                   <button
                     onClick={() => setWidgetOpen((prev) => (prev === "converter" ? null : "converter"))}
-                    className="w-24 shrink-0 flex flex-col items-center gap-2 transition-transform active:scale-95"
+                    className="flex w-full flex-col items-center gap-1.5 transition-transform active:scale-95 md:gap-2"
                   >
                     <span
-                      className={`h-20 w-20 rounded-full inline-flex items-center justify-center transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_10px_24px_rgba(0,0,0,0.45)] ${
+                      className={`inline-flex h-12 w-12 items-center justify-center rounded-full transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_6px_16px_rgba(0,0,0,0.4)] md:h-20 md:w-20 md:shadow-[inset_0_1px_0_rgba(255,255,255,0.15),0_10px_24px_rgba(0,0,0,0.45)] ${
                         widgetOpen === "converter"
-                          ? "bg-primary/18 border border-primary/35 text-primary"
-                          : "bg-card/90 border border-white/10 text-foreground"
+                          ? "border border-primary/35 bg-primary/18 text-primary"
+                          : "border border-white/10 bg-card/90 text-foreground"
                       }`}
                     >
-                      <Calculator className="h-5 w-5" />
+                      <Calculator className="h-4 w-4 md:h-5 md:w-5" />
                     </span>
-                    <span className="text-xs text-center">Calculadora</span>
+                    <span className="text-center text-[10px] leading-tight md:text-xs">Calculadora</span>
                   </button>
                 </div>
-                <button className="w-24 shrink-0 flex flex-col items-center gap-2 text-muted-foreground/85 opacity-80">
-                  <span className="h-20 w-20 rounded-full inline-flex items-center justify-center bg-card/50 border border-dashed border-border/70 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]">
-                    <Settings2 className="h-5 w-5" />
-                  </span>
-                  <span className="text-[11px] text-center leading-tight">Más Widgets</span>
-                </button>
-                <div className="flex-1" />
+                  <button
+                    type="button"
+                    className="flex w-[4.5rem] shrink-0 snap-start flex-col items-center gap-1.5 text-muted-foreground/85 opacity-80 transition-transform active:scale-95 md:w-24 md:gap-2"
+                  >
+                    <span className="inline-flex h-12 w-12 items-center justify-center rounded-full border border-dashed border-border/70 bg-card/50 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] md:h-20 md:w-20">
+                      <Settings2 className="h-4 w-4 md:h-5 md:w-5" />
+                    </span>
+                    <span className="text-center text-[10px] leading-tight md:text-[11px]">Más widgets</span>
+                  </button>
+                </div>
               </div>
             </div>
 

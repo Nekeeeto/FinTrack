@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Inicio: accesos rápidos compactos y carrusel en móvil
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: ítems de «Accesos rápidos» más chicos en móvil (`h-12 w-12`, columna `4.5rem`), texto `10px`; en `md+` se mantienen `h-20 w-20` y `w-24`. Fila con `overflow-x-auto`, `scrollbar-hide` y `snap-x` para carrusel; bleed horizontal `-mx-4 px-4` en móvil.
+
 ## [2026-04-10] - Layout: padding superior móvil bajo header (inicio)
 
 ### Cambiado
