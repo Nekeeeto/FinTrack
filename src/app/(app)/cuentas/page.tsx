@@ -1,7 +1,23 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { Loader2, Pencil, X, Check, Plus, ChevronRight, Building2, Smartphone, ArrowUp, ArrowDown, GripVertical, RefreshCw } from "lucide-react"
+import {
+  Loader2,
+  Pencil,
+  X,
+  Check,
+  Plus,
+  ChevronRight,
+  Building2,
+  Smartphone,
+  ArrowUp,
+  ArrowDown,
+  GripVertical,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  LayoutGrid,
+} from "lucide-react"
 import { getIcon } from "@/lib/icons"
 import { formatMoney, formatDate } from "@/lib/format"
 import { AccountBrandAvatar } from "@/components/accounts/account-brand-avatar"
@@ -32,11 +48,15 @@ const TYPE_OPTIONS: { value: AccountType; label: string }[] = [
 
 const ACCOUNT_ORDER_STORAGE_KEY = "fintrack:accounts-order:v1"
 
-const CURRENCY_OPTIONS: { code: Currency; label: string; flag: string }[] = [
-  { code: "UYU", label: "$", flag: "🇺🇾" },
-  { code: "USD", label: "US$", flag: "🇺🇸" },
-  { code: "BRL", label: "R$", flag: "🇧🇷" },
-  { code: "ARS", label: "AR$", flag: "🇦🇷" },
+/** Pestaña del resumen superior (referencia: Todas + filtros por moneda). */
+type BalanceTotalTab = "all" | Currency
+
+const BALANCE_TOTAL_TABS: { id: BalanceTotalTab; label: string; showGrid?: boolean }[] = [
+  { id: "all", label: "Todas", showGrid: true },
+  { id: "UYU", label: "$ Pesos" },
+  { id: "USD", label: "US$ Dólares" },
+  { id: "BRL", label: "R$ Reales" },
+  { id: "ARS", label: "AR$ Pesos" },
 ]
 
 /** Fila de UI: cuenta sola o par UYU + hermana `Nombre USD` (onboarding / alta nacional). */
@@ -151,7 +171,8 @@ export default function CuentasPage() {
   const [cardDisplayCurrency, setCardDisplayCurrency] = useState<Record<string, "UYU" | "USD">>({})
   const [rates, setRates] = useState<ExchangeRate[]>([])
   const [ratesRefreshing, setRatesRefreshing] = useState(false)
-  const [selectedTotalCurrency, setSelectedTotalCurrency] = useState<Currency>("UYU")
+  const [balanceTotalTab, setBalanceTotalTab] = useState<BalanceTotalTab>("all")
+  const [hideTotalBalance, setHideTotalBalance] = useState(false)
 
   function sortAccountsByStoredOrder(list: Account[]): Account[] {
     if (typeof window === "undefined") return list
@@ -446,7 +467,21 @@ export default function CuentasPage() {
     if (Number.isNaN(accountAmount)) return sum
     return sum + convertBetween(accountAmount, account.currency, "UYU")
   }, 0)
-  const selectedTotalValue = convertBetween(portfolioInUyu, "UYU", selectedTotalCurrency)
+
+  function sumBalanceByCurrency(currency: Currency): number {
+    return accounts
+      .filter((a) => a.currency === currency)
+      .reduce((s, a) => {
+        const n = Number(a.balance)
+        return s + (Number.isFinite(n) ? n : 0)
+      }, 0)
+  }
+
+  const balanceTotalDisplay =
+    balanceTotalTab === "all"
+      ? { amount: portfolioInUyu, currency: "UYU" as const }
+      : { amount: sumBalanceByCurrency(balanceTotalTab), currency: balanceTotalTab }
+
   const lastRateUpdatedAtMs = rates.reduce((latest, rate) => {
     const next = new Date(rate.fetched_at).getTime()
     return Number.isFinite(next) && next > latest ? next : latest
@@ -460,6 +495,23 @@ export default function CuentasPage() {
   const presetOptions = scope === "nacional" ? ONBOARDING_NACIONAL_PRESETS : INTERNACIONAL_ACCOUNT_PRESETS
   const selectedPreset = presetOptions.find((option) => option.name === newAccountPresetName)
   const accountRows = useMemo(() => buildAccountRows(accounts), [accounts])
+  const allowReorder = balanceTotalTab === "all"
+
+  const visibleAccountRows = useMemo(() => {
+    if (balanceTotalTab === "all") return accountRows
+    return accountRows.filter((row) => {
+      if (balanceTotalTab === "UYU") {
+        if (row.kind === "paired") return true
+        return row.account.currency === "UYU"
+      }
+      if (balanceTotalTab === "USD") {
+        if (row.kind === "paired") return true
+        return row.account.currency === "USD"
+      }
+      if (row.kind === "paired") return false
+      return row.account.currency === balanceTotalTab
+    })
+  }, [accountRows, balanceTotalTab])
 
   if (loading) {
     return (
@@ -471,57 +523,62 @@ export default function CuentasPage() {
 
   return (
     <div className="mx-auto max-w-md space-y-5 text-white">
-      <h1 className="text-3xl font-black tracking-tight">Cuentas</h1>
+      <h1 className="text-xl font-bold tracking-tight sm:text-2xl">Mis Cuentas</h1>
 
-      <div className="relative overflow-hidden rounded-3xl bg-linear-to-br from-primary/90 to-primary p-5 text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.22)]">
-        <div className="absolute -right-10 -top-12 h-44 w-44 rounded-full bg-white/12" />
-        <div className="absolute -right-4 bottom-6 h-24 w-24 rounded-full bg-white/8" />
-        <div className="relative z-10 flex items-start justify-between gap-2">
-          <p className="text-sm font-semibold opacity-90">Total en todas las cuentas</p>
-          <button
-            type="button"
-            onClick={() => void handleRefreshRates()}
-            disabled={ratesRefreshing}
-            className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/20 transition-colors hover:bg-black/30 disabled:opacity-50"
-            aria-label="Actualizar cotizaciones"
-            title="Actualizar cotizaciones"
-          >
-            <RefreshCw className={`h-4 w-4 ${ratesRefreshing ? "animate-spin" : ""}`} />
-          </button>
-        </div>
-        <p className="relative z-10 mt-1 text-3xl font-bold tracking-tight">
-          {formatTotalCurrency(selectedTotalValue, selectedTotalCurrency)}
-        </p>
-        <div className="relative z-10 mt-4 inline-flex max-w-full flex-wrap items-center gap-1 rounded-full bg-black/18 p-1">
-          {CURRENCY_OPTIONS.map((option) => (
+      <section className="-mx-4 rounded-none bg-black px-4 pb-5 pt-2 text-white md:mx-0 md:rounded-2xl md:px-0">
+        <div className="flex items-start justify-between gap-3">
+          <p className="text-xs font-medium text-zinc-500">Balance total</p>
+          <div className="flex shrink-0 items-center gap-0.5">
             <button
-              key={option.code}
               type="button"
-              onClick={() => setSelectedTotalCurrency(option.code)}
-              className={`rounded-full px-3 py-1.5 text-xs font-semibold transition-colors sm:text-sm ${
-                selectedTotalCurrency === option.code
-                  ? "bg-card/95 text-foreground"
-                  : "text-primary-foreground/85 hover:bg-black/12"
-              }`}
+              onClick={() => void handleRefreshRates()}
+              disabled={ratesRefreshing}
+              className="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-300 disabled:opacity-40"
+              aria-label="Actualizar cotizaciones"
+              title="Actualizar cotizaciones"
             >
-              <span className="inline-flex items-center gap-1.5">
-                <span>{option.flag}</span>
-                <span>{option.label}</span>
-              </span>
+              <RefreshCw className={`size-4 ${ratesRefreshing ? "animate-spin" : ""}`} />
             </button>
-          ))}
+            <button
+              type="button"
+              onClick={() => setHideTotalBalance((v) => !v)}
+              className="inline-flex size-9 items-center justify-center rounded-full text-zinc-500 transition-colors hover:bg-white/5 hover:text-zinc-300"
+              aria-label={hideTotalBalance ? "Mostrar balance" : "Ocultar balance"}
+            >
+              {hideTotalBalance ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+            </button>
+          </div>
         </div>
-        <p className="relative z-10 mt-3 text-[11px] leading-relaxed opacity-85 sm:text-xs">
-          {CURRENCY_OPTIONS.filter((o) => o.code !== selectedTotalCurrency)
-            .map((o) => formatTotalCurrency(convertBetween(portfolioInUyu, "UYU", o.code), o.code))
-            .join(" · ")}
+        <p className="mt-2 text-[1.65rem] font-bold leading-none tracking-tight tabular-nums sm:text-4xl">
+          {hideTotalBalance
+            ? "••••••"
+            : formatTotalCurrency(balanceTotalDisplay.amount, balanceTotalDisplay.currency)}
         </p>
-        <p className="relative z-10 mt-2 text-[11px] opacity-75 sm:text-xs">Cotización: {lastRateUpdatedLabel}</p>
-      </div>
+        <div className="mt-5 flex max-w-full gap-1 overflow-x-auto rounded-full bg-zinc-900/95 p-1 scrollbar-hide">
+          {BALANCE_TOTAL_TABS.map((tab) => {
+            const active = balanceTotalTab === tab.id
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setBalanceTotalTab(tab.id)}
+                className={cn(
+                  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:px-3.5 sm:text-[13px]",
+                  active ? "bg-zinc-600 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                {tab.showGrid ? <LayoutGrid className="size-3.5 opacity-95" aria-hidden /> : null}
+                {tab.label}
+              </button>
+            )
+          })}
+        </div>
+        <p className="mt-2.5 text-[10px] text-zinc-600 sm:text-xs">Cotización referencia: {lastRateUpdatedLabel}</p>
+      </section>
 
       {/* Cards de cuentas (par UYU + Nombre USD en una fila con pill compacta) */}
       <div className="grid grid-cols-1 gap-2">
-        {accountRows.map((row, rowIndex) => {
+        {visibleAccountRows.map((row, rowIndex) => {
           const rowKey = row.kind === "paired" ? pairRowKey(row) : row.account.id
           const accentColor = row.kind === "paired" ? row.uyu.color : row.account.color
           const isSelected =
@@ -546,10 +603,11 @@ export default function CuentasPage() {
               }}
               role="button"
               tabIndex={0}
-              draggable
-              onDragStart={() => setDraggingRowIndex(rowIndex)}
-              onDragOver={(event) => event.preventDefault()}
+              draggable={allowReorder}
+              onDragStart={() => allowReorder && setDraggingRowIndex(rowIndex)}
+              onDragOver={(event) => allowReorder && event.preventDefault()}
               onDrop={() => {
+                if (!allowReorder) return
                 if (draggingRowIndex !== null) moveRowByDrop(draggingRowIndex, rowIndex)
                 setDraggingRowIndex(null)
               }}
@@ -650,31 +708,33 @@ export default function CuentasPage() {
                     </button>
                   </div>
                 ) : null}
-                <div className="mt-auto inline-flex items-center gap-0.5 rounded-md bg-black/25 px-1 py-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-                  <GripVertical className="size-3 text-white/50" />
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      moveRow(rowIndex, "up")
-                    }}
-                    disabled={rowIndex === 0}
-                    className="inline-flex size-5 items-center justify-center rounded bg-white/10 disabled:opacity-30"
-                  >
-                    <ArrowUp className="size-3 text-white" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      moveRow(rowIndex, "down")
-                    }}
-                    disabled={rowIndex === accountRows.length - 1}
-                    className="inline-flex size-5 items-center justify-center rounded bg-white/10 disabled:opacity-30"
-                  >
-                    <ArrowDown className="size-3 text-white" />
-                  </button>
-                </div>
+                {allowReorder ? (
+                  <div className="mt-auto inline-flex items-center gap-0.5 rounded-md bg-black/25 px-1 py-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                    <GripVertical className="size-3 text-white/50" />
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        moveRow(rowIndex, "up")
+                      }}
+                      disabled={rowIndex === 0}
+                      className="inline-flex size-5 items-center justify-center rounded bg-white/10 disabled:opacity-30"
+                    >
+                      <ArrowUp className="size-3 text-white" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        moveRow(rowIndex, "down")
+                      }}
+                      disabled={rowIndex === visibleAccountRows.length - 1}
+                      className="inline-flex size-5 items-center justify-center rounded bg-white/10 disabled:opacity-30"
+                    >
+                      <ArrowDown className="size-3 text-white" />
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           )
