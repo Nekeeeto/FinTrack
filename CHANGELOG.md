@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Cuentas: filas UYU+USD con pill y total unificado
+
+### Cambiado
+- `src/app/(app)/cuentas/page.tsx`: las cuentas hermana `Nombre` + `Nombre USD` se muestran en una sola tarjeta compacta; pill `$` / `US$` elige el saldo principal y el otro queda como referencia (`≈`). Reordenar y arrastrar operan por fila (el par se mueve junto). El bloque de totales sigue siendo un solo monto con conversión (UYU/USD/BRL/ARS) vía cotizaciones.
+
 ## [2026-04-09] - Inicio: quitar línea de rango bajo tarjeta de balance
 
 ### Cambiado
