@@ -2,6 +2,25 @@ import { NextRequest, NextResponse } from "next/server"
 import { requireAuth, isAuthError } from "@/lib/auth"
 import { z } from "zod"
 
+function isAllowedLogoUrl(s: string) {
+  if (s.length > 512) return false
+  if (s.startsWith("/")) return /^\/[\w./-]+$/.test(s)
+  try {
+    const u = new URL(s)
+    return u.protocol === "https:" || u.protocol === "http:"
+  } catch {
+    return false
+  }
+}
+
+const logoUrlField = z
+  .union([
+    z.literal(""),
+    z.string().max(512).refine((s) => s.length > 0 && isAllowedLogoUrl(s), "logo_url inválida"),
+    z.null(),
+  ])
+  .optional()
+
 export async function GET() {
   const auth = await requireAuth()
   if (isAuthError(auth)) return auth
@@ -24,6 +43,7 @@ const createAccountSchema = z.object({
   balance: z.number().min(0).default(0),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#1a1a1a"),
   icon: z.string().min(1).max(30).default("wallet"),
+  logo_url: logoUrlField,
 })
 
 export async function POST(request: NextRequest) {
@@ -53,6 +73,7 @@ const updateAccountSchema = z.object({
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   icon: z.string().min(1).max(30).optional(),
   type: z.enum(["checking", "savings", "cash", "investment", "business"]).optional(),
+  logo_url: logoUrlField,
 })
 
 export async function PUT(request: NextRequest) {

@@ -13,6 +13,7 @@ CREATE TABLE accounts (
   balance NUMERIC(12,2) NOT NULL DEFAULT 0,
   color TEXT NOT NULL DEFAULT '#1a1a1a',
   icon TEXT NOT NULL DEFAULT 'wallet',
+  logo_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

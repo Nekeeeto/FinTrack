@@ -1,7 +1,23 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAuth, isAuthError } from "@/lib/auth"
 import { supabaseAdmin } from "@/lib/supabase/server"
-import { startOfMonth, endOfMonth, subMonths, format, eachDayOfInterval, parseISO } from "date-fns"
+import {
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  format,
+  eachDayOfInterval,
+  parseISO,
+  startOfToday,
+  endOfToday,
+  startOfDay,
+  subDays,
+  startOfWeek,
+  endOfWeek,
+  startOfYear,
+  endOfYear,
+  min,
+} from "date-fns"
 import { es } from "date-fns/locale"
 import { toUYU } from "@/lib/currency"
 import type { ExchangeRate } from "@/types/database"
@@ -12,6 +28,7 @@ export async function GET(req: NextRequest) {
 
   const searchParams = req.nextUrl.searchParams
   const period = searchParams.get("period") || "this_month"
+  const weekOptions = { weekStartsOn: 1 as const }
 
   let dateFrom: Date
   let dateTo: Date
@@ -22,15 +39,36 @@ export async function GET(req: NextRequest) {
     if (!fromParam || !toParam) {
       return NextResponse.json({ error: "from and to required for custom period" }, { status: 400 })
     }
-    dateFrom = parseISO(fromParam)
-    dateTo = parseISO(toParam)
+    dateFrom = startOfDay(parseISO(fromParam))
+    dateTo = startOfDay(parseISO(toParam))
+    if (dateFrom.getTime() > dateTo.getTime()) {
+      const tmp = dateFrom
+      dateFrom = dateTo
+      dateTo = tmp
+    }
+  } else if (period === "today") {
+    dateFrom = startOfToday()
+    dateTo = endOfToday()
+  } else if (period === "last_7_days") {
+    dateFrom = startOfDay(subDays(new Date(), 6))
+    dateTo = endOfToday()
+  } else if (period === "this_week") {
+    dateFrom = startOfWeek(new Date(), weekOptions)
+    dateTo = endOfWeek(new Date(), weekOptions)
+    const now = new Date()
+    if (dateTo.getTime() > now.getTime()) dateTo = endOfToday()
   } else if (period === "last_month") {
     const lastMonth = subMonths(new Date(), 1)
     dateFrom = startOfMonth(lastMonth)
     dateTo = endOfMonth(lastMonth)
+  } else if (period === "this_year") {
+    dateFrom = startOfYear(new Date())
+    dateTo = min([endOfYear(new Date()), endOfToday()])
   } else {
     dateFrom = startOfMonth(new Date())
     dateTo = endOfMonth(new Date())
+    const now = new Date()
+    if (dateTo.getTime() > now.getTime()) dateTo = endOfToday()
   }
 
   const from = format(dateFrom, "yyyy-MM-dd")
@@ -188,5 +226,6 @@ export async function GET(req: NextRequest) {
     balanceTrend: trendData,
     monthlyFlow,
     budgetProgress,
+    range: { from, to },
   })
 }

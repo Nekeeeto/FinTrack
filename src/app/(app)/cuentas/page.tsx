@@ -1,22 +1,21 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import Image from "next/image"
-import { Loader2, Pencil, X, Check, Plus, ChevronRight, Landmark, Wallet, Building2, Smartphone, ArrowUp, ArrowDown, GripVertical } from "lucide-react"
+import { Loader2, Pencil, X, Check, Plus, ChevronRight, Building2, Smartphone, ArrowUp, ArrowDown, GripVertical } from "lucide-react"
 import { getIcon } from "@/lib/icons"
 import { formatMoney, formatDate } from "@/lib/format"
+import { AccountBrandAvatar } from "@/components/accounts/account-brand-avatar"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Account, AccountType, Currency, Transaction } from "@/types/database"
-
-type AccountPreset = {
-  name: string
-  icon: string
-  type: AccountType
-  logoUrl?: string
-}
+import {
+  NACIONAL_ACCOUNT_PRESETS,
+  INTERNACIONAL_ACCOUNT_PRESETS,
+  resolveAccountDisplayLogoUrl,
+  type AccountPreset,
+} from "@/lib/account-presets"
 
 const ICON_OPTIONS = [
   { value: "wallet", label: "Billetera" },
@@ -38,66 +37,7 @@ const PRESET_COLORS = [
   "#b2bcc9", "#ef4444", "#f97316", "#fb923c", "#facc15", "#a3e635", "#4ade80",
 ]
 
-const BANK_OPTIONS: AccountPreset[] = [
-  { name: "Efectivo UYU", icon: "banknote", type: "cash" },
-  { name: "BROU", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/brou.com.uy" },
-  { name: "Santander UY", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/santander.com.uy" },
-  { name: "Itaú UY", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/itau.com.uy" },
-  { name: "BBVA UY", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/bbva.com.uy" },
-  { name: "Scotiabank UY", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/scotiabank.com.uy" },
-  { name: "HSBC UY", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/hsbc.com.uy" },
-  { name: "Prex", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/prexcard.com.uy" },
-  { name: "MiDinero", icon: "wallet", type: "checking", logoUrl: "https://logo.clearbit.com/midinero.com.uy" },
-]
-
-const WALLET_OPTIONS: AccountPreset[] = [
-  { name: "Binance", icon: "trending-up", type: "investment", logoUrl: "https://logo.clearbit.com/binance.com" },
-  { name: "Wise", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/wise.com" },
-  { name: "PayPal", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/paypal.com" },
-  { name: "Revolut", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/revolut.com" },
-  { name: "Payoneer", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/payoneer.com" },
-  { name: "Skrill", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/skrill.com" },
-]
 const ACCOUNT_ORDER_STORAGE_KEY = "fintrack:accounts-order:v1"
-
-function BrandAvatar({
-  name,
-  logoUrl,
-  variant,
-}: {
-  name: string
-  logoUrl?: string
-  variant: "bank" | "wallet"
-}) {
-  const [logoError, setLogoError] = useState(false)
-
-  if (logoUrl && !logoError) {
-    return (
-      <Image
-        src={logoUrl}
-        alt={`Logo ${name}`}
-        width={32}
-        height={32}
-        unoptimized
-        onError={() => setLogoError(true)}
-        className="h-8 w-8 rounded-lg object-contain bg-white p-1"
-      />
-    )
-  }
-
-  const initials = name
-    .split(" ")
-    .map((part) => part[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase()
-
-  return (
-    <span className="h-8 w-8 rounded-lg bg-muted inline-flex items-center justify-center text-[11px] font-semibold text-muted-foreground">
-      {variant === "bank" ? initials || <Landmark className="h-4 w-4" /> : initials || <Wallet className="h-4 w-4" />}
-    </span>
-  )
-}
 
 export default function CuentasPage() {
   const [accounts, setAccounts] = useState<Account[]>([])
@@ -106,7 +46,13 @@ export default function CuentasPage() {
   const [loading, setLoading] = useState(true)
   const [loadingTx, setLoadingTx] = useState(false)
   const [editingAccount, setEditingAccount] = useState<Account | null>(null)
-  const [editForm, setEditForm] = useState({ name: "", color: "", icon: "", type: "" as AccountType })
+  const [editForm, setEditForm] = useState<{
+    name: string
+    color: string
+    icon: string
+    type: AccountType
+    logo_url: string | null
+  }>({ name: "", color: "", icon: "", type: "cash", logo_url: null })
   const [saving, setSaving] = useState(false)
   const [creating, setCreating] = useState(false)
   const [selectorOpen, setSelectorOpen] = useState(false)
@@ -116,6 +62,7 @@ export default function CuentasPage() {
     icon: "banknote",
     type: "cash" as AccountType,
     color: PRESET_COLORS[4],
+    logoUrl: null as string | null,
     localBalance: "",
     usdEnabled: false,
     usdBalance: "",
@@ -180,6 +127,7 @@ export default function CuentasPage() {
       color: account.color,
       icon: account.icon,
       type: account.type,
+      logo_url: account.logo_url ?? null,
     })
   }
 
@@ -191,11 +139,14 @@ export default function CuentasPage() {
     if (!editingAccount) return
     setSaving(true)
 
-    const updates: Record<string, string> = {}
+    const updates: Record<string, string | AccountType | null> = {}
     if (editForm.name !== editingAccount.name) updates.name = editForm.name
     if (editForm.color !== editingAccount.color) updates.color = editForm.color
     if (editForm.icon !== editingAccount.icon) updates.icon = editForm.icon
     if (editForm.type !== editingAccount.type) updates.type = editForm.type
+    if (editingAccount.logo_url !== editForm.logo_url) {
+      updates.logo_url = editForm.logo_url === undefined ? null : editForm.logo_url
+    }
 
     if (Object.keys(updates).length === 0) {
       setEditingAccount(null)
@@ -225,6 +176,7 @@ export default function CuentasPage() {
       icon: "banknote",
       type: "cash",
       color: PRESET_COLORS[4],
+      logoUrl: null,
       localBalance: "",
       usdEnabled: false,
       usdBalance: "",
@@ -238,6 +190,7 @@ export default function CuentasPage() {
       name: option.name,
       icon: option.icon,
       type: option.type,
+      logoUrl: option.logoUrl ?? null,
     }))
     setSelectorOpen(false)
   }
@@ -268,6 +221,7 @@ export default function CuentasPage() {
         balance: localAmount,
         color: newAccount.color,
         icon: newAccount.icon,
+        ...(newAccount.logoUrl ? { logo_url: newAccount.logoUrl } : {}),
       }
 
       const firstRes = await fetch("/api/accounts", {
@@ -294,6 +248,7 @@ export default function CuentasPage() {
           balance: usdAmount,
           color: newAccount.color,
           icon: newAccount.icon,
+          ...(newAccount.logoUrl ? { logo_url: newAccount.logoUrl } : {}),
         }
         const usdRes = await fetch("/api/accounts", {
           method: "POST",
@@ -360,7 +315,7 @@ export default function CuentasPage() {
   const activeCurrencies = currencies.filter((cur) =>
     accounts.some((a) => a.currency === cur) || totalsByCurrency[cur] !== 0
   )
-  const presetOptions = scope === "nacional" ? BANK_OPTIONS : WALLET_OPTIONS
+  const presetOptions = scope === "nacional" ? NACIONAL_ACCOUNT_PRESETS : INTERNACIONAL_ACCOUNT_PRESETS
   const selectedPreset = presetOptions.find((option) => option.name === newAccount.name)
 
   if (loading) {
@@ -399,7 +354,6 @@ export default function CuentasPage() {
       {/* Cards de cuentas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {accounts.map((account) => {
-          const Icon = getIcon(account.icon)
           const isSelected = selectedAccount?.id === account.id
           const accountIndex = accounts.findIndex((a) => a.id === account.id)
           return (
@@ -459,9 +413,15 @@ export default function CuentasPage() {
               >
                 <Pencil className="h-3.5 w-3.5 text-white/80" />
               </button>
-              <div className="flex items-center gap-2 mb-3">
-                <Icon className="h-4 w-4 text-white/70" />
-                <span className="text-xs font-medium text-white/70 uppercase tracking-wider">
+              <div className="flex items-center gap-2 mb-3 min-w-0">
+                <AccountBrandAvatar
+                  logoUrl={account.logo_url}
+                  icon={account.icon}
+                  name={account.name}
+                  className="h-8 w-8 shrink-0 rounded-lg bg-white/15"
+                  iconClassName="text-white/80"
+                />
+                <span className="text-xs font-medium text-white/70 uppercase tracking-wider truncate min-w-0">
                   {account.name}
                 </span>
               </div>
@@ -529,7 +489,20 @@ export default function CuentasPage() {
             </div>
 
             <div className="space-y-2 sm:col-span-2">
-              <Label>Ícono</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>Logo / ícono</Label>
+                {resolveAccountDisplayLogoUrl({ name: editForm.name, logo_url: editForm.logo_url }) ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 text-xs text-muted-foreground"
+                    onClick={() => setEditForm((f) => ({ ...f, logo_url: "" }))}
+                  >
+                    Quitar logo
+                  </Button>
+                ) : null}
+              </div>
               <div className="grid grid-cols-5 sm:grid-cols-8 gap-2">
                 {ICON_OPTIONS.map((opt) => {
                   const OptIcon = getIcon(opt.value)
@@ -577,7 +550,13 @@ export default function CuentasPage() {
 
               {/* Preview */}
               <div className="flex items-center gap-3 p-3 rounded-lg" style={{ backgroundColor: editForm.color }}>
-                {(() => { const PreviewIcon = getIcon(editForm.icon); return <PreviewIcon className="h-5 w-5 text-white/70" /> })()}
+                <AccountBrandAvatar
+                  logoUrl={editForm.logo_url}
+                  icon={editForm.icon}
+                  name={editForm.name}
+                  className="h-10 w-10 shrink-0 rounded-lg bg-white/15"
+                  iconClassName="text-white/80"
+                />
                 <span className="text-sm font-medium text-white">{editForm.name}</span>
               </div>
 
@@ -700,12 +679,14 @@ export default function CuentasPage() {
                 className="w-full rounded-2xl border border-border bg-muted/30 p-3 flex items-center justify-between"
               >
                 <span className="flex items-center gap-3">
-                  <span className="h-9 w-9 rounded-xl bg-background border border-border flex items-center justify-center">
+                  <span className="h-9 w-9 rounded-xl bg-background border border-border flex items-center justify-center overflow-hidden">
                     {selectedPreset ? (
-                      <BrandAvatar
-                        name={selectedPreset.name}
+                      <AccountBrandAvatar
                         logoUrl={selectedPreset.logoUrl}
-                        variant={scope === "nacional" ? "bank" : "wallet"}
+                        icon={selectedPreset.icon}
+                        name={selectedPreset.name}
+                        className="h-full w-full rounded-lg bg-muted/40"
+                        iconClassName="text-muted-foreground"
                       />
                     ) : scope === "nacional" ? (
                       <Building2 className="h-4 w-4 text-muted-foreground" />
@@ -819,13 +800,15 @@ export default function CuentasPage() {
                           newAccount.name === option.name ? "border-emerald-500 bg-emerald-500/10" : "border-border hover:bg-accent/50"
                         }`}
                       >
-                        <span className="flex items-center gap-3">
-                          <BrandAvatar
-                            name={option.name}
+                        <span className="flex items-center gap-3 min-w-0">
+                          <AccountBrandAvatar
                             logoUrl={option.logoUrl}
-                            variant={scope === "nacional" ? "bank" : "wallet"}
+                            icon={option.icon}
+                            name={option.name}
+                            className="h-9 w-9 shrink-0 rounded-lg bg-muted/50"
+                            iconClassName="text-muted-foreground"
                           />
-                          <span className="font-medium">{option.name}</span>
+                          <span className="font-medium truncate">{option.name}</span>
                         </span>
                         {newAccount.name === option.name && (
                           <span className="h-7 w-7 rounded-full bg-emerald-500 text-black inline-flex items-center justify-center">

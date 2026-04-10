@@ -17,6 +17,17 @@ const categorySchema = z.object({
   subcategories: z.array(subcategorySchema),
 })
 
+function isAllowedLogoUrl(s: string) {
+  if (s.length > 512) return false
+  if (s.startsWith("/")) return /^\/[\w./-]+$/.test(s)
+  try {
+    const u = new URL(s)
+    return u.protocol === "https:" || u.protocol === "http:"
+  } catch {
+    return false
+  }
+}
+
 const accountSchema = z.object({
   name: z.string().min(1).max(50),
   type: z.enum(["checking", "savings", "cash", "investment", "business"]).default("checking"),
@@ -24,6 +35,13 @@ const accountSchema = z.object({
   balance: z.number().min(0).default(0),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).default("#1a1a1a"),
   icon: z.string().min(1).max(30).default("wallet"),
+  logo_url: z
+    .union([
+      z.literal(""),
+      z.string().max(512).refine((s) => s.length > 0 && isAllowedLogoUrl(s), "logo_url inválida"),
+      z.null(),
+    ])
+    .optional(),
   usd_enabled: z.boolean().default(false),
   usd_balance: z.number().min(0).default(0),
 })
@@ -172,6 +190,7 @@ export async function POST(req: NextRequest) {
       balance: account.balance,
       color: account.color,
       icon: account.icon,
+      logo_url: account.logo_url ?? null,
     })
 
     if (accountError) {
@@ -190,6 +209,7 @@ export async function POST(req: NextRequest) {
         balance: account.usd_balance,
         color: account.color,
         icon: account.icon,
+        logo_url: account.logo_url ?? null,
       })
 
       if (usdAccountError) {

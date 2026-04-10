@@ -24,6 +24,8 @@ export interface Account {
   balance: number
   color: string
   icon: string
+  /** Ruta local (/banks/...) o URL https del logo elegido en onboarding / alta de cuenta */
+  logo_url?: string | null
   created_at: string
 }
 

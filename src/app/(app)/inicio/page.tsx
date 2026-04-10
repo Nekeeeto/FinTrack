@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback } from "react"
+import { useEffect, useState, useCallback, useRef } from "react"
 import { AccountCards } from "@/components/dashboard/account-cards"
 import { ExpenseChart } from "@/components/dashboard/expense-chart"
 import { BalanceTrend } from "@/components/dashboard/balance-trend"
@@ -8,6 +8,12 @@ import { RecentTransactions } from "@/components/dashboard/recent-transactions"
 import { MonthlyFlow } from "@/components/dashboard/monthly-flow"
 import { BudgetProgress } from "@/components/dashboard/budget-progress"
 import { ExchangeRatesWidget } from "@/components/dashboard/exchange-rates-widget"
+import {
+  DashboardPeriodFilter,
+  buildDashboardQuery,
+  type DashboardPeriodState,
+} from "@/components/dashboard/dashboard-period-filter"
+import { cn } from "@/lib/utils"
 import { Loader2, ArrowRight, Rocket, CircleCheck, Circle, Sparkles, HelpCircle, MessageCircle, Eye, EyeOff, ArrowUp, ArrowDown, ChevronRight, Calculator, Settings2, Share2, ArrowLeftRight, RefreshCw } from "lucide-react"
 import type { Account, Transaction, Currency, ExchangeRate } from "@/types/database"
 import Link from "next/link"
@@ -21,6 +27,7 @@ interface DashboardData {
   balanceTrend: { date: string; balance: number }[]
   monthlyFlow: { month: string; label: string; income: number; expenses: number; net: number }[]
   budgetProgress: { id: string; category_id: string; category_name: string; category_color: string; limit: number; spent: number; percentage: number }[]
+  range?: { from: string; to: string }
 }
 
 type FirstStepsBaseline = {
@@ -43,6 +50,12 @@ export default function DashboardPage() {
   const [convertFrom, setConvertFrom] = useState<Currency>("UYU")
   const [convertTo, setConvertTo] = useState<Currency>("USD")
   const [firstStepsBaseline, setFirstStepsBaseline] = useState<FirstStepsBaseline | null>(null)
+  const [dashboardPeriod, setDashboardPeriod] = useState<DashboardPeriodState>({
+    kind: "preset",
+    id: "this_month",
+  })
+  const [dashboardRefreshing, setDashboardRefreshing] = useState(false)
+  const dashboardBootDone = useRef(false)
 
   const currencyOptions: { code: Currency; label: string; flag: string }[] = [
     { code: "UYU", label: "$", flag: "🇺🇾" },
@@ -51,30 +64,51 @@ export default function DashboardPage() {
     { code: "ARS", label: "AR$", flag: "🇦🇷" },
   ]
 
-  const fetchData = useCallback(async () => {
-    setLoading(true)
-    const [dashboardRes, categoriesRes, txRes] = await Promise.all([
-      fetch("/api/dashboard?period=this_month"),
-      fetch("/api/categories?flat=true"),
-      fetch("/api/transactions?limit=1"),
-    ])
-
-    const dashboardJson = await dashboardRes.json()
-    setData(dashboardJson)
-
-    const categoriesJson = await categoriesRes.json()
-    const txJson = await txRes.json()
-    setSetup({
-      categories: Array.isArray(categoriesJson) ? categoriesJson.length : 0,
-      transactions: typeof txJson?.total === "number" ? txJson.total : 0,
-    })
-    setLoading(false)
-  }, [])
-
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchData()
-  }, [fetchData])
+    let cancelled = false
+
+    async function run() {
+      if (!dashboardBootDone.current) {
+        setLoading(true)
+      } else {
+        setDashboardRefreshing(true)
+      }
+
+      try {
+        const qs = buildDashboardQuery(dashboardPeriod)
+        const [dashboardRes, categoriesRes, txRes] = await Promise.all([
+          fetch(`/api/dashboard?${qs}`),
+          fetch("/api/categories?flat=true"),
+          fetch("/api/transactions?limit=1"),
+        ])
+
+        if (cancelled) return
+
+        const dashboardJson = (await dashboardRes.json()) as DashboardData
+        setData(dashboardJson)
+
+        if (!dashboardBootDone.current) {
+          const categoriesJson = await categoriesRes.json()
+          const txJson = await txRes.json()
+          setSetup({
+            categories: Array.isArray(categoriesJson) ? categoriesJson.length : 0,
+            transactions: typeof txJson?.total === "number" ? txJson.total : 0,
+          })
+          dashboardBootDone.current = true
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+          setDashboardRefreshing(false)
+        }
+      }
+    }
+
+    void run()
+    return () => {
+      cancelled = true
+    }
+  }, [dashboardPeriod])
 
   const fetchRates = useCallback(async () => {
     try {
@@ -235,13 +269,6 @@ export default function DashboardPage() {
             <button className="h-8 w-8 rounded-full hover:bg-accent inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
               <MessageCircle className="h-4 w-4" />
             </button>
-            <button
-              onClick={() => setHideAmounts((prev) => !prev)}
-              className="h-8 w-8 rounded-full hover:bg-accent inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-              aria-label={hideAmounts ? "Mostrar montos" : "Ocultar montos"}
-            >
-              {hideAmounts ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            </button>
           </span>
         </div>
 
@@ -262,17 +289,19 @@ export default function DashboardPage() {
                   "linear-gradient(120deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%)",
               }}
             />
-            <div className="relative z-10 flex items-center justify-between gap-3 px-4 py-3">
-              <span className="flex items-center gap-2 text-left text-white">
-                <Rocket className="h-5 w-5" />
-                <span>
-                  <span className="block font-semibold">Completá los primeros pasos</span>
-                  <span className="block text-xs text-white/80">
+            <div className="relative z-10 flex items-center justify-between gap-2 sm:gap-3 px-4 py-3">
+              <span className="flex min-w-0 flex-1 items-center gap-2 text-left text-white">
+                <Rocket className="h-4 w-4 shrink-0 sm:h-5 sm:w-5" />
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold leading-snug sm:text-base">
+                    Completá los primeros pasos
+                  </span>
+                  <span className="block text-[11px] text-white/80 sm:text-xs">
                     {doneCount} de {firstSteps.length} completados
                   </span>
                 </span>
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-sm font-bold text-white">
+              <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-black/35 px-2.5 py-1 text-sm font-bold text-white">
                 <Sparkles className="h-3.5 w-3.5 animate-pulse" />
                 {doneCount}/{firstSteps.length}
               </span>
@@ -287,13 +316,21 @@ export default function DashboardPage() {
           <p className="text-4xl md:text-5xl font-bold tracking-tight relative z-10">
             {hideAmounts ? `${currencyOptions.find((option) => option.code === selectedBalanceCurrency)?.label ?? "$"} •••••` : formatCurrency(selectedBalanceValue, selectedBalanceCurrency)}
           </p>
-          <button
-            onClick={() => setHideAmounts((prev) => !prev)}
-            className="absolute right-4 top-4 z-10 h-9 w-9 rounded-full bg-black/20 hover:bg-black/30 inline-flex items-center justify-center transition-colors"
-            aria-label={hideAmounts ? "Mostrar montos" : "Ocultar montos"}
-          >
-            {hideAmounts ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </button>
+          <div className="absolute right-3 top-3 z-10 flex items-center gap-1.5 sm:right-4 sm:top-4">
+            <DashboardPeriodFilter
+              period={dashboardPeriod}
+              onPeriodChange={setDashboardPeriod}
+              disabled={loading && !data}
+            />
+            <button
+              type="button"
+              onClick={() => setHideAmounts((prev) => !prev)}
+              className="h-9 w-9 rounded-full bg-black/20 hover:bg-black/30 inline-flex items-center justify-center transition-colors"
+              aria-label={hideAmounts ? "Mostrar montos" : "Ocultar montos"}
+            >
+              {hideAmounts ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
           <div className="relative z-10 mt-4 inline-flex items-center rounded-full bg-black/18 p-1 gap-1 max-w-full overflow-x-auto">
             {currencyOptions.map((option) => (
               <button
@@ -314,8 +351,8 @@ export default function DashboardPage() {
           </div>
           <p className="relative z-10 mt-2 text-sm opacity-80">
             {selectedBalanceCurrency === "UYU"
-              ? "Total convertido a pesos uruguayos"
-              : `Conversión en tiempo real a ${selectedBalanceCurrency}`}
+              ? "Patrimonio total en cuentas · convertido a pesos uruguayos"
+              : `Patrimonio total en cuentas · conversión a ${selectedBalanceCurrency}`}
           </p>
         </div>
 
@@ -325,7 +362,12 @@ export default function DashboardPage() {
           </div>
         ) : data ? (
           <>
-            <div className="grid grid-cols-2 gap-3">
+            <div className={cn("relative grid grid-cols-2 gap-3", dashboardRefreshing && "opacity-55")}>
+              {dashboardRefreshing && (
+                <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-2xl bg-background/30">
+                  <Loader2 className="h-7 w-7 animate-spin text-muted-foreground" />
+                </div>
+              )}
               <div className="rounded-2xl bg-card border border-border overflow-hidden">
                 <div className="border-l-4 border-emerald-500 h-full p-4">
                   <div className="flex items-center justify-between">
@@ -370,13 +412,13 @@ export default function DashboardPage() {
                 {widgetOpen === "converter" && (
                   <button
                     onClick={() => setWidgetOpen(null)}
-                    className="fixed inset-0 z-30 bg-transparent"
+                    className="fixed inset-0 z-[45] bg-transparent"
                     aria-label="Cerrar widgets"
                   />
                 )}
-                <div className="relative z-40">
+                <div className="relative">
                   {widgetOpen === "converter" && (
-                    <div className="fixed inset-x-3 bottom-24 z-40 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 space-y-4 shadow-[0_16px_38px_rgba(0,0,0,0.5)] md:absolute md:inset-x-auto md:left-0 md:bottom-full md:mb-3 md:w-[min(420px,calc(100vw-2rem))]">
+                    <div className="fixed inset-x-3 bottom-24 z-50 rounded-2xl border border-border bg-card/95 backdrop-blur p-4 space-y-4 shadow-[0_16px_38px_rgba(0,0,0,0.5)] md:absolute md:inset-x-auto md:left-0 md:bottom-full md:mb-3 md:w-[min(420px,calc(100vw-2rem))] md:z-40">
                       <div className="flex items-center justify-between">
                         <h4 className="font-semibold text-lg">Calculadora</h4>
                         <div className="flex items-center gap-2">
@@ -497,7 +539,12 @@ export default function DashboardPage() {
                   Ver todas <ArrowRight className="h-3 w-3" />
                 </Link>
               </div>
-              <AccountCards accounts={data.accounts} />
+              <AccountCards
+                accounts={data.accounts}
+                onAccountsChange={(next) =>
+                  setData((d) => (d ? { ...d, accounts: next } : d))
+                }
+              />
             </div>
 
             {data.budgetProgress && data.budgetProgress.length > 0 && (

@@ -2,6 +2,65 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-09] - Inicio: quitar línea de rango bajo tarjeta de balance
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: se elimina el texto «Ingresos, gastos y resúmenes abajo: …» en la tarjeta verde; el filtro por fechas sigue igual.
+
+## [2026-04-09] - Inicio: filtro de fechas en tarjeta de balance
+
+### Añadido
+- `src/components/dashboard/dashboard-period-filter.tsx`: botón junto al ojo con popover — opciones rápidas (hoy, 7 días, semana, mes, mes pasado, año) y rango personalizado con inputs fecha + Aplicar.
+- `GET /api/dashboard`: períodos `today`, `last_7_days`, `this_week`, `this_year`; respuesta incluye `range: { from, to }` en `yyyy-MM-dd`.
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: el fetch del dashboard usa el período elegido; ingresos/gastos, tendencia, categorías, presupuestos y últimos movimientos siguen ese rango. El monto grande «Tu Balance» sigue siendo patrimonio actual en cuentas; texto aclara conversión y el rango aplicado abajo.
+
+## [2026-04-09] - Avatar logo banco: círculo blanco sin estirar
+
+### Cambiado
+- `src/components/accounts/account-brand-avatar.tsx`: logos en círculo blanco con borde, `grid` + `object-contain` y padding para que no se deformen; ícono Lucide sigue en círculo semitransparente.
+- `src/components/dashboard/account-cards.tsx`: tamaño del avatar sin `bg-white/15` duplicado en el logo.
+
+## [2026-04-09] - Cuentas: presets unificados + logo por nombre si falta logo_url
+
+### Añadido
+- `src/lib/account-presets.ts`: lista única de bancos/wallets (nacional + internacional), `resolveAccountDisplayLogoUrl` (usa `logo_url` en DB; si es `null`/`undefined` infiere logo por nombre normalizado, ej. `ITAU UY` → Itaú; `logo_url === ""` fuerza solo ícono).
+
+### Cambiado
+- `src/components/accounts/account-brand-avatar.tsx`: usa `resolveAccountDisplayLogoUrl` para mostrar imagen aunque la fila no tenga `logo_url` guardado todavía.
+- `src/app/(onboarding)/onboarding/page.tsx` y `src/app/(app)/cuentas/page.tsx`: importan los mismos presets desde `account-presets` (sin duplicar listas).
+- `src/app/api/accounts/route.ts` y onboarding `complete`: permiten `logo_url: ""` para marcar “sin logo inferido”.
+
+## [2026-04-09] - Cuentas: logo persistente y color desde el inicio
+
+### Añadido
+- `supabase/migrations/007_accounts_logo_url.sql` y columna `logo_url` en `supabase/schema.sql`: guarda ruta local (`/banks/...`) o URL del logo elegido al crear la cuenta.
+- `src/components/accounts/account-brand-avatar.tsx`: avatar con imagen o ícono Lucide si falla la imagen.
+
+### Cambiado
+- `src/app/api/accounts/route.ts` y `src/app/api/onboarding/complete/route.ts`: crear/actualizar cuenta con `logo_url` opcional.
+- `src/app/(onboarding)/onboarding/page.tsx`: envía `logo_url` del preset al completar onboarding (misma imagen que en el flujo).
+- `src/components/dashboard/account-cards.tsx`: muestra el logo en las tarjetas del dashboard; botón con paleta abre popover para cambiar color (PUT) sin ir a Cuentas.
+- `src/app/(app)/inicio/page.tsx`: actualiza la lista de cuentas en estado al cambiar color desde las tarjetas.
+- `src/app/(app)/cuentas/page.tsx`: alta de cuenta envía `logo_url` del preset; tarjetas y selector usan logos locales uruguayos alineados con onboarding; en edición, vista previa con logo y acción «Quitar logo».
+- `src/types/database.ts`: tipo `Account` con `logo_url` opcional.
+
+## [2026-04-09] - Inicio: accesos rápidos bajo la bottom nav (z-index)
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: el bloque de accesos rápidos ya no usa `z-40` en el contenedor (evita que los círculos tapen el menú inferior fijo en mobile, que compartía el mismo z-index y quedaba debajo en el orden del DOM). Panel de calculadora abierta: overlay `z-[45]` y panel `z-50` en mobile; en `md+` el panel vuelve a `z-40` al ser `absolute`.
+
+## [2026-04-09] - Inicio: un solo control para ocultar montos
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: se quita el botón ojo/ojo tachado de la barra superior (Nacional); el toggle sigue en la tarjeta de balance para no duplicar la acción.
+
+## [2026-04-09] - Inicio: CTA primeros pasos legible en mobile
+
+### Cambiado
+- `src/app/(app)/inicio/page.tsx`: título del botón «Completá los primeros pasos» con `text-sm` en viewport chico, `leading-snug`, ícono más chico y contenedor `min-w-0`/`shrink-0` para que no se parta feo ni compita con el badge.
+
 ## [2026-04-09] - Onboarding cuenta: edición habilitada siempre + personalizado en internacional
 
 ### Cambiado

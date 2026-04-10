@@ -27,16 +27,15 @@ import {
   type CategoryTemplate,
 } from "@/lib/category-templates"
 import type { AccountType, Currency } from "@/types/database"
+import {
+  ONBOARDING_NACIONAL_PRESETS,
+  INTERNACIONAL_ACCOUNT_PRESETS,
+  type AccountPreset,
+} from "@/lib/account-presets"
 
 type StepId = "welcome" | "objectives" | "account" | "categories" | "loading"
 type CategoryType = "expense" | "income"
 type AccountScope = "nacional" | "internacional"
-type AccountPreset = {
-  name: string
-  icon: string
-  type: AccountType
-  logoUrl?: string
-}
 
 const PROGRESS_STEPS: StepId[] = ["objectives", "account", "categories", "loading"]
 const LOADER_WORDS = [
@@ -58,25 +57,6 @@ const OBJECTIVE_ACCENT_COLORS: Record<string, string> = {
   ahorrar_dinero: "#22c55e",
   crear_presupuesto: "#a78bfa",
 }
-
-const BANK_OPTIONS: AccountPreset[] = [
-  { name: "BROU", icon: "wallet", type: "checking", logoUrl: "/banks/brou.png" },
-  { name: "Santander UY", icon: "wallet", type: "checking", logoUrl: "/banks/santander.png" },
-  { name: "Itaú UY", icon: "wallet", type: "checking", logoUrl: "/banks/itau.png" },
-  { name: "BBVA UY", icon: "wallet", type: "checking", logoUrl: "/banks/bbva.png" },
-  { name: "Scotiabank UY", icon: "wallet", type: "checking", logoUrl: "/banks/scotiabank.png" },
-  { name: "Prex", icon: "wallet", type: "checking", logoUrl: "/banks/prex.png" },
-  { name: "MiDinero", icon: "wallet", type: "checking", logoUrl: "/banks/midinero.png" },
-  { name: "Personalizado", icon: "wallet", type: "checking" },
-]
-
-const WALLET_OPTIONS: AccountPreset[] = [
-  { name: "Binance", icon: "trending-up", type: "investment", logoUrl: "https://logo.clearbit.com/binance.com" },
-  { name: "Wise", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/wise.com" },
-  { name: "PayPal", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/paypal.com" },
-  { name: "Revolut", icon: "briefcase", type: "investment", logoUrl: "https://logo.clearbit.com/revolut.com" },
-  { name: "Personalizado", icon: "wallet", type: "investment" },
-]
 
 const ACCOUNT_COLORS = ["#b2bcc9", "#ef4444", "#f97316", "#fb923c", "#facc15", "#a3e635", "#4ade80"]
 const ACCOUNT_ICON_OPTIONS = ["wallet", "banknote", "briefcase", "home", "trending-up", "landmark"]
@@ -164,7 +144,7 @@ export default function OnboardingPage() {
     })
     return result
   }, [categories, selectedCategories])
-  const presetOptions = accountScope === "nacional" ? BANK_OPTIONS : WALLET_OPTIONS
+  const presetOptions = accountScope === "nacional" ? ONBOARDING_NACIONAL_PRESETS : INTERNACIONAL_ACCOUNT_PRESETS
   const selectedPreset = presetOptions.find((preset) => preset.name === accountPresetName)
   const SelectedAccountIcon = getIcon(accountIcon)
   const accountCurrencySymbol = accountScope === "nacional" ? "$" : "US$"
@@ -293,7 +273,7 @@ export default function OnboardingPage() {
   function changeAccountScope(scope: AccountScope) {
     setAccountScope(scope)
     setUsdEnabled(false)
-    const defaultPreset = (scope === "nacional" ? BANK_OPTIONS : WALLET_OPTIONS)[0]
+    const defaultPreset = (scope === "nacional" ? ONBOARDING_NACIONAL_PRESETS : INTERNACIONAL_ACCOUNT_PRESETS)[0]
     setAccountPresetName(defaultPreset.name)
     setAccountName(defaultPreset.name)
     setAccountIcon(defaultPreset.icon)
@@ -341,6 +321,7 @@ export default function OnboardingPage() {
             color: accountColor,
             currency: baseCurrency,
             balance: localBalance,
+            logo_url: selectedPreset?.logoUrl ?? null,
             usd_enabled: accountScope === "nacional" ? usdEnabled : false,
             usd_balance: accountScope === "nacional" ? dollarsBalance : 0,
           },
