@@ -1,3 +1,4 @@
+import { AppMain } from "@/components/layout/app-main"
 import { Sidebar } from "@/components/layout/sidebar"
 import { AuthProvider } from "@/lib/auth-context"
 import { VoiceAssistant } from "@/components/voice/voice-assistant"
@@ -10,7 +11,7 @@ export default function AppLayout({
   return (
     <AuthProvider>
       <Sidebar />
-      <main className="flex-1 md:ml-64 pt-18 md:pt-8 pb-24 md:pb-8 px-4 md:px-8 bg-background min-w-0">{children}</main>
+      <AppMain>{children}</AppMain>
       <VoiceAssistant showFab={false} />
     </AuthProvider>
   )

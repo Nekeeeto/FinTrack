@@ -148,7 +148,7 @@ export function Sidebar() {
     pathname === href || pathname.startsWith(href + "/")
 
   const firstName = profile?.name?.split(" ")[0] || "Hola"
-  const isMenuPage = pathname === "/menu"
+  const showMobileTopBar = pathname === "/inicio"
 
   function openVoiceAssistant() {
     window.dispatchEvent(new CustomEvent("fintrack:open-voice-assistant"))
@@ -157,38 +157,25 @@ export function Sidebar() {
 
   return (
     <>
-      {/* Mobile top bar */}
-      <header className="fixed top-0 left-0 right-0 z-40 md:hidden h-16 bg-card/80 backdrop-blur-xl border-b border-border/50 flex items-center px-4 gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
-          {isMenuPage ? (
-            <h1 className="text-3xl font-semibold tracking-tight">Menú</h1>
-          ) : (
-            <>
-              <span className="h-8 w-8 rounded-full border border-border/70 inline-flex items-center justify-center">
-                <User className="h-4 w-4 text-muted-foreground" />
-              </span>
-              <span className="text-xl font-semibold truncate">{firstName}</span>
-            </>
-          )}
-        </div>
-        {isMenuPage ? (
-          <Link
-            href="/configuracion"
-            className="h-10 w-10 rounded-full bg-muted/60 inline-flex items-center justify-center hover:bg-muted transition-colors"
-          >
-            <Settings className="h-5 w-5" />
-          </Link>
-        ) : (
+      {/* Mobile top bar: solo en /inicio (resto de rutas sin barra superior fija) */}
+      {showMobileTopBar ? (
+        <header className="fixed top-0 left-0 right-0 z-40 flex h-16 items-center gap-3 border-b border-border/50 bg-card/80 px-4 backdrop-blur-xl md:hidden">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70">
+              <User className="h-4 w-4 text-muted-foreground" />
+            </span>
+            <span className="truncate text-xl font-semibold">{firstName}</span>
+          </div>
           <>
             <span className="hidden min-[380px]:inline-flex">
               <PlatitaBrandLockup size="sm" href="/inicio" wordmarkClassName="text-base" />
             </span>
-            <span className="min-[380px]:hidden inline-flex">
+            <span className="inline-flex min-[380px]:hidden">
               <ThemeToggle />
             </span>
           </>
-        )}
-      </header>
+        </header>
+      ) : null}
 
       {/* Mobile bottom nav */}
       <nav className="fixed bottom-3 left-3 right-3 z-40 md:hidden rounded-3xl border border-white/10 bg-card/65 backdrop-blur-xl shadow-[0_8px_30px_rgba(0,0,0,0.35)]">

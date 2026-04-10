@@ -2,6 +2,12 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Layout: header móvil solo en inicio
+
+### Cambiado
+- `src/components/layout/sidebar.tsx`: la barra superior fija (`md:hidden`) solo se muestra en `/inicio`; el resto de rutas del área app no la incluyen.
+- `src/components/layout/app-main.tsx` + `src/app/(app)/layout.tsx`: el padding superior en móvil usa `pt-18` solo con esa barra; en el resto de pantallas `pt-4` para no dejar hueco.
+
 ## [2026-04-10] - Cuentas: balance total sin bloque negro y pills con banderas
 
 ### Cambiado
