@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Cuentas: quitar línea de cotización referencia
+
+### Cambiado
+- `src/app/(app)/cuentas/page.tsx`: se elimina el texto «Cotización referencia: …» bajo el balance total.
+
 ## [2026-04-10] - Layout: header móvil solo en inicio
 
 ### Cambiado

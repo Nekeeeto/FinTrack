@@ -529,16 +529,6 @@ export default function CuentasPage() {
   const triggerCurrencyLabel =
     VIEW_CURRENCY_OPTIONS.find((o) => o.code === balanceViewCurrency)?.triggerLabel ?? "$"
 
-  const lastRateUpdatedAtMs = rates.reduce((latest, rate) => {
-    const next = new Date(rate.fetched_at).getTime()
-    return Number.isFinite(next) && next > latest ? next : latest
-  }, 0)
-  const lastRateUpdatedLabel = lastRateUpdatedAtMs
-    ? new Intl.DateTimeFormat("es-UY", { dateStyle: "medium", timeStyle: "short" }).format(
-        new Date(lastRateUpdatedAtMs)
-      )
-    : "Sin datos de cotización"
-
   const presetOptions = scope === "nacional" ? ONBOARDING_NACIONAL_PRESETS : INTERNACIONAL_ACCOUNT_PRESETS
   const selectedPreset = presetOptions.find((option) => option.name === newAccountPresetName)
   const accountRows = useMemo(() => buildAccountRows(accounts), [accounts])
@@ -669,7 +659,6 @@ export default function CuentasPage() {
             )
           })}
         </div>
-        <p className="mt-2.5 text-[10px] text-zinc-600 sm:text-xs">Cotización referencia: {lastRateUpdatedLabel}</p>
       </section>
 
       {/* Cards de cuentas (par UYU + Nombre USD en una fila con pill compacta) */}
