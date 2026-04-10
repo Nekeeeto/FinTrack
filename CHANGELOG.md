@@ -2,6 +2,13 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Avatares banco: círculo completo en onboarding y Cuentas
+
+### Cambiado
+- `src/app/(onboarding)/onboarding/page.tsx`: `PresetBrandAvatar` usa `Image` con `fill` y `object-contain` dentro de un círculo blanco (misma idea que `AccountBrandAvatar`); contenedores `relative` para el layout.
+- `src/app/(app)/cuentas/page.tsx`: se quitan `rounded-xl` / `rounded-lg` en wrappers y props del avatar para que el logo de banco se vea siempre como favicon circular.
+- `src/app/(app)/cuentas/page.tsx`: estado `newAccount` tipado con `NewAccountDraft` para que el selector de color compile con `ACCOUNT_COLOR_OPTIONS`.
+
 ## [2026-04-10] - Cuentas: filas UYU+USD con pill y total unificado
 
 ### Cambiado

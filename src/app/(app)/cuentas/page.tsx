@@ -65,6 +65,17 @@ const TYPE_OPTIONS: { value: AccountType; label: string }[] = [
 
 const ACCOUNT_ORDER_STORAGE_KEY = "fintrack:accounts-order:v1"
 
+type NewAccountDraft = {
+  name: string
+  icon: string
+  type: AccountType
+  color: (typeof ACCOUNT_COLOR_OPTIONS)[number]
+  logoUrl: string | null
+  localBalance: string
+  usdEnabled: boolean
+  usdBalance: string
+}
+
 /** Pestaña del resumen superior (referencia: Todas + filtros por moneda). */
 type BalanceTotalTab = "all" | Currency
 
@@ -179,12 +190,12 @@ export default function CuentasPage() {
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [scope, setScope] = useState<"nacional" | "internacional">("nacional")
   const [newAccountPresetName, setNewAccountPresetName] = useState("BROU")
-  const [newAccount, setNewAccount] = useState({
+  const [newAccount, setNewAccount] = useState<NewAccountDraft>({
     name: "BROU",
     icon: "wallet",
-    type: "checking" as AccountType,
+    type: "checking",
     color: ACCOUNT_COLOR_OPTIONS[4],
-    logoUrl: "/banks/brou.png" as string | null,
+    logoUrl: "/banks/brou.png",
     localBalance: "",
     usdEnabled: false,
     usdBalance: "",
@@ -700,7 +711,7 @@ export default function CuentasPage() {
                   logoUrl={avatarAccount.logo_url}
                   icon={avatarAccount.icon}
                   name={avatarAccount.name}
-                  className="size-9 shrink-0 rounded-xl border border-white/10 bg-primary/15"
+                  className="size-9 shrink-0 border border-white/10 bg-primary/15"
                   iconClassName="text-primary"
                 />
                 <div className="min-w-0 flex-1">
@@ -943,7 +954,7 @@ export default function CuentasPage() {
                   logoUrl={editForm.logo_url}
                   icon={editForm.icon}
                   name={editForm.name}
-                  className="h-10 w-10 shrink-0 rounded-lg bg-white/15"
+                  className="h-10 w-10 shrink-0 bg-white/15"
                   iconClassName="text-white/80"
                 />
                 <span className="text-sm font-medium text-white">{editForm.name}</span>
@@ -1091,13 +1102,13 @@ export default function CuentasPage() {
                 className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-zinc-900/50 p-3"
               >
                 <span className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-white/5">
+                  <span className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border border-white/10 bg-white/5">
                     {selectedPreset ? (
                       <AccountBrandAvatar
                         logoUrl={selectedPreset.logoUrl}
                         icon={selectedPreset.icon}
                         name={selectedPreset.name}
-                        className="h-full w-full rounded-lg bg-muted/40"
+                        className="size-full bg-muted/40"
                         iconClassName="text-muted-foreground"
                       />
                     ) : scope === "nacional" ? (
@@ -1219,7 +1230,7 @@ export default function CuentasPage() {
                             logoUrl={option.logoUrl}
                             icon={option.icon}
                             name={option.name}
-                            className="h-9 w-9 shrink-0 rounded-lg bg-white/8"
+                            className="h-9 w-9 shrink-0 bg-white/8"
                             iconClassName="text-zinc-300"
                           />
                           <span className="font-medium truncate">{option.name}</span>

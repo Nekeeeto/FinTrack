@@ -6,7 +6,6 @@ import {
   ArrowLeft,
   ArrowDownLeft,
   ArrowUpRight,
-  Building2,
   Check,
   Compass,
   ChevronRight,
@@ -14,7 +13,6 @@ import {
   Landmark,
   PiggyBank,
   SlidersHorizontal,
-  Smartphone,
   Wallet,
   type LucideIcon,
 } from "lucide-react"
@@ -28,6 +26,8 @@ import {
 } from "@/lib/category-templates"
 import type { AccountType, Currency } from "@/types/database"
 import {
+  ACCOUNT_COLOR_OPTIONS,
+  ACCOUNT_ICON_OPTIONS,
   ONBOARDING_NACIONAL_PRESETS,
   INTERNACIONAL_ACCOUNT_PRESETS,
   type AccountPreset,
@@ -58,24 +58,22 @@ const OBJECTIVE_ACCENT_COLORS: Record<string, string> = {
   crear_presupuesto: "#a78bfa",
 }
 
-const ACCOUNT_COLORS = ["#b2bcc9", "#ef4444", "#f97316", "#fb923c", "#facc15", "#a3e635", "#4ade80"]
-const ACCOUNT_ICON_OPTIONS = ["wallet", "banknote", "briefcase", "home", "trending-up", "landmark"]
-
 function PresetBrandAvatar({ preset }: { preset: AccountPreset }) {
   const [logoError, setLogoError] = useState(false)
   const PresetIcon = getIcon(preset.icon)
 
   if (preset.logoUrl && !logoError) {
     return (
-      <Image
-        src={preset.logoUrl}
-        alt={`Logo ${preset.name}`}
-        width={28}
-        height={28}
-        unoptimized
-        onError={() => setLogoError(true)}
-        className="h-full w-full rounded-full object-cover"
-      />
+      <span className="relative block size-full overflow-hidden rounded-full! bg-white p-[12%] shadow-[inset_0_1px_0_rgba(255,255,255,0.92)]">
+        <Image
+          src={preset.logoUrl}
+          alt={`Logo ${preset.name}`}
+          fill
+          unoptimized
+          onError={() => setLogoError(true)}
+          className="object-contain object-center"
+        />
+      </span>
     )
   }
 
@@ -613,7 +611,7 @@ export default function OnboardingPage() {
                         !active && "border-white/10 bg-zinc-900/50 text-zinc-300 hover:border-[#5DBCD2]/35"
                       )}
                     >
-                      <span className="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/8 text-[#5DBCD2]">
+                      <span className="relative flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/8 text-[#5DBCD2]">
                         <PresetBrandAvatar preset={preset} />
                       </span>
                       <span className="truncate">{preset.name}</span>
@@ -626,7 +624,7 @@ export default function OnboardingPage() {
             <div className="mt-3 space-y-3">
               <label className="block text-xs font-semibold uppercase tracking-wide text-zinc-500">Nombre</label>
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-900/60 px-3 py-2">
-                <span className="flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/8 text-[#5DBCD2]">
+                <span className="relative flex size-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/8 text-[#5DBCD2]">
                   {accountPresetName !== "Personalizado" && selectedPreset ? (
                     <PresetBrandAvatar preset={selectedPreset} />
                   ) : (
@@ -735,7 +733,7 @@ export default function OnboardingPage() {
             <div className="mt-4">
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Color</p>
               <div className="flex flex-wrap gap-2">
-                {ACCOUNT_COLORS.map((color) => (
+                {ACCOUNT_COLOR_OPTIONS.map((color) => (
                   <button
                     key={color}
                     type="button"
