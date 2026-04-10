@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Cuentas: texto de ayuda del sheet más corto
+
+### Cambiado
+- `src/app/(app)/cuentas/page.tsx`: descripción de «Qué es Mis Cuentas» acortada (nacional vs internacional, enfoque en organizar finanzas).
+
 ## [2026-04-10] - Inicio: accesos rápidos compactos y carrusel en móvil
 
 ### Cambiado

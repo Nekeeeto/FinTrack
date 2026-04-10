@@ -1261,10 +1261,8 @@ export default function CuentasPage() {
           <SheetHeader className="items-center space-y-3 pb-2 pt-4 text-center">
             <SheetTitle className="text-lg font-bold text-white">Qué es Mis Cuentas</SheetTitle>
             <SheetDescription className="text-sm leading-relaxed text-zinc-400">
-              Acá administrás tus cuentas en pesos uruguayos, dólares y otras monedas. Si activaste dólares en una cuenta
-              nacional, la vas a ver como una sola tarjeta con selector $ / US$. El total de arriba se filtra con las
-              pastillas (Todas, $ Pesos, etc.) y el botón con chevron convierte ese total en la moneda que elijas, con
-              cotización al día cuando hay datos. Tocá una cuenta para ver movimientos o el lápiz para editarla.
+              Creá cuentas bancarias nacionales en pesos uruguayos o con dólares, y cuentas internacionales en dólares,
+              para organizar tus finanzas en un solo lugar.
             </SheetDescription>
           </SheetHeader>
           <SheetFooter className="pt-2">
