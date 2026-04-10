@@ -2,6 +2,15 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Voz: transcripción mejorada, parseo IA y gastos múltiples con confirmación
+
+### Agregado
+- `src/app/api/audio/parse/route.ts`: endpoint POST que recibe transcripción + categorías/cuentas del usuario y usa Groq (chat JSON) para extraer uno o varios movimientos (monto, tipo, categoría sugerida, cuenta, descripción) con vocabulario rioplatense.
+
+### Cambiado
+- `src/app/api/audio/transcribe/route.ts`: prompt contextual para Whisper (Uruguay/rioplatense) y `temperature` 0 para transcripciones más estables.
+- `src/components/voice/voice-assistant.tsx`: tras transcribir llama al parser IA; muestra lista de movimientos detectados con tick individual antes de confirmar; guarda solo los seleccionados vía POST a `/api/transactions`; fallback al parser local si falla la IA.
+
 ## [2026-04-10] - Inicio: cotizaciones como dropdown
 
 ### Cambiado

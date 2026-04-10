@@ -8,6 +8,7 @@ import type { Account, Category } from "@/types/database"
 type VoiceState = "idle" | "recording" | "processing" | "success" | "error"
 
 interface ParsedTransaction {
+  id: string
   type: "expense" | "income"
   amount: number | null
   currency: string | null
@@ -16,6 +17,9 @@ interface ParsedTransaction {
   account_id: string | null
   account_name: string | null
   description: string
+  source_text?: string
+  confidence?: number | null
+  selected: boolean
 }
 
 // Palabras clave para detectar intención
@@ -302,7 +306,7 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
   const [state, setState] = useState<VoiceState>("idle")
   const [transcription, setTranscription] = useState("")
   const [feedback, setFeedback] = useState("")
-  const [parsedData, setParsedData] = useState<ParsedTransaction | null>(null)
+  const [parsedItems, setParsedItems] = useState<ParsedTransaction[]>([])
   const [accounts, setAccounts] = useState<Account[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [saving, setSaving] = useState(false)
@@ -360,12 +364,12 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
       setState("recording")
       setFeedback("")
       setTranscription("")
-      setParsedData(null)
+      setParsedItems([])
     } catch {
       setState("error")
       setFeedback("No se pudo acceder al micrófono. Revisá los permisos del navegador.")
     }
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const stopRecording = useCallback(() => {
     if (mediaRecorderRef.current?.state === "recording") {
@@ -394,71 +398,149 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
       const { text } = await res.json()
       setTranscription(text)
 
-      // Parsear la transcripción
-      const result = parseTranscription(text, categories, accounts)
+      const parseRes = await fetch("/api/audio/parse", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          categories: categories.map((c) => ({
+            id: c.id,
+            name: c.name,
+            type: c.type,
+            parent_id: c.parent_id,
+          })),
+          accounts: accounts.map((a) => ({
+            id: a.id,
+            name: a.name,
+            currency: a.currency,
+          })),
+        }),
+      })
 
-      if (result.action === "unsupported") {
+      if (parseRes.ok) {
+        const parsed = await parseRes.json()
+        const items = Array.isArray(parsed.items) ? parsed.items : []
+        const normalizedItems: ParsedTransaction[] = items.map((item: Omit<ParsedTransaction, "id" | "selected">, idx: number) => ({
+          id: crypto.randomUUID?.() || `voice-item-${Date.now()}-${idx}`,
+          type: item.type || "expense",
+          amount: item.amount ?? null,
+          currency: item.currency ?? null,
+          category_id: item.category_id ?? null,
+          category_name: item.category_name ?? null,
+          account_id: item.account_id ?? null,
+          account_name: item.account_name ?? null,
+          description: item.description || "",
+          source_text: item.source_text || "",
+          confidence: typeof item.confidence === "number" ? item.confidence : null,
+          selected: false,
+        }))
+
+        if (normalizedItems.length > 0) {
+          setParsedItems(normalizedItems)
+          setState("success")
+          setFeedback("Revisá y marcá con tick los movimientos que quieras guardar.")
+          return
+        }
+      }
+
+      // Fallback local (single item) si el parser IA falla.
+      const fallback = parseTranscription(text, categories, accounts)
+      if (fallback.action === "unsupported" || !fallback.parsed) {
         setState("error")
-        setFeedback(result.message || "Acción no soportada.")
+        setFeedback(fallback.message || "No pude interpretar el audio. Intentá con frases más cortas.")
         return
       }
 
-      if (result.parsed) {
-        setParsedData(result.parsed)
-        setState("success")
-
-        if (!result.parsed.amount) {
-          setFeedback("No detecté el monto. Podés corregirlo antes de confirmar.")
-        }
-      }
+      setParsedItems([
+        {
+          ...fallback.parsed,
+          id: crypto.randomUUID?.() || `voice-item-${Date.now()}`,
+          selected: false,
+        },
+      ])
+      setState("success")
+      setFeedback("Revisá y marcá con tick el movimiento antes de confirmar.")
     } catch {
       setState("error")
       setFeedback("Error de conexión. Intentá de nuevo.")
     }
   }
 
-  async function confirmTransaction() {
-    if (!parsedData) return
+  function toggleItemSelection(itemId: string) {
+    setParsedItems((prev) =>
+      prev.map((item) => (item.id === itemId ? { ...item, selected: !item.selected } : item))
+    )
+  }
 
-    if (!parsedData.amount) {
-      setFeedback("Necesitás un monto para crear la transacción.")
-      return
-    }
-
-    const accountId = parsedData.account_id || accounts[0]?.id
-    const categoryId = parsedData.category_id
-    if (!categoryId) {
-      setFeedback("No detecté la categoría. Intentá de nuevo mencionando la categoría.")
+  async function confirmTransactions() {
+    const selectedItems = parsedItems.filter((item) => item.selected)
+    if (selectedItems.length === 0) {
+      setFeedback("Marcá al menos un movimiento con tick para confirmar.")
       return
     }
 
     setSaving(true)
     try {
-      const body = {
-        account_id: accountId,
-        category_id: categoryId,
-        amount: parsedData.amount,
-        currency: parsedData.currency || accounts.find((a) => a.id === accountId)?.currency || "UYU",
-        description: parsedData.description || transcription,
-        date: new Date().toISOString().split("T")[0],
-        source: "webapp",
+      const results = await Promise.all(
+        selectedItems.map(async (item) => {
+          if (!item.amount || item.amount <= 0) {
+            return { ok: false, reason: "Monto inválido o faltante." }
+          }
+
+          const accountId = item.account_id || accounts[0]?.id
+          const categoryId = item.category_id
+
+          if (!accountId) {
+            return { ok: false, reason: "Cuenta no detectada." }
+          }
+
+          if (!categoryId) {
+            return { ok: false, reason: "Categoría no detectada." }
+          }
+
+          const body = {
+            account_id: accountId,
+            category_id: categoryId,
+            amount: item.amount,
+            currency: item.currency || accounts.find((a) => a.id === accountId)?.currency || "UYU",
+            description: item.description || item.source_text || transcription,
+            date: new Date().toISOString().split("T")[0],
+            source: "webapp",
+          }
+
+          const res = await fetch("/api/transactions", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+          })
+
+          if (!res.ok) {
+            const data = await res.json().catch(() => ({ error: "Error al guardar." }))
+            return { ok: false, reason: data.error?.toString() || "Error al guardar." }
+          }
+
+          return { ok: true as const }
+        })
+      )
+
+      const okCount = results.filter((r) => r.ok).length
+      const failCount = results.length - okCount
+
+      if (okCount === 0) {
+        const firstError = results.find((r) => !r.ok)?.reason || "No se pudieron guardar los movimientos."
+        setFeedback(firstError)
+        return
       }
 
-      const res = await fetch("/api/transactions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      })
-
-      if (res.ok) {
-        setFeedback("Transacción creada con éxito!")
-        setTimeout(() => {
-          handleClose()
-        }, 1500)
+      if (failCount > 0) {
+        setFeedback(`Guardé ${okCount} movimiento(s) y ${failCount} quedaron pendientes por errores.`)
       } else {
-        const data = await res.json()
-        setFeedback(data.error?.toString() || "Error al guardar.")
+        setFeedback(`Guardé ${okCount} movimiento(s) con éxito.`)
       }
+
+      setTimeout(() => {
+        handleClose()
+      }, 1500)
     } catch {
       setFeedback("Error de conexión.")
     } finally {
@@ -479,7 +561,7 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
     setState("idle")
     setTranscription("")
     setFeedback("")
-    setParsedData(null)
+    setParsedItems([])
   }
 
   return (
@@ -524,6 +606,7 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
                     <p className="text-xs font-medium text-muted-foreground">Ejemplos:</p>
                     <p className="text-sm">&quot;Gasté 1500 en supermercado&quot;</p>
                     <p className="text-sm">&quot;Pagué 800 de luz con cuenta general&quot;</p>
+                    <p className="text-sm">&quot;20 faso, 15 papas, 80 nafta&quot;</p>
                     <p className="text-sm">&quot;Cobré 25000 de sueldo&quot;</p>
                   </div>
                 </div>
@@ -553,7 +636,7 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
               )}
 
               {/* Resultado exitoso */}
-              {state === "success" && parsedData && (
+              {state === "success" && parsedItems.length > 0 && (
                 <div className="space-y-3">
                   {/* Transcripción */}
                   <div className="bg-accent/50 rounded-lg p-3">
@@ -561,30 +644,43 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
                     <p className="text-sm italic">&quot;{transcription}&quot;</p>
                   </div>
 
-                  {/* Datos parseados */}
+                  {/* Datos parseados bulk */}
                   <div className="bg-accent/30 rounded-lg p-3 space-y-2">
-                    <p className="text-xs font-medium text-muted-foreground">Transacción detectada:</p>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-muted-foreground">Tipo: </span>
-                        <span className={parsedData.type === "expense" ? "text-red-500 font-medium" : "text-emerald-500 font-medium"}>
-                          {parsedData.type === "expense" ? "Gasto" : "Ingreso"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Monto: </span>
-                        <span className="font-medium">
-                          {parsedData.amount ? `$${parsedData.amount.toLocaleString()}` : "No detectado"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Categoría: </span>
-                        <span className="font-medium">{parsedData.category_name || "No detectada"}</span>
-                      </div>
-                      <div>
-                        <span className="text-muted-foreground">Cuenta: </span>
-                        <span className="font-medium">{parsedData.account_name || accounts[0]?.name || "Default"}</span>
-                      </div>
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Movimientos detectados ({parsedItems.length}):
+                    </p>
+                    <div className="space-y-2">
+                      {parsedItems.map((item) => (
+                        <button
+                          key={item.id}
+                          onClick={() => toggleItemSelection(item.id)}
+                          className={`w-full text-left rounded-lg border p-2 transition-colors ${
+                            item.selected ? "border-emerald-500 bg-emerald-500/10" : "border-border bg-background"
+                          }`}
+                          type="button"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {item.description || item.source_text || "Movimiento sin descripción"}
+                              </p>
+                              <p className="text-xs text-muted-foreground">
+                                {item.type === "expense" ? "Gasto" : "Ingreso"} ·{" "}
+                                {item.amount ? `$${item.amount.toLocaleString()}` : "Monto no detectado"} ·{" "}
+                                {item.category_name || "Sin categoría"} ·{" "}
+                                {item.account_name || accounts[0]?.name || "Cuenta por defecto"}
+                              </p>
+                            </div>
+                            <div
+                              className={`h-5 w-5 rounded border flex items-center justify-center ${
+                                item.selected ? "bg-emerald-500 border-emerald-500 text-white" : "border-muted-foreground/40"
+                              }`}
+                            >
+                              {item.selected ? <Check className="h-3.5 w-3.5" /> : null}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
                     </div>
                   </div>
 
@@ -603,7 +699,7 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
                       onClick={() => {
                         setState("idle")
                         setTranscription("")
-                        setParsedData(null)
+                        setParsedItems([])
                         setFeedback("")
                       }}
                     >
@@ -611,7 +707,7 @@ export function VoiceAssistant({ showFab = true }: { showFab?: boolean }) {
                     </Button>
                     <Button
                       className="flex-1 bg-emerald-500 hover:bg-emerald-600"
-                      onClick={confirmTransaction}
+                      onClick={confirmTransactions}
                       disabled={saving}
                     >
                       {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : (

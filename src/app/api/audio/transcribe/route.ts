@@ -31,12 +31,20 @@ export async function POST(req: NextRequest) {
 
     const file = new File([buffer], `audio.${ext}`, { type: mimeType })
 
-    // Enviar a Groq Whisper
+    // Enviar a Groq Whisper con prompt contextual para español rioplatense.
     const groqForm = new FormData()
     groqForm.append("file", file)
     groqForm.append("model", "whisper-large-v3-turbo")
     groqForm.append("language", "es")
     groqForm.append("response_format", "json")
+    groqForm.append("temperature", "0")
+    groqForm.append(
+      "prompt",
+      "Transcripción de gastos financieros en español rioplatense (Uruguay). " +
+      "Conservar montos exactos y palabras coloquiales como nafta, bondi, súper, faso, puchos, cigarros, morfi, almacén. " +
+      "Ejemplos: 'gasté 1500 en el super', '80 de nafta', '20 faso 15 papas 80 nafta'. " +
+      "No inventar texto, mantener números y moneda si aparecen."
+    )
 
     const res = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
       method: "POST",
