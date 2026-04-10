@@ -2,6 +2,13 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Layout: padding superior móvil bajo header (inicio)
+
+### Cambiado
+- `src/components/layout/app-main.tsx`: en `/inicio` el `main` usa `padding-top: calc(safe-area + 4rem + 1rem)` para alinear con header fijo (`h-16`) y dejar ~16px de separación (antes `pt-18` dejaba ~8px).
+- `src/components/layout/sidebar.tsx`: el header móvil aplica `padding-top` con `env(safe-area-inset-top)` y la fila interior mantiene `h-16`.
+- Rutas sin barra superior: `padding-top` mínimo algo mayor y con respeto al notch.
+
 ## [2026-04-10] - Cuentas: quitar línea de cotización referencia
 
 ### Cambiado

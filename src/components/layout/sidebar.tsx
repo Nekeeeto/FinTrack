@@ -159,7 +159,8 @@ export function Sidebar() {
     <>
       {/* Mobile top bar: solo en /inicio (resto de rutas sin barra superior fija) */}
       {showMobileTopBar ? (
-        <header className="fixed top-0 left-0 right-0 z-40 flex h-16 items-center gap-3 border-b border-border/50 bg-card/80 px-4 backdrop-blur-xl md:hidden">
+        <header className="fixed top-0 left-0 right-0 z-40 border-b border-border/50 bg-card/80 pt-[env(safe-area-inset-top,0px)] backdrop-blur-xl md:hidden">
+          <div className="flex h-16 items-center gap-3 px-4">
           <div className="flex min-w-0 flex-1 items-center gap-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border/70">
               <User className="h-4 w-4 text-muted-foreground" />
@@ -174,6 +175,7 @@ export function Sidebar() {
               <ThemeToggle />
             </span>
           </>
+          </div>
         </header>
       ) : null}
 
