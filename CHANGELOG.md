@@ -2,6 +2,11 @@
 
 Todos los cambios relevantes del proyecto se documentan en este archivo.
 
+## [2026-04-10] - Cuentas: balance total sin bloque negro y pills con banderas
+
+### Cambiado
+- `src/app/(app)/cuentas/page.tsx`: la franja «Balance total» deja de usar `bg-black` y hereda el fondo de la página; las pills de filtro replican el estilo del inicio (`bg-black/18`, banderas 🇺🇾 🇺🇸 🇧🇷 🇦🇷 con etiquetas `$` / `US$` / `R$` / `AR$`, «Todas» con ícono de grilla).
+
 ## [2026-04-10] - Avatares banco: círculo completo en onboarding y Cuentas
 
 ### Cambiado

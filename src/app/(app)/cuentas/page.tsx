@@ -79,12 +79,13 @@ type NewAccountDraft = {
 /** Pestaña del resumen superior (referencia: Todas + filtros por moneda). */
 type BalanceTotalTab = "all" | Currency
 
-const BALANCE_TOTAL_TABS: { id: BalanceTotalTab; label: string; showGrid?: boolean }[] = [
+/** Misma convención que inicio (banderas + etiqueta corta). */
+const BALANCE_TOTAL_TABS: { id: BalanceTotalTab; label: string; showGrid?: boolean; flag?: string }[] = [
   { id: "all", label: "Todas", showGrid: true },
-  { id: "UYU", label: "$ Pesos" },
-  { id: "USD", label: "US$ Dólares" },
-  { id: "BRL", label: "R$ Reales" },
-  { id: "ARS", label: "AR$ Pesos" },
+  { id: "UYU", label: "$", flag: "🇺🇾" },
+  { id: "USD", label: "US$", flag: "🇺🇸" },
+  { id: "BRL", label: "R$", flag: "🇧🇷" },
+  { id: "ARS", label: "AR$", flag: "🇦🇷" },
 ]
 
 const VIEW_CURRENCY_OPTIONS: { code: Currency; triggerLabel: string; menuLabel: string }[] = [
@@ -612,7 +613,7 @@ export default function CuentasPage() {
         </div>
       </div>
 
-      <section className="-mx-4 rounded-none bg-black px-4 pb-5 pt-2 text-white md:mx-0 md:rounded-2xl md:px-0">
+      <section className="-mx-4 rounded-none px-4 pb-5 pt-2 text-white md:mx-0 md:px-0">
         <div className="flex items-start justify-between gap-3">
           <p className="text-xs font-medium text-zinc-500">Balance total</p>
           <div className="flex shrink-0 items-center gap-0.5">
@@ -641,7 +642,7 @@ export default function CuentasPage() {
             ? "••••••"
             : formatTotalCurrency(balanceAmountForView, balanceViewCurrency)}
         </p>
-        <div className="mt-5 flex max-w-full gap-1 overflow-x-auto rounded-full bg-zinc-900/95 p-1 scrollbar-hide">
+        <div className="mt-5 inline-flex max-w-full items-center gap-1 overflow-x-auto rounded-full bg-black/18 p-1 scrollbar-hide">
           {BALANCE_TOTAL_TABS.map((tab) => {
             const active = balanceTotalTab === tab.id
             return (
@@ -650,12 +651,20 @@ export default function CuentasPage() {
                 type="button"
                 onClick={() => setBalanceTotalTab(tab.id)}
                 className={cn(
-                  "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition-colors sm:px-3.5 sm:text-[13px]",
-                  active ? "bg-zinc-600 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-300"
+                  "inline-flex shrink-0 items-center justify-center rounded-full px-3 py-1.5 text-sm font-semibold transition-colors sm:px-4",
+                  active
+                    ? "bg-white/20 text-white shadow-sm ring-1 ring-white/15"
+                    : "text-white/75 hover:bg-white/10"
                 )}
               >
-                {tab.showGrid ? <LayoutGrid className="size-3.5 opacity-95" aria-hidden /> : null}
-                {tab.label}
+                <span className="inline-flex items-center gap-1.5">
+                  {tab.showGrid ? (
+                    <LayoutGrid className="size-3.5 opacity-90" aria-hidden />
+                  ) : tab.flag ? (
+                    <span aria-hidden>{tab.flag}</span>
+                  ) : null}
+                  <span>{tab.label}</span>
+                </span>
               </button>
             )
           })}
